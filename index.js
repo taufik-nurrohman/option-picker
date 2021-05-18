@@ -234,6 +234,10 @@
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
     };
+    var letText = function letText(node) {
+        var state = 'textContent';
+        return hasState(node, state) && (node[state] = ""), node;
+    };
     var setAttribute = function setAttribute(node, attribute, value) {
         if (true === value) {
             value = attribute;
@@ -887,7 +891,6 @@
             return $;
         };
         $.self = selectBoxFake;
-        $.value = toValue(getValue());
         return $;
     }
     OP.instances = {};
@@ -897,6 +900,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.0.0';
+    OP.version = '1.0.1';
     return OP;
 });

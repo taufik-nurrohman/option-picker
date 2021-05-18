@@ -1,4 +1,4 @@
-import {D, W, getAttribute, getChildren, getClasses, getHTML, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setData, setElement, setHTML, setNext, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
+import {D, W, getAttribute, getChildren, getClasses, getHTML, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, letText, setAttribute, setChildLast, setClass, setData, setElement, setHTML, setNext, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
 import {offEvent, offEvents, offEventDefault, onEvent, onEvents} from '@taufik-nurrohman/event';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getOffset, getRect, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
@@ -483,7 +483,6 @@ function OP(source, state = {}) {
     };
 
     $.self = selectBoxFake;
-    $.value = toValue(getValue());
 
     return $;
 
@@ -498,6 +497,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.0.0';
+OP.version = '1.0.1';
 
 export default OP;

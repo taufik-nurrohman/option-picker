@@ -22,6 +22,11 @@ Contribute
 Release Notes
 -------------
 
+### 1.0.1
+
+ - Fixed broken `picker.pop()` response.
+ - Removed `picker.value` property.
+
 ### 1.0.0
 
  - Initial release.

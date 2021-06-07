@@ -1,0 +1,245 @@
+extends _index.pug
+
+block state
+  - const title = 'Color Picker ' + version
+  - const theme = '#000'
+  - const scripts = ['index.min.js']
+  - const styles = ['index.min.css']
+
+block script
+  script
+    | // TODO
+
+block style
+  style
+    | * {
+    |   box-sizing: border-box;
+    | }
+    | :root {
+    |   background: #fff;
+    |   color: #000;
+    |   border-top: 4px solid;
+    |   font: normal normal 16px/1.25 serif;
+    | }
+    | a {
+    |   color: #009;
+    |   text-decoration: none;
+    | }
+    | a, code {
+    |   word-wrap: break-word;
+    | }
+    | code {
+    |   font-family: monospace;
+    |   font-size: 80%;
+    | }
+    | footer, header, main, nav {
+    |   max-width: 700px;
+    |   margin: 0 auto;
+    | }
+    | hr {
+    |   border: 0;
+    |   color: inherit;
+    |   border-top: 1px dashed;
+    |   height: 0;
+    | }
+    | pre {
+    |   white-space: pre-wrap;
+    |   word-wrap: break-word;
+    | }
+    | pre code {
+    |   display: block;
+    |   background: #eee;
+    |   padding: 1em;
+    | }
+    | table {
+    |   width: 100%;
+    | }
+    | td, th {
+    |   text-align: left;
+    |   vertical-align: top;
+    | }
+    | body > p:first-child {
+    |   background: #ffa;
+    |   border: 1px dashed;
+    |   margin-top: 0;
+    |   padding: .75em 1em;
+    | }
+
+block content
+  p Do you like this project? Please support my #[a(href='https://github.com/mecha-cms') Mecha CMS] project too. Thank you!
+  header
+    h1= title
+    p Just a generic custom #[code &lt;select&gt;] element with accessibility in mind.
+    hr
+  main
+    h2 Features
+    ul
+      li Light-weight, no dependencies. It uses vanilla JavaScript.
+      li Simple #[abbr(title='Application Programming Interface') API]. Easy to master.
+      li Responsive. It tries to place itself inside an area that is visible within the browser window.
+      li #[mark TODO]
+    h2 Usage
+    h3 Browser
+    pre: code
+      | &lt;!DOCTYPE html&gt;
+      | &lt;html dir="ltr"&gt;
+      |   &lt;head&gt;
+      |     &lt;meta charset="utf-8"&gt;
+      |     &lt;link href="#[a(href='index.min.css' target='_blank') ./index.min.css]" rel="stylesheet"&gt;
+      |   &lt;/head&gt;
+      |   &lt;body&gt;
+      |     &lt;p&gt;
+      |       &lt;select&gt;
+      |         &lt;option&gt;Option 1&lt;/option&gt;
+      |         &lt;option&gt;Option 2&lt;/option&gt;
+      |         &lt;option value="3"&gt;Option 3&lt;/option&gt;
+      |       &lt;/select&gt;
+      |     &lt;/p&gt;
+      |     &lt;script src="#[a(href='index.min.js' target='_blank') ./index.min.js]"&gt;&lt;/script&gt;
+      |     &lt;script&gt;
+      |     let picker = new OP(document.querySelector('select'));
+      |     &lt;/script&gt;
+      |   &lt;/body&gt;
+      | &lt;/html&gt;
+    h3 Node.js
+    p Functions and methods in this application are mostly native JavaScript and are intended for use by the browser. Node.js doesn&rsquo;t know about the DOM, so this kind of practice will probably be used more often to build new browser packages than to be used directly in the Node.js server.
+    h4 CommonJS
+    pre: code
+      | const OP = require('@taufik-nurrohman/option-picker');
+      |
+      | const picker = new OP(document.querySelector('select'));
+    h4 ECMAScript
+    pre: code
+      | import OP from '@taufik-nurrohman/option-picker';
+      |
+      | const picker = new OP(document.querySelector('select'));
+    h2 Examples
+    ul
+      li: a(href='test.html' target='_blank') No Idea?
+      li: a(href='test/picker.html' target='_blank') Multiple Instances
+      li #[mark TODO]
+    h2 Settings
+    table(border='1')
+      thead
+        tr
+          th Name
+          th Description
+      tbody
+        tr
+          td: code source
+          td The source element that holds the initial color data.
+        tr
+          td: code state
+          td The configuration data.
+    pre: code let picker = new CP(#[var source], #[var color]);
+    pre: code
+      | let picker = new OP(#[var source], #[var state] = {});
+    h2 Methods and Properties
+    h3 OP.instances
+    p Return the option picker instances.
+    pre: code
+      | for (let key in OP.instances) {
+      |     console.log(key);
+      |     console.log(OP.instances[key]);
+      | }
+    h3 OP.state
+    p This property stores the initial values of #[code picker.state].
+    pre: code
+      | let picker = new OP(source, {
+      |         foo: ['bar', 'baz', 'qux']
+      |     });
+      |
+      | console.log([OP.state, picker.state]);
+    h3 OP.version
+    p Return the option picker version.
+    pre: code
+      | let version = OP.version,
+      |     major = version.split('.')[0];
+      |
+      | if (+major &lt; 2) {
+      |     // &hellip;
+      | }
+    h3 picker.get()
+    p Get current option value.
+    pre: code console.log(picker.get());
+    h3 picker.option
+    p #[mark TODO]
+    h3 picker.options
+    p #[mark TODO]
+    h3 picker.pop()
+    p Remove custom option picker features from the source element.
+    h3 picker.self
+    p Return the option picker element.
+    pre: code picker.self.style.borderWidth = '4px';
+    h3 picker.set(value)
+    p Set option picker&rsquo;s value.
+    pre: code
+      | picker.set('Option 1');
+    h3 picker.source
+    p Return the option picker source element that holds the initial option value.
+    pre: code
+      | picker.source.addEventListener('change', function() {
+      |     console.log(this.value);
+      | }, false);
+    h3 picker.state
+    p Return the modified option picker states.
+    h3 picker.value
+    p Return the initial value of the #[code &lt;select&gt;] element.
+    h2 Hooks
+    table(border='1')
+      thead
+        tr
+          th Name
+          th Description
+      tbody
+        tr
+          td: code blur
+          td #[mark TODO]
+        tr
+          td: code change
+          td Will be triggered on every value change.
+        tr
+          td: code enter
+          td Will be triggered when option picker list is visible.
+        tr
+          td: code exit
+          td Will be triggered when option picker list is hidden.
+        tr
+          td: code fit
+          td Will be triggered when option picker pane is positioned.
+        tr
+          td: code focus
+          td #[mark TODO]
+        tr
+          td: code pop
+          td Will be triggered after #[code picker.pop()].
+    h3 picker.fire(event, data)
+    p Trigger a hook.
+    pre: code picker.fire('change', ['Option 1', picker.options]);
+    h3 picker.hooks
+    p Return the added hooks.
+    pre: code console.log(picker.hooks);
+    h3 picker.off(event, then)
+    p Remove a hook.
+    pre: code picker.off('change');
+    pre: code picker.off('change', onChange); // With context
+    h3 picker.on(event, then)
+    p Add a new hook.
+    pre: code
+      | picker.on('change', function(option, options) {
+      |     console.log(option);
+      | });
+    pre: code
+      | function onChange(option, options) {
+      |     console.log(option);
+      | }
+      |
+      | picker.on('change', onChange); // With context
+    h2 License
+    p Use it for free, pay if you get paid. So, you&rsquo;ve just benefited financially after using this project? It&rsquo;s a good idea to #[a(href='https://paypal.me/tatautaufik' target='_blank') share a little financial support] with this open source project too. Your support will motivate me to do any further development, as well as to provide voluntary support to overcome problems related to this project.
+    p Thank you! ❤️
+  footer
+    hr
+    p
+      != '&copy; ' + year + ' '
+      a(href='/') Taufik Nurrohman

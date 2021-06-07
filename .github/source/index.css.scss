@@ -1,0 +1,169 @@
+$color-active-focus: #fff;
+$color-active: #00f;
+$color-back-active-focus: #00f;
+$color-back-active: none;
+$color-back-dead-focus: #999;
+$color-back-focus: #00f;
+$color-back: #fff;
+$color-border-dead: #999;
+$color-border-focus: #00f;
+$color-border: #000;
+$color-dead-focus: #fff;
+$color-dead: #999;
+$color-focus: #fff;
+$color: #000;
+
+.option-picker {
+  position: relative;
+  background: $color-back;
+  color: $color;
+  border: 1px solid $color-border;
+  font: inherit;
+  display: inline-block;
+  vertical-align: middle;
+  min-width: 12em;
+  padding: .5em .75em;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-tap-highlight-color: transparent;
+  &:focus {
+    outline: 0;
+    border-color: $color-border-focus;
+  }
+  &::after {
+    content: "";
+    width: 0;
+    height: 0;
+    border-top: 6px solid $color-border;
+    border-right: 5px solid transparent;
+    border-bottom: 0;
+    border-left: 5px solid transparent;
+    position: absolute;
+    top: 50%;
+    margin-top: -3px;
+    right: .5em;
+    pointer-events: none;
+  }
+  &.open {
+    &::after {
+      border-top: 0;
+      border-bottom: 6px solid;
+    }
+    > div {
+      display: block;
+    }
+  }
+  *:focus {
+    outline: 0;
+  }
+  > b {
+    display: block;
+    font: inherit;
+    margin-right: 1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  > div {
+    position: fixed;
+    z-index: 9999;
+    background: inherit;
+    border: inherit;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    overflow: auto;
+    display: none;
+    a {
+      display: block;
+      padding: .25em .5em;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      &:hover {
+        background: $color-back-focus;
+        color: $color-focus;
+      }
+      &.dead {
+        color: $color-dead;
+        cursor: not-allowed;
+        &:hover {
+          background: $color-back-dead-focus;
+          color: $color-dead-focus;
+        }
+      }
+      &.active {
+        background: $color-back-active;
+        color: $color-active;
+        &:hover {
+          background: $color-back-active-focus;
+          color: $color-active-focus;
+        }
+      }
+    }
+    span {
+      display: block;
+      padding: .25em .5em;
+      &[title] {
+        &::before {
+          content: attr(title);
+          display: block;
+          margin: 0 0 .25em;
+          font-weight: bold;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+      a {
+        padding-left: 1.5em;
+        margin: 0 -.5em;
+      }
+    }
+  }
+}
+
+.option-picker {
+  &,
+  & * {
+    box-sizing: border-box;
+  }
+}
+
+.option-picker-source {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  + .option-picker {
+    color: $color-dead;
+    border-color: $color-border-dead;
+    cursor: not-allowed;
+  }
+  &[size] {
+    + .option-picker {
+      height: auto;
+      &::after {
+        display: none;
+      }
+      > b {
+        margin: 0;
+      }
+      > div {
+        display: block;
+        position: relative;
+        z-index: 1;
+        background: none;
+        border-width: 0;
+        border-top-width: inherit;
+        box-shadow: none;
+        margin: .5em -.75em -.5em;
+        padding: 0;
+      }
+    }
+  }
+}

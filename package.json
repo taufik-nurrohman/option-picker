@@ -1,0 +1,58 @@
+{
+  "author": "Taufik Nurrohman",
+  "browser": "index.min.js",
+  "bugs": "https://github.com/taufik-nurrohman/option-picker/issues",
+  "dependencies": {
+    "@taufik-nurrohman/document": "^0.1.8",
+    "@taufik-nurrohman/event": "^0.3.1",
+    "@taufik-nurrohman/from": "^0.0.7",
+    "@taufik-nurrohman/has": "^0.0.3",
+    "@taufik-nurrohman/hook": "^0.1.2",
+    "@taufik-nurrohman/is": "^0.1.2",
+    "@taufik-nurrohman/pattern": "^0.1.7",
+    "@taufik-nurrohman/rect": "0.0.8",
+    "@taufik-nurrohman/to": "^0.0.18"
+  },
+  "description": "A simple color picker application written in pure JavaScript, for modern browsers.",
+  "devDependencies": {
+    "@taufik-nurrohman/factory": "^0.1.16"
+  },
+  "exports": {
+    "import": "./index.mjs",
+    "require": "./index.js"
+  },
+  "files": [
+    "index.css",
+    "index.min.css",
+    "index.scss",
+    "index.js",
+    "index.min.js",
+    "index.mjs"
+  ],
+  "funding": {
+    "url": "https://paypal.me/tatautaufik"
+  },
+  "homepage": "https://taufik-nurrohman.js.org/option-picker",
+  "keywords": [
+    "a11y",
+    "combo",
+    "list",
+    "native",
+    "option",
+    "picker",
+    "select"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "module": "index.mjs",
+  "name": "@taufik-nurrohman/option-picker",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taufik-nurrohman/option-picker.git"
+  },
+  "scripts": {
+    "pack": "pack --clean=false --from=.github/source --js-format=umd --js-name=OP --js-top='%(js.license)' --mjs=true --scss=true --to=."
+  },
+  "type": "module",
+  "version": "1.0.0"
+}

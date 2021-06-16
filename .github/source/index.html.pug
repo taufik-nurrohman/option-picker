@@ -1,14 +1,14 @@
 extends _index.pug
 
 block state
-  - const title = 'Color Picker ' + version
+  - const title = 'Option Picker ' + version
   - const theme = '#000'
   - const scripts = ['index.min.js']
   - const styles = ['index.min.css']
 
 block script
   script
-    | // TODO
+    | let picker = new OP(document.querySelector('select'));
 
 block style
   style
@@ -64,6 +64,11 @@ block style
     |   margin-top: 0;
     |   padding: .75em 1em;
     | }
+    |
+    | /* Add Bootstrap-like focus ring effect */
+    | .option-picker.focus {
+    |   box-shadow: 0 0 0 3px rgba(0, 0, 255, .25);
+    | }
 
 block content
   p Do you like this project? Please support my #[a(href='https://github.com/mecha-cms') Mecha CMS] project too. Thank you!
@@ -72,6 +77,15 @@ block content
     p Just a generic custom #[code &lt;select&gt;] element with accessibility in mind.
     hr
   main
+    form(method='get' target='_blank')
+      p
+        select(name='test')
+          option(value='1') Option 1
+          option(value='2') Option 2
+          option(value='3') Option 3
+          option(disabled value='4') Option 4
+          option Option 5
+      p: button(type='submit') Submit
     h2 Features
     ul
       li Light-weight, no dependencies. It uses vanilla JavaScript.
@@ -131,7 +145,6 @@ block content
         tr
           td: code state
           td The configuration data.
-    pre: code let picker = new CP(#[var source], #[var color]);
     pre: code
       | let picker = new OP(#[var source], #[var state] = {});
     h2 Methods and Properties

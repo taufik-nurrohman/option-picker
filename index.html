@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="#000" name="theme-color">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Just a generic custom `&lt;select&gt;` element with accessibility in mind." name="description">
+    <title>Option Picker 1.0.0</title>
+    <link href="index.min.css" rel="stylesheet">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      :root {
+        background: #fff;
+        color: #000;
+        border-top: 4px solid;
+        font: normal normal 16px/1.25 serif;
+      }
+      a {
+        color: #009;
+        text-decoration: none;
+      }
+      a,
+      code {
+        word-wrap: break-word;
+      }
+      code {
+        font-family: monospace;
+        font-size: 80%;
+      }
+      footer,
+      header,
+      main,
+      nav {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+      hr {
+        border: 0;
+        color: inherit;
+        border-top: 1px dashed;
+        height: 0;
+      }
+      pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      pre code {
+        display: block;
+        background: #eee;
+        padding: 1em;
+      }
+      table {
+        width: 100%;
+      }
+      td,
+      th {
+        text-align: left;
+        vertical-align: top;
+      }
+      body > p:first-child {
+        background: #ffa;
+        border: 1px dashed;
+        margin-top: 0;
+        padding: .75em 1em;
+      }
+
+      /* Add Bootstrap-like focus ring effect */
+      .option-picker.focus {
+        box-shadow: 0 0 0 3px rgba(0, 0, 255, .25);
+      }
+    </style>
+  </head>
+  <body>
+    <p>Do you like this project? Please support my <a href="https://github.com/mecha-cms">Mecha CMS</a> project too. Thank you!</p>
+    <header>
+      <h1>Option Picker 1.0.0</h1>
+      <p>Just a generic custom <code>&lt;select&gt;</code> element with accessibility in mind.</p>
+      <hr>
+    </header>
+    <main>
+      <form method="get" target="_blank">
+        <p><select name="test">
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+            <option disabled value="4">Option 4</option>
+            <option>Option 5</option>
+          </select></p>
+        <p><button type="submit">Submit</button></p>
+      </form>
+      <h2>Features</h2>
+      <ul>
+        <li>Light-weight, no dependencies. It uses vanilla JavaScript.</li>
+        <li>Simple <abbr title="Application Programming Interface">API</abbr>. Easy to master.</li>
+        <li>Responsive. It tries to place itself inside an area that is visible within the browser window.</li>
+        <li><mark>TODO</mark></li>
+      </ul>
+      <h2>Usage</h2>
+      <h3>Browser</h3>
+      <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html dir="ltr"&gt;
+  &lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;link href="<a href="index.min.css" target="_blank">./index.min.css</a>" rel="stylesheet"&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      &lt;select&gt;
+        &lt;option&gt;Option 1&lt;/option&gt;
+        &lt;option&gt;Option 2&lt;/option&gt;
+        &lt;option value="3"&gt;Option 3&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/p&gt;
+    &lt;script src="<a href="index.min.js" target="_blank">./index.min.js</a>"&gt;&lt;/script&gt;
+    &lt;script&gt;
+    let picker = new OP(document.querySelector('select'));
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <h3>Node.js</h3>
+      <p>Functions and methods in this application are mostly native JavaScript and are intended for use by the browser. Node.js doesn&rsquo;t know about the DOM, so this kind of practice will probably be used more often to build new browser packages than to be used directly in the Node.js server.</p>
+      <h4>CommonJS</h4>
+      <pre><code>const OP = require('@taufik-nurrohman/option-picker');
+
+const picker = new OP(document.querySelector('select'));</code></pre>
+      <h4>ECMAScript</h4>
+      <pre><code>import OP from '@taufik-nurrohman/option-picker';
+
+const picker = new OP(document.querySelector('select'));</code></pre>
+      <h2>Examples</h2>
+      <ul>
+        <li><a href="test.html" target="_blank">No Idea?</a></li>
+        <li><a href="test/picker.html" target="_blank">Multiple Instances</a></li>
+        <li><mark>TODO</mark></li>
+      </ul>
+      <h2>Settings</h2>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>source</code></td>
+            <td>The source element that holds the initial color data.</td>
+          </tr>
+          <tr>
+            <td><code>state</code></td>
+            <td>The configuration data.</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre><code>let picker = new OP(<var>source</var>, <var>state</var> = {});</code></pre>
+      <h2>Methods and Properties</h2>
+      <h3>OP.instances</h3>
+      <p>Return the option picker instances.</p>
+      <pre><code>for (let key in OP.instances) {
+    console.log(key);
+    console.log(OP.instances[key]);
+}</code></pre>
+      <h3>OP.state</h3>
+      <p>This property stores the initial values of <code>picker.state</code>.</p>
+      <pre><code>let picker = new OP(source, {
+        foo: ['bar', 'baz', 'qux']
+    });
+
+console.log([OP.state, picker.state]);</code></pre>
+      <h3>OP.version</h3>
+      <p>Return the option picker version.</p>
+      <pre><code>let version = OP.version,
+    major = version.split('.')[0];
+
+if (+major &lt; 2) {
+    // &hellip;
+}</code></pre>
+      <h3>picker.get()</h3>
+      <p>Get current option value.</p>
+      <pre><code>console.log(picker.get());</code></pre>
+      <h3>picker.option</h3>
+      <p><mark>TODO</mark></p>
+      <h3>picker.options</h3>
+      <p><mark>TODO</mark></p>
+      <h3>picker.pop()</h3>
+      <p>Remove custom option picker features from the source element.</p>
+      <h3>picker.self</h3>
+      <p>Return the option picker element.</p>
+      <pre><code>picker.self.style.borderWidth = '4px';</code></pre>
+      <h3>picker.set(value)</h3>
+      <p>Set option picker&rsquo;s value.</p>
+      <pre><code>picker.set('Option 1');</code></pre>
+      <h3>picker.source</h3>
+      <p>Return the option picker source element that holds the initial option value.</p>
+      <pre><code>picker.source.addEventListener('change', function() {
+    console.log(this.value);
+}, false);</code></pre>
+      <h3>picker.state</h3>
+      <p>Return the modified option picker states.</p>
+      <h3>picker.value</h3>
+      <p>Return the initial value of the <code>&lt;select&gt;</code> element.</p>
+      <h2>Hooks</h2>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>blur</code></td>
+            <td><mark>TODO</mark></td>
+          </tr>
+          <tr>
+            <td><code>change</code></td>
+            <td>Will be triggered on every value change.</td>
+          </tr>
+          <tr>
+            <td><code>enter</code></td>
+            <td>Will be triggered when option picker list is visible.</td>
+          </tr>
+          <tr>
+            <td><code>exit</code></td>
+            <td>Will be triggered when option picker list is hidden.</td>
+          </tr>
+          <tr>
+            <td><code>fit</code></td>
+            <td>Will be triggered when option picker pane is positioned.</td>
+          </tr>
+          <tr>
+            <td><code>focus</code></td>
+            <td><mark>TODO</mark></td>
+          </tr>
+          <tr>
+            <td><code>pop</code></td>
+            <td>Will be triggered after <code>picker.pop()</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>picker.fire(event, data)</h3>
+      <p>Trigger a hook.</p>
+      <pre><code>picker.fire('change', ['Option 1', picker.options]);</code></pre>
+      <h3>picker.hooks</h3>
+      <p>Return the added hooks.</p>
+      <pre><code>console.log(picker.hooks);</code></pre>
+      <h3>picker.off(event, then)</h3>
+      <p>Remove a hook.</p>
+      <pre><code>picker.off('change');</code></pre>
+      <pre><code>picker.off('change', onChange); // With context</code></pre>
+      <h3>picker.on(event, then)</h3>
+      <p>Add a new hook.</p>
+      <pre><code>picker.on('change', function(option, options) {
+    console.log(option);
+});</code></pre>
+      <pre><code>function onChange(option, options) {
+    console.log(option);
+}
+
+picker.on('change', onChange); // With context</code></pre>
+      <h2>License</h2>
+      <p>Use it for free, pay if you get paid. So, you&rsquo;ve just benefited financially after using this project? It&rsquo;s a good idea to <a href="https://paypal.me/tatautaufik" target="_blank">share a little financial support</a> with this open source project too. Your support will motivate me to do any further development, as well as to provide voluntary support to overcome problems related to this project.</p>
+      <p>Thank you! ❤️</p>
+    </main>
+    <footer>
+      <hr>
+      <p>&copy; 2021 <a href="/">Taufik Nurrohman</a></p>
+    </footer>
+    <script src="index.min.js"></script>
+    <script>
+      let picker = new OP(document.querySelector('select'));
+    </script>
+  </body>
+</html>

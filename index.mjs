@@ -6,7 +6,7 @@ import {isInstance} from '@taufik-nurrohman/is';
 import {getOffset, getRect, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
 import {toCount, toNumber, toObjectCount} from '@taufik-nurrohman/to';
 
-let name = '%(js.name)';
+let name = 'OP';
 
 function OP(source, state = {}) {
 
@@ -382,6 +382,6 @@ OP.state = {
     'parent': null
 };
 
-OP.version = '%(version)';
+OP.version = '1.0.0';
 
 export default OP;

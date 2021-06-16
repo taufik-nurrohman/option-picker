@@ -13,7 +13,7 @@
     "@taufik-nurrohman/rect": "0.0.8",
     "@taufik-nurrohman/to": "^0.0.18"
   },
-  "description": "A simple color picker application written in pure JavaScript, for modern browsers.",
+  "description": "Just a generic custom `<select>` element with accessibility in mind.",
   "devDependencies": {
     "@taufik-nurrohman/factory": "^0.1.16"
   },

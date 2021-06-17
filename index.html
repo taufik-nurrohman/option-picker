@@ -112,7 +112,7 @@
         <p><select name="test-4[]" size="3" multiple>
             <option value="1">Option 1</option>
             <option value="2">Option 2</option>
-            <option value="3">Option 3</option>
+            <option selected value="3">Option 3</option>
             <option value="4">Option 4</option>
             <option value="5">Option 5</option>
           </select></p>
@@ -302,9 +302,9 @@ picker.on('change', onChange); // With context</code></pre>
       let sources = document.querySelectorAll('select');
       sources.forEach(source => {
           let picker = new OP(source);
-          picker.on('change', (value, values) => {
-              console.log([value, values]);
-          });
+          // picker.on('change', (value, values) => {
+          //     console.log([value, values]);
+          // });
       });
     </script>
   </body>

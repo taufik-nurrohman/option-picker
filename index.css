@@ -86,12 +86,12 @@
 }
 
 .option-picker > div a.dead {
-  color: #999;
+  color: #666;
   cursor: not-allowed;
 }
 
 .option-picker > div a.dead:hover {
-  background: #999;
+  background: #666;
   color: #fff;
 }
 
@@ -137,8 +137,8 @@
 }
 
 .option-picker-source[disabled] + .option-picker {
-  color: #999;
-  border-color: #999;
+  color: #666;
+  border-color: #666;
   cursor: not-allowed;
 }
 

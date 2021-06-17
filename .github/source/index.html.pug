@@ -11,9 +11,9 @@ block script
     | let sources = document.querySelectorAll('select');
     | sources.forEach(source => {
     |     let picker = new OP(source);
-    |     picker.on('change', (value, values) => {
-    |         console.log([value, values]);
-    |     });
+    |     // picker.on('change', (value, values) => {
+    |     //     console.log([value, values]);
+    |     // });
     | });
 
 block style
@@ -114,7 +114,7 @@ block content
         select(name='test-4[]' size='3' multiple)
           option(value='1') Option 1
           option(value='2') Option 2
-          option(value='3') Option 3
+          option(selected value='3') Option 3
           option(value='4') Option 4
           option(value='5') Option 5
       p: button(type='submit') Submit

@@ -89,6 +89,9 @@
         }
         return "" + x;
     };
+    var toArray = function toArray(x) {
+        return isArray(x) ? x : [x];
+    };
     var toCaseCamel = function toCaseCamel(x) {
         return x.replace(/[-_.](\w)/g, function(m0, m1) {
             return toCaseUpper(m1);
@@ -442,12 +445,15 @@
             hooks
         } = hook($);
         $.state = state = fromStates(OP.state, state);
-        $.option = null;
         $.options = {};
         $.source = source;
         $.value = source.value; // Store current instance to `OP.instances`
         OP.instances[source.id || source.name || toObjectCount(OP.instances)] = $; // Mark current DOM as active option picker to prevent duplicate instance
         source[name] = 1;
+
+        function getLot() {
+            return [toValue(getValue()), $.options];
+        }
 
         function getValue() {
             let value = source.value;
@@ -465,7 +471,7 @@
             selectBoxItems = getChildren(selectBox);
         selectBox.multiple; // TODO
         let selectBoxOptionIndex = 0,
-            selectBoxOptions = selectBox.options,
+            selectBoxOptions = toArray(selectBox.options),
             selectBoxSize = selectBox.size,
             selectBoxTitle = selectBox.title,
             selectBoxValue = getValue(),
@@ -482,6 +488,37 @@
             selectBoxFakeOptions = [];
         setChildLast(selectBoxFake, selectBoxFakeLabel);
         setNext(selectBox, selectBoxFake);
+
+        function doBlur() {
+            letClass(selectBoxFake, 'focus');
+            fire('blur', getLot());
+        }
+
+        function doFocus() {
+            setClass(selectBoxFake, 'focus');
+            fire('focus', getLot());
+        }
+
+        function doEnter() {
+            setClass(selectBoxFake, 'open');
+            fire('enter', getLot());
+        }
+
+        function doExit() {
+            letClass(selectBoxFake, 'open');
+            fire('exit', getLot());
+        }
+
+        function doToggle(force) {
+            toggleClass(selectBoxFake, 'open', force);
+            let isOpen = isEnter();
+            fire(isOpen ? 'enter' : 'exit', getLot());
+            return isOpen;
+        }
+
+        function isEnter() {
+            return hasClass(selectBoxFake, 'open');
+        }
 
         function onSelectBoxChange(e) {
             onSelectBoxInput.call(this, e);
@@ -502,14 +539,14 @@
             let selectBoxFakeOption = this,
                 selectBoxValuePrevious = selectBoxValue;
             selectBoxValue = selectBoxFakeOption._value;
-            $.option = selectBoxValue;
             setText(selectBoxFakeLabel, getText(selectBoxFakeOption));
+            e.isTrusted && selectBoxFake.focus();
             selectBoxFakeOptions.forEach(selectBoxFakeOption => {
                 toggleClass(selectBoxFakeOption, 'active', selectBoxValue === selectBoxFakeOption._value);
             });
-            e.isTrusted && selectBoxFake.focus();
             if (selectBoxValue !== selectBoxValuePrevious) {
                 setValue(selectBoxValue);
+                fire('change', getLot());
                 fireEvent('input', selectBox); // `input` must come first
                 fireEvent('change', selectBox);
             }
@@ -517,88 +554,72 @@
         }
 
         function onSelectBoxFakeBlur(e) {
-            letClass(this, 'focus');
+            doBlur();
         }
 
         function onSelectBoxFakeClick(e) {
             if (selectBoxSize) {
-                setClass(selectBoxFake, 'open');
-                return;
+                return doEnter();
             }
-            toggleClass(selectBoxFake, 'open');
-            if (hasClass(selectBoxFake, 'open')) {
-                setSelectBoxFakeOptionsPosition(selectBoxFake);
-            }
+            doToggle() && setSelectBoxFakeOptionsPosition(selectBoxFake);
         }
 
         function onSelectBoxFakeFocus() {
-            setClass(this, 'focus');
+            doFocus();
         }
 
         function onSelectBoxFakeKeyDown(e) {
             let key = e.key,
                 selectBoxOptionIndexCurrent = selectBox.selectedIndex,
                 selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndexCurrent],
-                isOpen = hasClass(selectBoxFake, 'open');
+                selectBoxFakeOptionIsDead = selectBoxFakeOption => hasClass(selectBoxFakeOption, 'dead'),
+                isOpen = isEnter();
             if ('ArrowDown' === key) {
                 while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
-                    if (!hasClass(selectBoxFakeOption, 'dead')) {
+                    if (!selectBoxFakeOptionIsDead(selectBoxFakeOption)) {
                         break;
                     }
                 }
-                if (selectBoxFakeOption) {
-                    fireEvent('click', selectBoxFakeOption);
-                    toggleClass(selectBoxFake, isOpen);
-                }
+                selectBoxFakeOption && (fireEvent('click', selectBoxFakeOption), doToggle(isOpen));
                 offEventDefault(e);
             } else if ('ArrowUp' === key) {
                 while (selectBoxFakeOption = selectBoxFakeOptions[--selectBoxOptionIndexCurrent]) {
-                    if (!hasClass(selectBoxFakeOption, 'dead')) {
+                    if (!selectBoxFakeOptionIsDead(selectBoxFakeOption)) {
                         break;
                     }
                 }
-                if (selectBoxFakeOption) {
-                    fireEvent('click', selectBoxFakeOption);
-                    toggleClass(selectBoxFake, isOpen);
-                }
+                selectBoxFakeOption && (fireEvent('click', selectBoxFakeOption), doToggle(isOpen));
                 offEventDefault(e);
             } else if ('End' === key) {
                 selectBoxOptionIndexCurrent = toCount(selectBoxOptions);
                 while (selectBoxFakeOption = selectBoxFakeOptions[--selectBoxOptionIndexCurrent]) {
-                    if (!hasClass(selectBoxFakeOption, 'dead')) {
+                    if (!selectBoxFakeOptionIsDead(selectBoxFakeOption)) {
                         break;
                     }
                 }
-                if (selectBoxFakeOption) {
-                    fireEvent('click', selectBoxFakeOption);
-                    toggleClass(selectBoxFake, isOpen);
-                }
+                selectBoxFakeOption && (fireEvent('click', selectBoxFakeOption), doToggle(isOpen));
                 offEventDefault(e);
             } else if ('Enter' === key) {
-                toggleClass(selectBoxFake, 'open');
-                offEventDefault(e);
+                doToggle(), offEventDefault(e);
             } else if ('Escape' === key) {
-                !selectBoxSize && letClass(selectBoxFake, 'open'); // offEventDefault(e);
+                !selectBoxSize && doExit(); // offEventDefault(e);
             } else if ('Home' === key) {
                 selectBoxOptionIndexCurrent = 0;
                 while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
-                    if (!hasClass(seletBoxFakeOption, 'dead')) {
+                    if (!selectBoxFakeOptionIsDead(selectBoxFakeOption)) {
                         break;
                     }
                 }
-                if (selectBoxFakeOption) {
-                    fireEvent('click', selectBoxFakeOption);
-                    toggleClass(selectBoxFake, isOpen);
-                }
+                selectBoxFakeOption && (fireEvent('click', selectBoxFakeOption), doToggle(isOpen));
                 offEventDefault(e);
             } else if ('Tab' === key) {
                 selectBoxFakeOption && fireEvent('click', selectBoxFakeOption);
-                !selectBoxSize && letClass(selectBoxFake, 'open'); // offEventDefault(e);
+                !selectBoxSize && doExit(); // offEventDefault(e);
             }
-            hasClass(selectBoxFake, 'open') && setSelectBoxFakeOptionsPosition(selectBoxFake);
+            isOpen && setSelectBoxFakeOptionsPosition(selectBoxFake);
         }
 
-        function onSelectBoxFakeKeyUp() {}
+        function onSelectBoxWindowKey(e) {}
 
         function onSelectBoxWindowClick(e) {
             let target = e.target;
@@ -609,9 +630,7 @@
                     }
                 }
             }
-            if (selectBoxFake !== target) {
-                letClass(selectBoxFake, 'open');
-            }
+            selectBoxFake !== target && doExit();
         }
 
         function setSelectBoxFakeOptions(selectBoxItem, parent) {
@@ -695,11 +714,14 @@
                     setScroll(selectBoxFakeDropDown, [left, top + height - heightParent]);
                 }
             }
+            fire('fit', getLot());
         }
         if (selectBox.disabled) {
             setClass(selectBoxFake, 'dead');
         } else {
             onEvent('click', selectBoxWindow, onSelectBoxWindowClick);
+            onEvent('keydown', selectBoxWindow, onSelectBoxWindowKey);
+            onEvent('keyup', selectBoxWindow, onSelectBoxWindowKey);
             onEvent('focus', selectBox, onSelectBoxFocus);
             onEvent('change', selectBox, onSelectBoxChange);
             onEvent('input', selectBox, onSelectBoxInput);
@@ -707,7 +729,6 @@
             onEvent('click', selectBoxFake, onSelectBoxFakeClick);
             onEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
             onEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
-            onEvent('keyup', selectBoxFake, onSelectBoxFakeKeyUp);
         }
         let j = toCount(selectBoxItems);
         if (j) {
@@ -726,13 +747,18 @@
             // Force `open` class
             setClass(selectBoxFake, 'open');
         }
-        $.get = () => getValue();
+        $.get = (parseValue = true) => {
+            let value = getValue();
+            return parseValue ? toValue(value) : value;
+        };
         $.pop = () => {
             if (!source[name]) {
                 return $; // Already ejected
             }
             delete source[name];
             offEvent('click', selectBoxWindow, onSelectBoxWindowClick);
+            offEvent('keydown', selectBoxWindow, onSelectBoxWindowKey);
+            offEvent('keyup', selectBoxWindow, onSelectBoxWindowKey);
             offEvent('change', selectBox, onSelectBoxChange);
             offEvent('focus', selectBox, onSelectBoxFocus);
             offEvent('input', selectBox, onSelectBoxInput);
@@ -741,15 +767,15 @@
             offEvent('click', selectBoxFake, onSelectBoxFakeClick);
             offEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
             offEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
-            offEvent('keyup', selectBoxFake, onSelectBoxFakeKeyUp);
             letText(selectBoxFake);
             letElement(selectBoxFake);
-            return fire('pop', [getValue()]);
+            return fire('pop', getLot());
         };
         $.set = value => {
-            setValue(value);
+            setValue(fromValue(value));
             fireEvent(source, 'input');
             fireEvent(source, 'change');
+            fire('change', getLot());
             return $;
         };
         $.self = selectBoxFake;

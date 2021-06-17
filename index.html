@@ -81,12 +81,40 @@
     </header>
     <main>
       <form method="get" target="_blank">
-        <p><select name="test">
+        <p><select name="test-1">
             <option value="1">Option 1</option>
             <option value="2">Option 2</option>
             <option value="3">Option 3</option>
             <option disabled value="4">Option 4</option>
             <option>Option 5</option>
+          </select></p>
+        <p><select name="test-2">
+            <optgroup label="Group 1">
+              <option value="1">Option 1</option>
+              <option value="2">Option 2</option>
+              <option value="3">Option 3</option>
+              <option disabled value="4">Option 4</option>
+              <option>Option 5</option>
+            </optgroup>
+            <optgroup label="Group 2">
+              <option value="#f00">Red</option>
+              <option value="#0f0">Green</option>
+              <option value="#00f">Blue</option>
+            </optgroup>
+          </select></p>
+        <p><select name="test-3" size="3">
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+            <option value="4">Option 4</option>
+            <option value="5">Option 5</option>
+          </select></p>
+        <p><select name="test-4[]" size="3" multiple>
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+            <option value="4">Option 4</option>
+            <option value="5">Option 5</option>
           </select></p>
         <p><button type="submit">Submit</button></p>
       </form>
@@ -94,8 +122,8 @@
       <ul>
         <li>Light-weight, no dependencies. It uses vanilla JavaScript.</li>
         <li>Simple <abbr title="Application Programming Interface">API</abbr>. Easy to master.</li>
-        <li>Responsive. It tries to place itself inside an area that is visible within the browser window.</li>
-        <li><mark>TODO</mark></li>
+        <li>Responsive. It tries to place the option menus inside an area that is visible within the browser window.</li>
+        <li>Care about accessibility. Interacts very well using the keyboard keys. Free from the focus traps.</li>
       </ul>
       <h2>Usage</h2>
       <h3>Browser</h3>
@@ -133,7 +161,6 @@ const picker = new OP(document.querySelector('select'));</code></pre>
       <ul>
         <li><a href="test.html" target="_blank">No Idea?</a></li>
         <li><a href="test/picker.html" target="_blank">Multiple Instances</a></li>
-        <li><mark>TODO</mark></li>
       </ul>
       <h2>Settings</h2>
       <table border="1">
@@ -151,6 +178,10 @@ const picker = new OP(document.querySelector('select'));</code></pre>
           <tr>
             <td><code>state</code></td>
             <td>The configuration data.</td>
+          </tr>
+          <tr>
+            <td><code>state.parent</code></td>
+            <td>The parent element as the source of the &ldquo;click-outside&rdquo; event handler to close the select box options that is currently open. It will use the <code>&lt;body&gt;</code> element by default.</td>
           </tr>
         </tbody>
       </table>
@@ -177,13 +208,11 @@ console.log([OP.state, picker.state]);</code></pre>
 if (+major &lt; 2) {
     // &hellip;
 }</code></pre>
-      <h3>picker.get()</h3>
+      <h3>picker.get(eval = true)</h3>
       <p>Get current option value.</p>
       <pre><code>console.log(picker.get());</code></pre>
-      <h3>picker.option</h3>
-      <p><mark>TODO</mark></p>
       <h3>picker.options</h3>
-      <p><mark>TODO</mark></p>
+      <p>Return all of the available options.</p>
       <h3>picker.pop()</h3>
       <p>Remove custom option picker features from the source element.</p>
       <h3>picker.self</h3>
@@ -212,7 +241,7 @@ if (+major &lt; 2) {
         <tbody>
           <tr>
             <td><code>blur</code></td>
-            <td><mark>TODO</mark></td>
+            <td>Will be triggered on every blur event.</td>
           </tr>
           <tr>
             <td><code>change</code></td>
@@ -220,11 +249,11 @@ if (+major &lt; 2) {
           </tr>
           <tr>
             <td><code>enter</code></td>
-            <td>Will be triggered when option picker list is visible.</td>
+            <td>Will be triggered when option picker list is opened.</td>
           </tr>
           <tr>
             <td><code>exit</code></td>
-            <td>Will be triggered when option picker list is hidden.</td>
+            <td>Will be triggered when option picker list is closed.</td>
           </tr>
           <tr>
             <td><code>fit</code></td>
@@ -232,7 +261,7 @@ if (+major &lt; 2) {
           </tr>
           <tr>
             <td><code>focus</code></td>
-            <td><mark>TODO</mark></td>
+            <td>Will be triggered on every focus event.</td>
           </tr>
           <tr>
             <td><code>pop</code></td>
@@ -268,9 +297,15 @@ picker.on('change', onChange); // With context</code></pre>
       <hr>
       <p>&copy; 2021 <a href="/">Taufik Nurrohman</a></p>
     </footer>
-    <script src="index.min.js"></script>
+    <script src="index.js"></script>
     <script>
-      let picker = new OP(document.querySelector('select'));
+      let sources = document.querySelectorAll('select');
+      sources.forEach(source => {
+          let picker = new OP(source);
+          picker.on('change', (value, values) => {
+              console.log([value, values]);
+          });
+      });
     </script>
   </body>
 </html>

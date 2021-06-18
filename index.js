@@ -488,7 +488,8 @@
             selectBoxFakeDropDown = setElement('div', {
                 'tabindex': -1
             }),
-            selectBoxFakeOptions = [];
+            selectBoxFakeOptions = [],
+            keyIsCtrl = false;
         setChildLast(selectBoxFake, selectBoxFakeLabel);
         setNext(selectBox, selectBoxFake);
 
@@ -541,6 +542,18 @@
             selectBoxFakeOption && fireEvent('click', selectBoxFakeOption);
         }
 
+        function doSelectBoxOptionLet(fakeSelectBoxOption) {
+            letClass(fakeSelectBoxOption, 'active');
+            letAttribute(fakeSelectBoxOption._item, 'selected');
+            fakeSelectBoxOption._item.selected = false;
+        }
+
+        function doSelectBoxOptionSet(fakeSelectBoxOption) {
+            setClass(fakeSelectBoxOption, 'active');
+            setAttribute(fakeSelectBoxOption._item, 'selected', true);
+            fakeSelectBoxOption._item.selected = true;
+        }
+
         function onSelectBoxFakeOptionClick(e) {
             let selectBoxFakeOption = this,
                 selectBoxOption = selectBoxFakeOption._item,
@@ -549,12 +562,11 @@
             let selectBoxFakeLabelText = hasAttribute(selectBoxOption, 'selected') ? [getText(selectBoxOption)] : [];
             e.isTrusted && selectBoxFake.focus();
             offEventDefault(e);
-            if (hasClass(selectBoxFake, 'mode-c')) {
-                toggleClass(selectBoxFakeOption, 'active');
+            if (keyIsCtrl) {
                 if (hasClass(selectBoxFakeOption, 'active')) {
-                    setAttribute(selectBoxOption, 'selected', true);
+                    doSelectBoxOptionLet(fakeSelectBoxOption);
                 } else {
-                    letAttribute(selectBoxOption, 'selected');
+                    doSelectBoxOptionSet(fakeSelectBoxOption);
                 }
                 for (let i = 0, j = toCount(selectBoxOptions); i < j; ++i) {
                     if (hasAttribute(selectBoxOptions[i], 'selected')) {
@@ -598,8 +610,7 @@
                 selectBoxFakeOptionIsDead = selectBoxFakeOption => hasClass(selectBoxFakeOption, 'dead'),
                 isOpen = isEnter();
             if (selectBoxMultiple) {
-                toggleClass(selectBoxFake, 'mode-c', e.ctrlKey);
-                toggleClass(selectBoxFake, 'mode-s', e.shiftKey);
+                keyIsCtrl = e.ctrlKey;
             }
             if ('ArrowDown' === key) {
                 while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
@@ -648,8 +659,7 @@
 
         function onSelectBoxFakeKeyUp(e) {
             if (selectBoxMultiple) {
-                letClass(selectBoxFake, 'mode-c');
-                letClass(selectBoxFake, 'mode-s');
+                keyIsCtrl = false;
             }
         }
 
@@ -663,6 +673,10 @@
                 }
             }
             selectBoxFake !== target && doExit();
+        }
+
+        function onSelectBoxWindowScroll() {
+            isEnter() && setSelectBoxFakeOptionsPosition(selectBoxFake);
         }
 
         function setSelectBoxFakeOptions(selectBoxItem, parent) {
@@ -751,6 +765,7 @@
         if (selectBox.disabled) {
             setClass(selectBoxFake, 'dead');
         } else {
+            onEvent('scroll', W, onSelectBoxWindowScroll);
             onEvent('click', selectBoxParent, onSelectBoxParentClick);
             onEvent('focus', selectBox, onSelectBoxFocus);
             onEvent('change', selectBox, onSelectBoxChange);
@@ -787,6 +802,7 @@
                 return $; // Already ejected
             }
             delete source[name];
+            onEvent('scroll', W, onSelectBoxWindowScroll);
             offEvent('click', selectBoxParent, onSelectBoxParentClick);
             offEvent('change', selectBox, onSelectBoxChange);
             offEvent('focus', selectBox, onSelectBoxFocus);

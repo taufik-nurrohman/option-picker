@@ -11,9 +11,9 @@ block script
     | let sources = document.querySelectorAll('select');
     | sources.forEach(source => {
     |     let picker = new OP(source);
-    |     // picker.on('change', (value, values) => {
-    |     //     console.log([value, values]);
-    |     // });
+    |     picker.on('change', (value, values) => {
+    |         console.log([value, values]);
+    |     });
     | });
 
 block style

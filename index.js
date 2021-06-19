@@ -542,47 +542,52 @@
             selectBoxFakeOption && fireEvent('click', selectBoxFakeOption);
         }
 
-        function doSelectBoxOptionLet(fakeSelectBoxOption) {
-            letClass(fakeSelectBoxOption, 'active');
-            letAttribute(fakeSelectBoxOption._item, 'selected');
-            fakeSelectBoxOption._item.selected = false;
+        function doSelectBoxOptionLet(selectBoxFakeOption) {
+            letClass(selectBoxFakeOption, 'active');
+            letAttribute(selectBoxFakeOption._item, 'selected');
+            selectBoxFakeOption._item.selected = false;
         }
 
-        function doSelectBoxOptionSet(fakeSelectBoxOption) {
-            setClass(fakeSelectBoxOption, 'active');
-            setAttribute(fakeSelectBoxOption._item, 'selected', true);
-            fakeSelectBoxOption._item.selected = true;
+        function doSelectBoxOptionSet(selectBoxFakeOption) {
+            setClass(selectBoxFakeOption, 'active');
+            setAttribute(selectBoxFakeOption._item, 'selected', true);
+            selectBoxFakeOption._item.selected = true;
         }
 
         function onSelectBoxFakeOptionClick(e) {
-            let selectBoxFakeOption = this,
-                selectBoxOption = selectBoxFakeOption._item,
-                selectBoxValuePrevious = selectBoxValue;
+            let selectBoxFakeOption = this;
+            selectBoxFakeOption._item;
+            let selectBoxValuePrevious = selectBoxValue;
             selectBoxValue = selectBoxFakeOption._value;
-            let selectBoxFakeLabelText = hasAttribute(selectBoxOption, 'selected') ? [getText(selectBoxOption)] : [];
+            let selectBoxFakeLabelText = [];
             e.isTrusted && selectBoxFake.focus();
             offEventDefault(e);
             if (keyIsCtrl) {
                 if (hasClass(selectBoxFakeOption, 'active')) {
-                    doSelectBoxOptionLet(fakeSelectBoxOption);
+                    doSelectBoxOptionLet(selectBoxFakeOption);
                 } else {
-                    doSelectBoxOptionSet(fakeSelectBoxOption);
+                    doSelectBoxOptionSet(selectBoxFakeOption);
                 }
                 for (let i = 0, j = toCount(selectBoxOptions); i < j; ++i) {
                     if (hasAttribute(selectBoxOptions[i], 'selected')) {
                         selectBoxFakeLabelText.push(getText(selectBoxFakeOptions[i]));
                     }
                 }
-                setText(selectBoxFakeLabel, selectBoxFakeLabelText.join(', ')); // fireEvents(['input', 'change'], selectBox);
+                setText(selectBoxFakeLabel, selectBoxFakeLabelText.join(', ') || '\u200c'); // fireEvents(['input', 'change'], selectBox);
                 // fire('change', getLot());
                 return;
             }
             setText(selectBoxFakeLabel, getText(selectBoxFakeOption));
             selectBoxFakeOptions.forEach(selectBoxFakeOption => {
-                toggleClass(selectBoxFakeOption, 'active', selectBoxValue === selectBoxFakeOption._value);
+                if (selectBoxValue === selectBoxFakeOption._value) {
+                    doSelectBoxOptionSet(selectBoxFakeOption);
+                    setClass(selectBoxFakeOption, 'active');
+                } else {
+                    doSelectBoxOptionLet(selectBoxFakeOption);
+                    letClass(selectBoxFakeOption, 'active');
+                }
             });
             if (selectBoxValue !== selectBoxValuePrevious) {
-                setValue(selectBoxValue);
                 fireEvents(['input', 'change'], selectBox);
                 fire('change', getLot());
             }

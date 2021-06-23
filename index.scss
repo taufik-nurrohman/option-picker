@@ -1,16 +1,16 @@
-$color-active-focus: #fff;
-$color-active: #00f;
-$color-back-active-focus: #00f;
-$color-back-active: none;
-$color-back-dead-focus: #666;
-$color-back-focus: #00f;
+$color-back-disabled-focused: #666;
+$color-back-focused: #00f;
+$color-back-selected-focused: #00f;
+$color-back-selected: none;
 $color-back: #fff;
-$color-border-dead: #666;
-$color-border-focus: #00f;
+$color-border-disabled: #666;
+$color-border-focused: #00f;
 $color-border: #000;
-$color-dead-focus: #fff;
-$color-dead: #666;
-$color-focus: #fff;
+$color-disabled-focused: #fff;
+$color-disabled: #666;
+$color-focused: #fff;
+$color-selected-focused: #fff;
+$color-selected: #00f;
 $color: #000;
 
 .option-picker {
@@ -32,7 +32,7 @@ $color: #000;
   -webkit-tap-highlight-color: transparent;
   &:focus {
     outline: 0;
-    border-color: $color-border-focus;
+    border-color: $color-border-focused;
   }
   &::after {
     content: "";
@@ -86,23 +86,23 @@ $color: #000;
       overflow: hidden;
       text-overflow: ellipsis;
       &:hover {
-        background: $color-back-focus;
-        color: $color-focus;
+        background: $color-back-focused;
+        color: $color-focused;
       }
-      &.dead {
-        color: $color-dead;
+      &.disabled {
+        color: $color-disabled;
         cursor: not-allowed;
         &:hover {
-          background: $color-back-dead-focus;
-          color: $color-dead-focus;
+          background: $color-back-disabled-focused;
+          color: $color-disabled-focused;
         }
       }
-      &.active {
-        background: $color-back-active;
-        color: $color-active;
+      &.selected {
+        background: $color-back-selected;
+        color: $color-selected;
         &:hover {
-          background: $color-back-active-focus;
-          color: $color-active-focus;
+          background: $color-back-selected-focused;
+          color: $color-selected-focused;
         }
       }
     }
@@ -141,8 +141,8 @@ $color: #000;
   left: -9999px;
   &[disabled] {
     + .option-picker {
-      color: $color-dead;
-      border-color: $color-border-dead;
+      color: $color-disabled;
+      border-color: $color-border-disabled;
       cursor: not-allowed;
     }
   }

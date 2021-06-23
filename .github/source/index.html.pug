@@ -72,7 +72,7 @@ block style
     | }
     |
     | /* Add Bootstrap-like focus ring effect */
-    | .option-picker.focus {
+    | .option-picker.focused {
     |   box-shadow: 0 0 0 3px rgba(0, 0, 255, .25);
     | }
 
@@ -178,7 +178,7 @@ block content
           td The configuration data.
         tr
           td: code state.parent
-          td The parent element as the source of the &ldquo;click-outside&rdquo; event handler to close the select box options that is currently open. It will use the #[code &lt;body&gt;] element by default.
+          td The parent element as the source of the &ldquo;click-outside&rdquo; event handler to close the select box options that is currently open. It will use the #[code document] by default.
     pre: code
       | let picker = new OP(#[var source], #[var state] = {});
     h2 Methods and Properties

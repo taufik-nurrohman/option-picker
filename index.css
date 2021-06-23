@@ -85,22 +85,22 @@
   color: #fff;
 }
 
-.option-picker > div a.dead {
+.option-picker > div a.disabled {
   color: #666;
   cursor: not-allowed;
 }
 
-.option-picker > div a.dead:hover {
+.option-picker > div a.disabled:hover {
   background: #666;
   color: #fff;
 }
 
-.option-picker > div a.active {
+.option-picker > div a.selected {
   background: none;
   color: #00f;
 }
 
-.option-picker > div a.active:hover {
+.option-picker > div a.selected:hover {
   background: #00f;
   color: #fff;
 }

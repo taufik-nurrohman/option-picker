@@ -1,19 +1,19 @@
 /*!
  *
  * The MIT License (MIT)
- *
+
  * Copyright © 2021 Taufik Nurrohman <https://github.com/taufik-nurrohman>
- *
+
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+
  * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -324,16 +324,6 @@
     var toggleClass = function toggleClass(node, name, force) {
         return node.classList.toggle(name, force), node;
     };
-    var event = function event(name, options, cache) {
-        if (cache && isSet(events[name])) {
-            return events[name];
-        }
-        return events[name] = new Event(name, options);
-    };
-    var events = {};
-    var fireEvent = function fireEvent(name, node, options, cache) {
-        node.dispatchEvent(event(name, options, cache));
-    };
     var offEvent = function offEvent(name, node, then) {
         node.removeEventListener(name, then);
     };
@@ -540,6 +530,7 @@
                 'class': className + '-source',
                 'tabindex': -1
             }),
+            selectBoxIsDisabled = () => selectBox.disabled,
             selectBoxItems = getChildren(selectBox),
             selectBoxMultiple = selectBox.multiple,
             selectBoxOptionIndex = 0,
@@ -597,37 +588,20 @@
             return hasClass(selectBoxFake, 'open');
         }
 
-        function onSelectBoxChange(e) {
-            onSelectBoxInput.call(this, e);
-        }
-
-        function onSelectBoxFocus(e) {
+        function onSelectBoxFocus() {
             selectBoxFake.focus();
         }
 
-        function onSelectBoxInput() {
-            let selectBoxFakeOption = selectBoxFakeOptions.find(selectBoxFakeOption => {
-                return selectBoxValue === selectBoxFakeOption[PROP_VALUE];
-            });
-            selectBoxFakeOption && fireEvent('click', selectBoxFakeOption);
-        }
-
-        function onSelectBoxDocumentKeyDown(e) {
-            keyIsCtrl = e.ctrlKey;
-            keyIsShift = e.shiftKey;
-        }
-
-        function onSelectBoxDocumentKeyUp() {
-            keyIsCtrl = keyIsShift = false;
-        }
-
         function onSelectBoxFakeOptionClick(e) {
+            if (selectBoxIsDisabled()) {
+                return;
+            }
             let selectBoxFakeOption = this,
                 selectBoxOption = selectBoxFakeOption[PROP_SOURCE],
                 selectBoxValuePrevious = selectBoxValue;
             selectBoxValue = selectBoxFakeOption[PROP_VALUE];
             let selectBoxFakeLabelText = [];
-            e && e.isTrusted && selectBoxFake.focus();
+            e && e.isTrusted && onSelectBoxFocus();
             offEventDefault(e);
             if (selectBoxMultiple && keyIsCtrl) {
                 if (getOptionFakeSelected(selectBoxFakeOption)) {
@@ -669,6 +643,9 @@
         }
 
         function onSelectBoxFakeClick(e) {
+            if (selectBoxIsDisabled()) {
+                return;
+            }
             if (selectBoxSize) {
                 return doEnter();
             }
@@ -680,6 +657,8 @@
         }
 
         function onSelectBoxFakeKeyDown(e) {
+            keyIsCtrl = e.ctrlKey;
+            keyIsShift = e.shiftKey;
             let key = e.key,
                 selectBoxOptionIndexCurrent = selectBox.selectedIndex,
                 selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndexCurrent],
@@ -729,6 +708,10 @@
                 !selectBoxSize && doExit(); // offEventDefault(e);
             }
             isOpen && !keyIsCtrl && !keyIsShift && setSelectBoxFakeOptionsPosition(selectBoxFake);
+        }
+
+        function onSelectBoxFakeKeyUp() {
+            keyIsCtrl = keyIsShift = false;
         }
 
         function onSelectBoxParentClick(e) {
@@ -831,21 +814,14 @@
             }
             fire('fit', getLot());
         }
-        if (selectBox.disabled) {
-            setClass(selectBoxFake, 'lock');
-        } else {
-            onEvents(['resize', 'scroll'], W, onSelectBoxWindow);
-            onEvent('keydown', D, onSelectBoxDocumentKeyDown);
-            onEvent('keyup', D, onSelectBoxDocumentKeyUp);
-            onEvent('click', selectBoxParent, onSelectBoxParentClick);
-            onEvent('focus', selectBox, onSelectBoxFocus);
-            onEvent('change', selectBox, onSelectBoxChange);
-            onEvent('input', selectBox, onSelectBoxInput);
-            onEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
-            onEvent('click', selectBoxFake, onSelectBoxFakeClick);
-            onEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
-            onEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
-        }
+        onEvents(['resize', 'scroll'], W, onSelectBoxWindow);
+        onEvent('click', selectBoxParent, onSelectBoxParentClick);
+        onEvent('focus', selectBox, onSelectBoxFocus);
+        onEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
+        onEvent('click', selectBoxFake, onSelectBoxFakeClick);
+        onEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
+        onEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
+        onEvent('keyup', selectBoxFake, onSelectBoxFakeKeyUp);
         let j = toCount(selectBoxItems);
         if (j) {
             setChildLast(selectBoxFake, selectBoxFakeDropDown);
@@ -873,17 +849,14 @@
             }
             delete source[name];
             offEvents(['resize', 'scroll'], W, onSelectBoxWindow);
-            offEvent('keydown', D, onSelectBoxDocumentKeyDown);
-            offEvent('keyup', D, onSelectBoxDocumentKeyUp);
             offEvent('click', selectBoxParent, onSelectBoxParentClick);
-            offEvent('change', selectBox, onSelectBoxChange);
             offEvent('focus', selectBox, onSelectBoxFocus);
-            offEvent('input', selectBox, onSelectBoxInput);
             letClass(selectBox, className + '-source');
             offEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
             offEvent('click', selectBoxFake, onSelectBoxFakeClick);
             offEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
             offEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
+            offEvent('keyup', selectBoxFake, onSelectBoxFakeKeyUp);
             letText(selectBoxFake);
             letElement(selectBoxFake);
             return fire('pop', getLot());

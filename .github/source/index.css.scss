@@ -158,6 +158,13 @@ $color: #000;
       &::after {
         border-top-color: $color-border-lock;
       }
+      > b,
+      > div {
+        pointer-events: none;
+        a {
+          color: inherit;
+        }
+      }
     }
   }
   &[size] {

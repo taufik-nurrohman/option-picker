@@ -1,5 +1,5 @@
-import {B, D, W, getAttribute, getChildren, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setData, setElement, setNext, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
-import {fireEvent, fireEvents, offEvent, offEvents, offEventDefault, onEvent, onEvents} from '@taufik-nurrohman/event';
+import {D, W, getAttribute, getChildren, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setData, setElement, setNext, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
+import {offEvent, offEvents, offEventDefault, onEvent, onEvents} from '@taufik-nurrohman/event';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isInstance, isString} from '@taufik-nurrohman/is';
@@ -115,6 +115,7 @@ function OP(source, state = {}) {
             'class': className + '-source',
             'tabindex': -1
         }),
+        selectBoxIsDisabled = () => selectBox.disabled,
         selectBoxItems = getChildren(selectBox),
         selectBoxMultiple = selectBox.multiple,
         selectBoxOptionIndex = 0,
@@ -174,37 +175,20 @@ function OP(source, state = {}) {
         return hasClass(selectBoxFake, 'open');
     }
 
-    function onSelectBoxChange(e) {
-        onSelectBoxInput.call(this, e);
-    }
-
-    function onSelectBoxFocus(e) {
+    function onSelectBoxFocus() {
         selectBoxFake.focus();
     }
 
-    function onSelectBoxInput() {
-        let selectBoxFakeOption = selectBoxFakeOptions.find(selectBoxFakeOption => {
-            return selectBoxValue === selectBoxFakeOption[PROP_VALUE];
-        });
-        selectBoxFakeOption && fireEvent('click', selectBoxFakeOption);
-    }
-
-    function onSelectBoxDocumentKeyDown(e) {
-        keyIsCtrl = e.ctrlKey;
-        keyIsShift = e.shiftKey;
-    }
-
-    function onSelectBoxDocumentKeyUp() {
-        keyIsCtrl = keyIsShift = false;
-    }
-
     function onSelectBoxFakeOptionClick(e) {
+        if (selectBoxIsDisabled()) {
+            return;
+        }
         let selectBoxFakeOption = this,
             selectBoxOption = selectBoxFakeOption[PROP_SOURCE],
             selectBoxValuePrevious = selectBoxValue;
         selectBoxValue = selectBoxFakeOption[PROP_VALUE];
         let selectBoxFakeLabelText = [];
-        e && e.isTrusted && selectBoxFake.focus();
+        e && e.isTrusted && onSelectBoxFocus();
         offEventDefault(e);
         if (selectBoxMultiple && keyIsCtrl) {
             if (getOptionFakeSelected(selectBoxFakeOption)) {
@@ -246,6 +230,9 @@ function OP(source, state = {}) {
     }
 
     function onSelectBoxFakeClick(e) {
+        if (selectBoxIsDisabled()) {
+            return;
+        }
         if (selectBoxSize) {
             return doEnter();
         }
@@ -257,6 +244,8 @@ function OP(source, state = {}) {
     }
 
     function onSelectBoxFakeKeyDown(e) {
+        keyIsCtrl = e.ctrlKey;
+        keyIsShift = e.shiftKey;
         let key = e.key,
             selectBoxOptionIndexCurrent = selectBox.selectedIndex,
             selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndexCurrent],
@@ -308,6 +297,10 @@ function OP(source, state = {}) {
             // offEventDefault(e);
         }
         isOpen && !keyIsCtrl && !keyIsShift && setSelectBoxFakeOptionsPosition(selectBoxFake);
+    }
+
+    function onSelectBoxFakeKeyUp() {
+        keyIsCtrl = keyIsShift = false;
     }
 
     function onSelectBoxParentClick(e) {
@@ -411,21 +404,15 @@ function OP(source, state = {}) {
         fire('fit', getLot());
     }
 
-    if (selectBox.disabled) {
-        setClass(selectBoxFake, 'lock');
-    } else {
-        onEvents(['resize', 'scroll'], W, onSelectBoxWindow);
-        onEvent('keydown', D, onSelectBoxDocumentKeyDown);
-        onEvent('keyup', D, onSelectBoxDocumentKeyUp);
-        onEvent('click', selectBoxParent, onSelectBoxParentClick);
-        onEvent('focus', selectBox, onSelectBoxFocus);
-        onEvent('change', selectBox, onSelectBoxChange);
-        onEvent('input', selectBox, onSelectBoxInput);
-        onEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
-        onEvent('click', selectBoxFake, onSelectBoxFakeClick);
-        onEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
-        onEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
-    }
+    onEvents(['resize', 'scroll'], W, onSelectBoxWindow);
+    onEvent('click', selectBoxParent, onSelectBoxParentClick);
+    onEvent('focus', selectBox, onSelectBoxFocus);
+    onEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
+    onEvent('click', selectBoxFake, onSelectBoxFakeClick);
+    onEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
+    onEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
+    onEvent('keyup', selectBoxFake, onSelectBoxFakeKeyUp);
+
     let j = toCount(selectBoxItems);
     if (j) {
         setChildLast(selectBoxFake, selectBoxFakeDropDown);
@@ -456,17 +443,14 @@ function OP(source, state = {}) {
         }
         delete source[name];
         offEvents(['resize', 'scroll'], W, onSelectBoxWindow);
-        offEvent('keydown', D, onSelectBoxDocumentKeyDown);
-        offEvent('keyup', D, onSelectBoxDocumentKeyUp);
         offEvent('click', selectBoxParent, onSelectBoxParentClick);
-        offEvent('change', selectBox, onSelectBoxChange);
         offEvent('focus', selectBox, onSelectBoxFocus);
-        offEvent('input', selectBox, onSelectBoxInput);
         letClass(selectBox, className + '-source');
         offEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
         offEvent('click', selectBoxFake, onSelectBoxFakeClick);
         offEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
         offEvent('keydown', selectBoxFake, onSelectBoxFakeKeyDown);
+        offEvent('keyup', selectBoxFake, onSelectBoxFakeKeyUp);
         letText(selectBoxFake);
         letElement(selectBoxFake);
         return fire('pop', getLot());

@@ -156,6 +156,16 @@
   border-top-color: #666;
 }
 
+.option-picker-source[disabled] + .option-picker > b,
+.option-picker-source[disabled] + .option-picker > div {
+  pointer-events: none;
+}
+
+.option-picker-source[disabled] + .option-picker > b a,
+.option-picker-source[disabled] + .option-picker > div a {
+  color: inherit;
+}
+
 .option-picker-source[size] + .option-picker {
   height: auto;
 }

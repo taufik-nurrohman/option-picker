@@ -1,0 +1,27 @@
+extends ../_index.pug
+
+block state
+  - const title = 'Option Picker'
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+
+block script
+  script
+    | let picker = new OP(document.querySelector('select'));
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(name='test')
+          optgroup(label='Group 1')
+            option Option 1
+            option Option 2
+            option Option 3
+          optgroup(label='Group 2')
+            option Red
+            option Green
+            option Blue
+          option Other
+      p
+        button(type='submit') Submit

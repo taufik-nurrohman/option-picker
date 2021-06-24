@@ -72,7 +72,8 @@ block style
     | }
     |
     | /* Add Bootstrap-like focus ring effect */
-    | .option-picker.focused {
+    | .option-picker.focus,
+    | .option-picker-source:not([multiple]):not([size]) + .option-picker.open {
     |   box-shadow: 0 0 0 3px rgba(0, 0, 255, .25);
     | }
 
@@ -103,20 +104,6 @@ block content
             option(value='#f00') Red
             option(value='#0f0') Green
             option(value='#00f') Blue
-      p
-        select(name='test-3' size='3')
-          option(value='1') Option 1
-          option(value='2') Option 2
-          option(value='3') Option 3
-          option(value='4') Option 4
-          option(value='5') Option 5
-      p
-        select(name='test-4[]' size='3' multiple)
-          option(value='1') Option 1
-          option(value='2') Option 2
-          option(selected value='3') Option 3
-          option(value='4') Option 4
-          option(value='5') Option 5
       p: button(type='submit') Submit
     h2 Features
     ul
@@ -162,7 +149,10 @@ block content
     h2 Examples
     ul
       li: a(href='test.html' target='_blank') No Idea?
-      li: a(href='test/picker.html' target='_blank') Multiple Instances
+      li: a(href='test/group.html' target='_blank') Grouped Options
+      li: a(href='test/size.html' target='_blank') Visible Options
+      li: a(href='test/multiple.html' target='_blank') Multiple Selection
+      li: a(href='test/disabled.html' target='_blank') Disabled States
     h2 Settings
     table(border='1')
       thead
@@ -172,10 +162,13 @@ block content
       tbody
         tr
           td: code source
-          td The source element that holds the initial color data.
+          td The source element that holds the initial option data.
         tr
           td: code state
           td The configuration data.
+        tr
+          td: code state.join
+          td The separator character between values for multiple selection.
         tr
           td: code state.parent
           td The parent element as the source of the &ldquo;click-outside&rdquo; event handler to close the select box options that is currently open. It will use the #[code document] by default.

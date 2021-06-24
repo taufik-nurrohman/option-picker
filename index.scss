@@ -1,16 +1,16 @@
-$color-back-disabled-focused: #666;
-$color-back-focused: #00f;
-$color-back-selected-focused: #00f;
-$color-back-selected: none;
+$color-active-focus: #fff;
+$color-active: #00f;
+$color-back-active-focus: #00f;
+$color-back-active: none;
+$color-back-focus: #00f;
+$color-back-lock-focus: #666;
 $color-back: #fff;
-$color-border-disabled: #666;
-$color-border-focused: #00f;
+$color-border-focus: #00f;
+$color-border-lock: #666;
 $color-border: #000;
-$color-disabled-focused: #fff;
-$color-disabled: #666;
-$color-focused: #fff;
-$color-selected-focused: #fff;
-$color-selected: #00f;
+$color-focus: #fff;
+$color-lock-focus: #fff;
+$color-lock: #666;
 $color: #000;
 
 .option-picker {
@@ -19,10 +19,11 @@ $color: #000;
   color: $color;
   border: 1px solid $color-border;
   font: inherit;
+  line-height: 1.5em;
   display: inline-block;
   vertical-align: middle;
   width: 12em;
-  padding: .5em .75em;
+  padding: .25em;
   cursor: pointer;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -32,7 +33,7 @@ $color: #000;
   -webkit-tap-highlight-color: transparent;
   &:focus {
     outline: 0;
-    border-color: $color-border-focused;
+    border-color: $color-border-focus;
   }
   &::after {
     content: "";
@@ -63,7 +64,8 @@ $color: #000;
   > b {
     display: block;
     font: inherit;
-    margin-right: 1em;
+    margin-right: 1.5em;
+    padding: 0 .25em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -71,14 +73,16 @@ $color: #000;
   > div {
     position: fixed;
     z-index: 9999;
-    background: inherit;
+    background: $color-back;
     border: inherit;
+    padding: .25em;
     box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
     overflow: auto;
     display: none;
     a {
       display: block;
-      padding: .25em .5em;
+      padding: 0 .5em;
+      margin: 0 -.25em;
       font: inherit;
       color: inherit;
       cursor: pointer;
@@ -86,38 +90,45 @@ $color: #000;
       overflow: hidden;
       text-overflow: ellipsis;
       &:hover {
-        background: $color-back-focused;
-        color: $color-focused;
+        background: $color-back-focus;
+        color: $color-focus;
       }
-      &.disabled {
-        color: $color-disabled;
+      &.lock {
+        color: $color-lock;
         cursor: not-allowed;
         &:hover {
-          background: $color-back-disabled-focused;
-          color: $color-disabled-focused;
+          background: $color-back-lock-focus;
+          color: $color-lock-focus;
         }
       }
-      &.selected {
-        background: $color-back-selected;
-        color: $color-selected;
+      &.active {
+        background: $color-back-active;
+        color: $color-active;
         &:hover {
-          background: $color-back-selected-focused;
-          color: $color-selected-focused;
+          background: $color-back-active-focus;
+          color: $color-active-focus;
         }
       }
     }
     span {
       display: block;
-      padding: .25em .5em;
+      padding: 0 .5em;
+      margin: 0 -.25em;
       &[title] {
         &::before {
           content: attr(title);
           display: block;
-          margin: 0 0 .25em;
+          padding: 0 .25em;
+          margin: .25em -.25em;
           font-weight: bold;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+        &:first-child {
+          &::before {
+            margin-top: 0;
+          }
         }
       }
       a {
@@ -141,9 +152,12 @@ $color: #000;
   left: -9999px;
   &[disabled] {
     + .option-picker {
-      color: $color-disabled;
-      border-color: $color-border-disabled;
+      color: $color-lock;
+      border-color: $color-border-lock;
       cursor: not-allowed;
+      &::after {
+        border-top-color: $color-border-lock;
+      }
     }
   }
   &[size] {
@@ -159,12 +173,10 @@ $color: #000;
         display: block;
         position: relative;
         z-index: 1;
-        background: none;
         border-width: 0;
         border-top-width: inherit;
         box-shadow: none;
-        margin: .5em -.75em -.5em;
-        padding: 0;
+        margin: .25em -.25em -.25em;
       }
     }
   }

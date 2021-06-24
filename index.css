@@ -4,10 +4,11 @@
   color: #000;
   border: 1px solid #000;
   font: inherit;
+  line-height: 1.5em;
   display: inline-block;
   vertical-align: middle;
   width: 12em;
-  padding: .5em .75em;
+  padding: .25em;
   cursor: pointer;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -53,7 +54,8 @@
 .option-picker > b {
   display: block;
   font: inherit;
-  margin-right: 1em;
+  margin-right: 1.5em;
+  padding: 0 .25em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -62,8 +64,9 @@
 .option-picker > div {
   position: fixed;
   z-index: 9999;
-  background: inherit;
+  background: #fff;
   border: inherit;
+  padding: .25em;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   overflow: auto;
   display: none;
@@ -71,7 +74,8 @@
 
 .option-picker > div a {
   display: block;
-  padding: .25em .5em;
+  padding: 0 .5em;
+  margin: 0 -.25em;
   font: inherit;
   color: inherit;
   cursor: pointer;
@@ -85,39 +89,45 @@
   color: #fff;
 }
 
-.option-picker > div a.disabled {
+.option-picker > div a.lock {
   color: #666;
   cursor: not-allowed;
 }
 
-.option-picker > div a.disabled:hover {
+.option-picker > div a.lock:hover {
   background: #666;
   color: #fff;
 }
 
-.option-picker > div a.selected {
+.option-picker > div a.active {
   background: none;
   color: #00f;
 }
 
-.option-picker > div a.selected:hover {
+.option-picker > div a.active:hover {
   background: #00f;
   color: #fff;
 }
 
 .option-picker > div span {
   display: block;
-  padding: .25em .5em;
+  padding: 0 .5em;
+  margin: 0 -.25em;
 }
 
 .option-picker > div span[title]::before {
   content: attr(title);
   display: block;
-  margin: 0 0 .25em;
+  padding: 0 .25em;
+  margin: .25em -.25em;
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.option-picker > div span[title]:first-child::before {
+  margin-top: 0;
 }
 
 .option-picker > div span a {
@@ -142,6 +152,10 @@
   cursor: not-allowed;
 }
 
+.option-picker-source[disabled] + .option-picker::after {
+  border-top-color: #666;
+}
+
 .option-picker-source[size] + .option-picker {
   height: auto;
 }
@@ -158,10 +172,8 @@
   display: block;
   position: relative;
   z-index: 1;
-  background: none;
   border-width: 0;
   border-top-width: inherit;
   box-shadow: none;
-  margin: .5em -.75em -.5em;
-  padding: 0;
+  margin: .25em -.25em -.25em;
 }

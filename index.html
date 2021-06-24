@@ -67,7 +67,8 @@
       }
 
       /* Add Bootstrap-like focus ring effect */
-      .option-picker.focused {
+      .option-picker.focus,
+      .option-picker-source:not([multiple]):not([size]) + .option-picker.open {
         box-shadow: 0 0 0 3px rgba(0, 0, 255, .25);
       }
     </style>
@@ -101,20 +102,6 @@
               <option value="#0f0">Green</option>
               <option value="#00f">Blue</option>
             </optgroup>
-          </select></p>
-        <p><select name="test-3" size="3">
-            <option value="1">Option 1</option>
-            <option value="2">Option 2</option>
-            <option value="3">Option 3</option>
-            <option value="4">Option 4</option>
-            <option value="5">Option 5</option>
-          </select></p>
-        <p><select name="test-4[]" size="3" multiple>
-            <option value="1">Option 1</option>
-            <option value="2">Option 2</option>
-            <option selected value="3">Option 3</option>
-            <option value="4">Option 4</option>
-            <option value="5">Option 5</option>
           </select></p>
         <p><button type="submit">Submit</button></p>
       </form>
@@ -160,7 +147,10 @@ const picker = new OP(document.querySelector('select'));</code></pre>
       <h2>Examples</h2>
       <ul>
         <li><a href="test.html" target="_blank">No Idea?</a></li>
-        <li><a href="test/picker.html" target="_blank">Multiple Instances</a></li>
+        <li><a href="test/group.html" target="_blank">Grouped Options</a></li>
+        <li><a href="test/size.html" target="_blank">Visible Options</a></li>
+        <li><a href="test/multiple.html" target="_blank">Multiple Selection</a></li>
+        <li><a href="test/disabled.html" target="_blank">Disabled States</a></li>
       </ul>
       <h2>Settings</h2>
       <table border="1">
@@ -173,11 +163,15 @@ const picker = new OP(document.querySelector('select'));</code></pre>
         <tbody>
           <tr>
             <td><code>source</code></td>
-            <td>The source element that holds the initial color data.</td>
+            <td>The source element that holds the initial option data.</td>
           </tr>
           <tr>
             <td><code>state</code></td>
             <td>The configuration data.</td>
+          </tr>
+          <tr>
+            <td><code>state.join</code></td>
+            <td>The separator character between values for multiple selection.</td>
           </tr>
           <tr>
             <td><code>state.parent</code></td>

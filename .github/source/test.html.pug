@@ -1,0 +1,18 @@
+extends _index.pug
+
+block state
+  - const title = 'Option Picker'
+  - const scripts = ['index.min.js']
+  - const styles = ['index.min.css']
+
+block script
+  script
+    | const picker = new OP(document.querySelector('select'));
+
+block content
+  main
+    p
+      select
+        option Option 1
+        option Option 2
+        option Option 3

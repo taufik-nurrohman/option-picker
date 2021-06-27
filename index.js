@@ -1,19 +1,19 @@
 /*!
  *
  * The MIT License (MIT)
-
+ *
  * Copyright © 2021 Taufik Nurrohman <https://github.com/taufik-nurrohman>
-
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -165,6 +165,13 @@
         var children = parent.children;
         return isNumber(index) ? children[index] || null : children || [];
     };
+    var getClasses = function getClasses(node, toArray) {
+        if (toArray === void 0) {
+            toArray = true;
+        }
+        var value = (getState(node, 'className') || "").trim();
+        return toArray ? value.split(/\s+/) : value;
+    };
     var getName = function getName(node) {
         return toCaseLower(node && node.nodeName || "") || null;
     };
@@ -183,6 +190,9 @@
             value = toValue(value);
         }
         return value || "" === value || 0 === value ? value : null;
+    };
+    var getState = function getState(node, state) {
+        return hasState(node, state) && node[state] || null;
     };
     var getText = function getText(node, trim) {
         if (trim === void 0) {
@@ -311,16 +321,6 @@
         }
         return node;
     };
-    var setText = function setText(node, content, trim) {
-        if (trim === void 0) {
-            trim = true;
-        }
-        if (null === content) {
-            return node;
-        }
-        var state = 'textContent';
-        return hasState(node, state) && (node[state] = trim ? content.trim() : content), node;
-    };
     var toggleClass = function toggleClass(node, name, force) {
         return node.classList.toggle(name, force), node;
     };
@@ -348,6 +348,41 @@
         names.forEach(function(name) {
             return onEvent(name, node, then, options);
         });
+    };
+    var getOffset = function getOffset(node) {
+        return [node.offsetLeft, node.offsetTop];
+    };
+    var getRect = function getRect(node) {
+        var h, rect, w, x, y, X, Y;
+        if (isWindow(node)) {
+            x = node.pageXOffset || R.scrollLeft || B.scrollLeft;
+            y = node.pageYOffset || R.scrollTop || B.scrollTop;
+            w = node.innerWidth;
+            h = node.innerHeight;
+        } else {
+            rect = node.getBoundingClientRect();
+            x = rect.left;
+            y = rect.top;
+            w = rect.width;
+            h = rect.height;
+            X = rect.right;
+            Y = rect.bottom;
+        }
+        return [x, y, w, h, X, Y];
+    };
+    var getSize = function getSize(node) {
+        return isWindow(node) ? [node.innerWidth, node.innerHeight] : [node.offsetWidth, node.offsetHeight];
+    };
+    var getScroll = function getScroll(node) {
+        return [node.scrollLeft, node.scrollTop];
+    };
+    var setScroll = function setScroll(node, data) {
+        node.scrollLeft = data[0];
+        node.scrollTop = data[1];
+        return node;
+    };
+    var hasValue = function hasValue(x, data) {
+        return -1 !== data.indexOf(x);
     };
 
     function hook($) {
@@ -400,38 +435,6 @@
         $.on = on;
         return $;
     }
-    var getOffset = function getOffset(node) {
-        return [node.offsetLeft, node.offsetTop];
-    };
-    var getRect = function getRect(node) {
-        var h, rect, w, x, y, X, Y;
-        if (isWindow(node)) {
-            x = node.pageXOffset || R.scrollLeft || B.scrollLeft;
-            y = node.pageYOffset || R.scrollTop || B.scrollTop;
-            w = node.innerWidth;
-            h = node.innerHeight;
-        } else {
-            rect = node.getBoundingClientRect();
-            x = rect.left;
-            y = rect.top;
-            w = rect.width;
-            h = rect.height;
-            X = rect.right;
-            Y = rect.bottom;
-        }
-        return [x, y, w, h, X, Y];
-    };
-    var getSize = function getSize(node) {
-        return isWindow(node) ? [node.innerWidth, node.innerHeight] : [node.offsetWidth, node.offsetHeight];
-    };
-    var getScroll = function getScroll(node) {
-        return [node.scrollLeft, node.scrollTop];
-    };
-    var setScroll = function setScroll(node, data) {
-        node.scrollLeft = data[0];
-        node.scrollTop = data[1];
-        return node;
-    };
     let name = 'OP',
         PROP_INDEX = 'i',
         PROP_SOURCE = '$',
@@ -505,10 +508,10 @@
             setClass(selectBoxFakeOption, 'active');
         }
 
-        function setLabelText(text) {
-            text = text || '\u200c';
-            selectBoxFakeLabel.title = text;
-            setText(selectBoxFakeLabel, text);
+        function setLabelContent(content) {
+            content = content || '\u200c';
+            selectBoxFakeLabel.title = content.replace(/<.*?>/g, "");
+            setHTML(selectBoxFakeLabel, content);
         }
 
         function setValue(value) {
@@ -551,6 +554,9 @@
             selectBoxFakeOptions = [],
             keyIsCtrl = false,
             keyIsShift = false;
+        if (selectBoxMultiple && !selectBoxSize) {
+            selectBox.size = selectBoxSize = state.size;
+        }
         setChildLast(selectBoxFake, selectBoxFakeLabel);
         setNext(selectBox, selectBoxFake);
 
@@ -600,7 +606,10 @@
                 selectBoxOption = selectBoxFakeOption[PROP_SOURCE],
                 selectBoxValuePrevious = selectBoxValue;
             selectBoxValue = selectBoxFakeOption[PROP_VALUE];
-            let selectBoxFakeLabelText = [];
+            let selectBoxFakeLabelContent = [],
+                content,
+                index,
+                value;
             e && e.isTrusted && onSelectBoxFocus();
             offEventDefault(e);
             if (selectBoxMultiple && keyIsCtrl) {
@@ -613,17 +622,22 @@
                 }
                 for (let i = 0, j = toCount(selectBoxOptions); i < j; ++i) {
                     if (getOptionSelected(selectBoxOptions[i])) {
-                        selectBoxFakeLabelText.push(getText(selectBoxFakeOptions[i]));
+                        content = getText(selectBoxFakeOptions[i]);
+                        index = selectBoxFakeOptions[i][PROP_INDEX];
+                        value = selectBoxFakeOptions[i][PROP_VALUE];
+                        content = '<i class="' + getClasses(selectBoxFakeOptions[i], false) + '" data-index="' + index + '"' + (hasAttribute(selectBoxFakeOptions[i], 'data-value') ? ' data-value="' + value + '"' : "") + '>' + content + '</i>';
+                        selectBoxFakeLabelContent.push(content);
                     }
                 }
-                setLabelText(selectBoxFakeLabelText.join(state.join));
+                setLabelContent(selectBoxFakeLabelContent.join(state.join));
                 fire('change', getLot());
                 return;
             }
-            if (selectBoxMultiple && keyIsShift) {
-                return;
-            }
-            setLabelText(getText(selectBoxFakeOption));
+            content = getText(selectBoxFakeOption);
+            index = selectBoxFakeOption[PROP_INDEX];
+            value = selectBoxFakeOption[PROP_VALUE];
+            content = '<i class="' + getClasses(selectBoxFakeOption, false) + '" data-index="' + index + '"' + (hasAttribute(selectBoxFakeOption, 'data-value') ? ' data-value="' + value + '"' : "") + '>' + content + '</i>';
+            setLabelContent(content);
             selectBoxFakeOptions.forEach(selectBoxFakeOption => {
                 if (selectBoxValue === selectBoxFakeOption[PROP_VALUE]) {
                     setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
@@ -742,6 +756,7 @@
                 return;
             }
             let selectBoxOptionValue = getAttribute(selectBoxItem, 'value', false),
+                selectBoxOptionValueReal = selectBoxOptionValue,
                 selectBoxOptionText = getText(selectBoxItem),
                 selectBoxFakeOption = setElement('a', selectBoxOptionText, {
                     'title': selectBoxOptionText
@@ -752,19 +767,20 @@
             selectBoxFakeOption[PROP_VALUE] = selectBoxOptionValue;
             setData(selectBoxFakeOption, {
                 index: selectBoxOptionIndex,
-                value: selectBoxOptionValue
+                value: selectBoxOptionValueReal
             });
             $.options[selectBoxOptionValue] = selectBoxOptionText;
-            if (selectBoxItem.disabled) {
+            let selectBoxOptionIsDisabled = selectBoxItem.disabled;
+            if (selectBoxOptionIsDisabled) {
                 setClass(selectBoxFakeOption, 'lock');
             } else {
                 onEvent('click', selectBoxFakeOption, onSelectBoxFakeOptionClick);
             }
             setChildLast(parent, selectBoxFakeOption);
             selectBoxFakeOptions.push(selectBoxFakeOption);
-            if (selectBoxOptionValue === selectBoxValue) {
+            if (isArray(selectBoxValue) && hasValue(selectBoxOptionValue, selectBoxValue) || selectBoxOptionValue === selectBoxValue) {
                 setClass(selectBoxFakeOption, 'active');
-                setLabelText(selectBoxOptionText);
+                setLabelContent('<i class="active' + (selectBoxOptionIsDisabled ? ' lock' : "") + '" data-index="' + selectBoxOptionIndex + '"' + (selectBoxOptionValueReal ? ' data-value="' + selectBoxOptionValueReal + '"' : "") + '>' + selectBoxOptionText + '</i>');
                 setOptionSelected(selectBoxItem);
             } else {
                 letOptionSelected(selectBoxItem);
@@ -878,7 +894,8 @@
     OP.state = {
         'class': 'option-picker',
         'join': ', ',
-        'parent': null
+        'parent': null,
+        'size': 5
     };
     OP.version = '1.0.0';
     return OP;

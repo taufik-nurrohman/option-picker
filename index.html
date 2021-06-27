@@ -130,7 +130,7 @@
     &lt;/p&gt;
     &lt;script src="<a href="index.min.js" target="_blank">./index.min.js</a>"&gt;&lt;/script&gt;
     &lt;script&gt;
-    let picker = new OP(document.querySelector('select'));
+    const picker = new OP(document.querySelector('select'));
     &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
@@ -151,6 +151,8 @@ const picker = new OP(document.querySelector('select'));</code></pre>
         <li><a href="test/size.html" target="_blank">Visible Options</a></li>
         <li><a href="test/multiple.html" target="_blank">Multiple Selection</a></li>
         <li><a href="test/disabled.html" target="_blank">Disabled States</a></li>
+        <li><a href="tweak/placeholder.html" target="_blank">Placeholder Example</a></li>
+        <li><a href="tweak/icons.html" target="_blank">With Icons</a></li>
       </ul>
       <h2>Settings</h2>
       <table border="1">
@@ -177,9 +179,13 @@ const picker = new OP(document.querySelector('select'));</code></pre>
             <td><code>state.parent</code></td>
             <td>The parent element as the source of the &ldquo;click-outside&rdquo; event handler to close the select box options that is currently open. It will use the <code>document</code> by default.</td>
           </tr>
+          <tr>
+            <td><code>state.size</code></td>
+            <td>Default <code>size</code> value if <code>&lt;select multiple&gt;</code> element does not have <code>size</code> attribute defined.</td>
+          </tr>
         </tbody>
       </table>
-      <pre><code>let picker = new OP(<var>source</var>, <var>state</var> = {});</code></pre>
+      <pre><code>const picker = new OP(<var>source</var>, <var>state</var> = {});</code></pre>
       <h2>Methods and Properties</h2>
       <h3>OP.instances</h3>
       <p>Return the option picker instances.</p>
@@ -189,7 +195,7 @@ const picker = new OP(document.querySelector('select'));</code></pre>
 }</code></pre>
       <h3>OP.state</h3>
       <p>This property stores the initial values of <code>picker.state</code>.</p>
-      <pre><code>let picker = new OP(source, {
+      <pre><code>const picker = new OP(source, {
         foo: ['bar', 'baz', 'qux']
     });
 
@@ -293,9 +299,9 @@ picker.on('change', onChange); // With context</code></pre>
     </footer>
     <script src="index.js"></script>
     <script>
-      let sources = document.querySelectorAll('select');
+      const sources = document.querySelectorAll('select');
       sources.forEach(source => {
-          let picker = new OP(source);
+          const picker = new OP(source);
           picker.on('change', (value, values) => {
               console.log([value, values]);
           });

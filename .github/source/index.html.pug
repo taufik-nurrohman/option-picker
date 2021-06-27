@@ -8,9 +8,9 @@ block state
 
 block script
   script
-    | let sources = document.querySelectorAll('select');
+    | const sources = document.querySelectorAll('select');
     | sources.forEach(source => {
-    |     let picker = new OP(source);
+    |     const picker = new OP(source);
     |     picker.on('change', (value, values) => {
     |         console.log([value, values]);
     |     });
@@ -130,7 +130,7 @@ block content
       |     &lt;/p&gt;
       |     &lt;script src="#[a(href='index.min.js' target='_blank') ./index.min.js]"&gt;&lt;/script&gt;
       |     &lt;script&gt;
-      |     let picker = new OP(document.querySelector('select'));
+      |     const picker = new OP(document.querySelector('select'));
       |     &lt;/script&gt;
       |   &lt;/body&gt;
       | &lt;/html&gt;
@@ -153,6 +153,8 @@ block content
       li: a(href='test/size.html' target='_blank') Visible Options
       li: a(href='test/multiple.html' target='_blank') Multiple Selection
       li: a(href='test/disabled.html' target='_blank') Disabled States
+      li: a(href='tweak/placeholder.html' target='_blank') Placeholder Example
+      li: a(href='tweak/icons.html' target='_blank') With Icons
     h2 Settings
     table(border='1')
       thead
@@ -172,8 +174,11 @@ block content
         tr
           td: code state.parent
           td The parent element as the source of the &ldquo;click-outside&rdquo; event handler to close the select box options that is currently open. It will use the #[code document] by default.
+        tr
+          td: code state.size
+          td Default #[code size] value if #[code &lt;select multiple&gt;] element does not have #[code size] attribute defined.
     pre: code
-      | let picker = new OP(#[var source], #[var state] = {});
+      | const picker = new OP(#[var source], #[var state] = {});
     h2 Methods and Properties
     h3 OP.instances
     p Return the option picker instances.
@@ -185,7 +190,7 @@ block content
     h3 OP.state
     p This property stores the initial values of #[code picker.state].
     pre: code
-      | let picker = new OP(source, {
+      | const picker = new OP(source, {
       |         foo: ['bar', 'baz', 'qux']
       |     });
       |

@@ -1,17 +1,17 @@
-$color-active-focus: #fff;
-$color-active: #00f;
-$color-back-active-focus: #00f;
-$color-back-active: none;
-$color-back-focus: #00f;
-$color-back-lock-focus: #666;
-$color-back: #fff;
-$color-border-focus: #00f;
-$color-border-lock: #666;
-$color-border: #000;
-$color-focus: #fff;
-$color-lock-focus: #fff;
-$color-lock: #666;
-$color: #000;
+$color-active-focus: #fff !default;
+$color-active: #00f !default;
+$color-back-active-focus: #00f !default;
+$color-back-active: none !default;
+$color-back-focus: #00f !default;
+$color-back-lock-focus: #666 !default;
+$color-back: #fff !default;
+$color-border-focus: #00f !default;
+$color-border-lock: #666 !default;
+$color-border: #000 !default;
+$color-focus: #fff !default;
+$color-lock-focus: #fff !default;
+$color-lock: #666 !default;
+$color: #000 !default;
 
 .option-picker {
   position: relative;
@@ -69,20 +69,24 @@ $color: #000;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    > i {
+      font: inherit;
+      &.lock {
+        color: $color-lock;
+      }
+    }
   }
   > div {
     position: fixed;
     z-index: 9999;
     background: $color-back;
     border: inherit;
-    padding: .25em;
     box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
     overflow: auto;
     display: none;
     a {
       display: block;
       padding: 0 .5em;
-      margin: 0 -.25em;
       font: inherit;
       color: inherit;
       cursor: pointer;
@@ -93,14 +97,6 @@ $color: #000;
         background: $color-back-focus;
         color: $color-focus;
       }
-      &.lock {
-        color: $color-lock;
-        cursor: not-allowed;
-        &:hover {
-          background: $color-back-lock-focus;
-          color: $color-lock-focus;
-        }
-      }
       &.active {
         background: $color-back-active;
         color: $color-active;
@@ -109,26 +105,28 @@ $color: #000;
           color: $color-active-focus;
         }
       }
+      &.lock {
+        color: $color-lock;
+        cursor: not-allowed;
+        &:hover {
+          background: $color-back-lock-focus;
+          color: $color-lock-focus;
+        }
+      }
     }
     span {
       display: block;
       padding: 0 .5em;
-      margin: 0 -.25em;
       &[title] {
         &::before {
           content: attr(title);
           display: block;
-          padding: 0 .25em;
-          margin: .25em -.25em;
+          margin: 0 -.5em;
+          padding: 0 .5em;
           font-weight: bold;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        &:first-child {
-          &::before {
-            margin-top: 0;
-          }
         }
       }
       a {
@@ -184,6 +182,13 @@ $color: #000;
         border-top-width: inherit;
         box-shadow: none;
         margin: .25em -.25em -.25em;
+      }
+    }
+  }
+  &[multiple] {
+    + .option-picker {
+      > b {
+        white-space: normal;
       }
     }
   }

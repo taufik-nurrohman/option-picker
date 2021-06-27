@@ -1,9 +1,10 @@
-import {D, W, getAttribute, getChildren, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setData, setElement, setNext, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
-import {offEvent, offEvents, offEventDefault, onEvent, onEvents} from '@taufik-nurrohman/event';
+import {D, W, getAttribute, getChildren, getClasses, getHTML, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setData, setElement, setHTML, setNext, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
+import {fireEvent, offEvent, offEvents, offEventDefault, onEvent, onEvents} from '@taufik-nurrohman/event';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
+import {getOffset, getRect, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
+import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isInstance, isString} from '@taufik-nurrohman/is';
-import {getOffset, getRect, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
 import {toArray, toCount, toNumber, toObjectCount, toValue} from '@taufik-nurrohman/to';
 
 let name = 'OP',
@@ -89,10 +90,10 @@ function OP(source, state = {}) {
         setClass(selectBoxFakeOption, 'active');
     }
 
-    function setLabelText(text) {
-        text = text || '\u200c';
-        selectBoxFakeLabel.title = text;
-        setText(selectBoxFakeLabel, text);
+    function setLabelContent(content) {
+        content = content || '\u200c';
+        selectBoxFakeLabel.title = content.replace(/<.*?>/g, "");
+        setHTML(selectBoxFakeLabel, content);
     }
 
     function setValue(value) {
@@ -137,6 +138,10 @@ function OP(source, state = {}) {
         selectBoxFakeOptions = [],
         keyIsCtrl = false,
         keyIsShift = false;
+
+    if (selectBoxMultiple && !selectBoxSize) {
+        selectBox.size = selectBoxSize = state.size;
+    }
 
     setChildLast(selectBoxFake, selectBoxFakeLabel);
     setNext(selectBox, selectBoxFake);
@@ -187,7 +192,8 @@ function OP(source, state = {}) {
             selectBoxOption = selectBoxFakeOption[PROP_SOURCE],
             selectBoxValuePrevious = selectBoxValue;
         selectBoxValue = selectBoxFakeOption[PROP_VALUE];
-        let selectBoxFakeLabelText = [];
+        let selectBoxFakeLabelContent = [],
+            content, index, value;
         e && e.isTrusted && onSelectBoxFocus();
         offEventDefault(e);
         if (selectBoxMultiple && keyIsCtrl) {
@@ -200,17 +206,22 @@ function OP(source, state = {}) {
             }
             for (let i = 0, j = toCount(selectBoxOptions); i < j; ++i) {
                 if (getOptionSelected(selectBoxOptions[i])) {
-                    selectBoxFakeLabelText.push(getText(selectBoxFakeOptions[i]));
+                    content = getText(selectBoxFakeOptions[i]);
+                    index = selectBoxFakeOptions[i][PROP_INDEX];
+                    value = selectBoxFakeOptions[i][PROP_VALUE];
+                    content = '<i class="' + getClasses(selectBoxFakeOptions[i], false) + '" data-index="' + index + '"' + (hasAttribute(selectBoxFakeOptions[i], 'data-value') ? ' data-value="' + value + '"' : "") + '>' + content + '</i>';
+                    selectBoxFakeLabelContent.push(content);
                 }
             }
-            setLabelText(selectBoxFakeLabelText.join(state.join));
+            setLabelContent(selectBoxFakeLabelContent.join(state.join));
             fire('change', getLot());
             return;
         }
-        if (selectBoxMultiple && keyIsShift) {
-            return;
-        }
-        setLabelText(getText(selectBoxFakeOption));
+        content = getText(selectBoxFakeOption);
+        index = selectBoxFakeOption[PROP_INDEX];
+        value = selectBoxFakeOption[PROP_VALUE];
+        content = '<i class="' + getClasses(selectBoxFakeOption, false) + '" data-index="' + index + '"' + (hasAttribute(selectBoxFakeOption, 'data-value') ? ' data-value="' + value + '"' : "") + '>' + content + '</i>';
+        setLabelContent(content);
         selectBoxFakeOptions.forEach(selectBoxFakeOption => {
             if (selectBoxValue === selectBoxFakeOption[PROP_VALUE]) {
                 setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
@@ -331,6 +342,7 @@ function OP(source, state = {}) {
             return;
         }
         let selectBoxOptionValue = getAttribute(selectBoxItem, 'value', false),
+            selectBoxOptionValueReal = selectBoxOptionValue,
             selectBoxOptionText = getText(selectBoxItem),
             selectBoxFakeOption = setElement('a', selectBoxOptionText, {
                 'title': selectBoxOptionText
@@ -341,19 +353,23 @@ function OP(source, state = {}) {
         selectBoxFakeOption[PROP_VALUE] = selectBoxOptionValue;
         setData(selectBoxFakeOption, {
             index: selectBoxOptionIndex,
-            value: selectBoxOptionValue
+            value: selectBoxOptionValueReal
         });
         $.options[selectBoxOptionValue] = selectBoxOptionText;
-        if (selectBoxItem.disabled) {
+        let selectBoxOptionIsDisabled = selectBoxItem.disabled;
+        if (selectBoxOptionIsDisabled) {
             setClass(selectBoxFakeOption, 'lock');
         } else {
             onEvent('click', selectBoxFakeOption, onSelectBoxFakeOptionClick);
         }
         setChildLast(parent, selectBoxFakeOption);
         selectBoxFakeOptions.push(selectBoxFakeOption);
-        if (selectBoxOptionValue === selectBoxValue) {
+        if (
+            isArray(selectBoxValue) && hasValue(selectBoxOptionValue, selectBoxValue) ||
+            selectBoxOptionValue === selectBoxValue
+        ) {
             setClass(selectBoxFakeOption, 'active');
-            setLabelText(selectBoxOptionText);
+            setLabelContent('<i class="active' + (selectBoxOptionIsDisabled ? ' lock' : "") + '" data-index="' + selectBoxOptionIndex + '"' + (selectBoxOptionValueReal ? ' data-value="' + selectBoxOptionValueReal + '"' : "") + '>' + selectBoxOptionText + '</i>');
             setOptionSelected(selectBoxItem);
         } else {
             letOptionSelected(selectBoxItem);
@@ -478,7 +494,8 @@ OP.instances = {};
 OP.state = {
     'class': 'option-picker',
     'join': ', ',
-    'parent': null
+    'parent': null,
+    'size': 5
 };
 
 OP.version = '1.0.0';

@@ -3,7 +3,7 @@ Option Picker
 
 > Just a generic custom `<select>` element with accessibility in mind.
 
-![Option Picker](https://user-images.githubusercontent.com/1669261/123191341-54239600-d4cb-11eb-947f-15aa5b28a521.png)
+![Option Picker](https://user-images.githubusercontent.com/1669261/123552542-d5677b00-d7a0-11eb-8032-f3fa3a100b68.png)
 
 [Demo and Documentation](https://taufik-nurrohman.github.io/option-picker "View Demo")
 
@@ -22,6 +22,6 @@ Contribute
 Release Notes
 -------------
 
-### main
+### 1.0.0
 
- - [ ] Initial release.
+ - Initial release.

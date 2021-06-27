@@ -9,36 +9,33 @@ block script
   script
     | const sources = document.querySelectorAll('select');
     | sources.forEach(source => new OP(source));
-    |
-    | function disable() {
-    |     sources.forEach(source => (source.disabled = true));
-    | }
-    |
-    | function enable() {
-    |     sources.forEach(source => (source.disabled = false));
-    | }
 
 block content
   main
     form(method='get' target='_blank')
       p
         select(name='test-1')
-          option Option 1
-          option Option 2
-          option(disabled) Option 3
-      p
-        select(disabled name='test-2')
+          option(disabled selected) Select&hellip;
           option Option 1
           option Option 2
           option Option 3
+          option Option 4
+          option Option 5
       p
-        select(disabled name='test-3' size='3')
+        select(name='test-2' size='3')
+          option(disabled selected) Select&hellip;
           option Option 1
           option Option 2
           option Option 3
+          option Option 4
+          option Option 5
       p
-        button(onclick='disable();' type='button') Disable All
-        = ' '
-        button(onclick='enable();' type='button') Enable All
-        = ' '
+        select(multiple name='test-3[]' size='3')
+          option(disabled selected) Select&hellip;
+          option Option 1
+          option Option 2
+          option Option 3
+          option Option 4
+          option Option 5
+      p
         button(type='submit') Submit

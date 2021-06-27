@@ -9,6 +9,7 @@
   </head>
   <body>
     <main>
+      <p>Press <kbd>⌘</kbd> key while clicking on the available options to select more than one option. <code>multiple</code> attribute needs to be added to the <code>&lt;select&gt;</code> element to enable this feature.</p>
       <form method="get" target="_blank">
         <p><select multiple name="test[]" size="3">
             <option>Option 1</option>
@@ -19,10 +20,11 @@
           </select></p>
         <p><button type="submit">Submit</button></p>
       </form>
+      <p><strong>TODO:</strong> Add <kbd>⇧</kbd> + Click, <kbd>⇧+↑</kbd>, and <kbd>⇧+↓</kbd> feature.</p>
     </main>
     <script src="../index.min.js"></script>
     <script>
-      let picker = new OP(document.querySelector('select'));
+      const picker = new OP(document.querySelector('select'));
     </script>
   </body>
 </html>

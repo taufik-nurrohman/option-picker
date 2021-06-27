@@ -61,12 +61,19 @@
   text-overflow: ellipsis;
 }
 
+.option-picker > b > i {
+  font: inherit;
+}
+
+.option-picker > b > i.lock {
+  color: #666;
+}
+
 .option-picker > div {
   position: fixed;
   z-index: 9999;
   background: #fff;
   border: inherit;
-  padding: .25em;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   overflow: auto;
   display: none;
@@ -75,7 +82,6 @@
 .option-picker > div a {
   display: block;
   padding: 0 .5em;
-  margin: 0 -.25em;
   font: inherit;
   color: inherit;
   cursor: pointer;
@@ -85,6 +91,16 @@
 }
 
 .option-picker > div a:hover {
+  background: #00f;
+  color: #fff;
+}
+
+.option-picker > div a.active {
+  background: none;
+  color: #00f;
+}
+
+.option-picker > div a.active:hover {
   background: #00f;
   color: #fff;
 }
@@ -99,35 +115,20 @@
   color: #fff;
 }
 
-.option-picker > div a.active {
-  background: none;
-  color: #00f;
-}
-
-.option-picker > div a.active:hover {
-  background: #00f;
-  color: #fff;
-}
-
 .option-picker > div span {
   display: block;
   padding: 0 .5em;
-  margin: 0 -.25em;
 }
 
 .option-picker > div span[title]::before {
   content: attr(title);
   display: block;
-  padding: 0 .25em;
-  margin: .25em -.25em;
+  margin: 0 -.5em;
+  padding: 0 .5em;
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.option-picker > div span[title]:first-child::before {
-  margin-top: 0;
 }
 
 .option-picker > div span a {
@@ -186,4 +187,8 @@
   border-top-width: inherit;
   box-shadow: none;
   margin: .25em -.25em -.25em;
+}
+
+.option-picker-source[multiple] + .option-picker > b {
+  white-space: normal;
 }

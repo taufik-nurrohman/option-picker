@@ -22,6 +22,10 @@ Contribute
 Release Notes
 -------------
 
+### 1.1.0
+
+ - TODO
+
 ### 1.0.1
 
  - Fixed broken `picker.pop()` response.

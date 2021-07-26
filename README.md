@@ -22,7 +22,7 @@ Contribute
 Release Notes
 -------------
 
-### 1.1.0
+### 1.1.1
 
  - Changed CSS classes to follow the [BEM](http://getbem.com) approach.
 

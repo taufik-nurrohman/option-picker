@@ -400,6 +400,9 @@ function OP(source, state = {}) {
         }
         setChildLast(parent, selectBoxFakeOption);
         selectBoxFakeOptions.push(selectBoxFakeOption);
+        if ("" === selectBoxOptionValueReal) {
+            selectBoxOptionValue = null;
+        }
         if (
             isArray(selectBoxValue) && hasValue(selectBoxOptionValue, selectBoxValue) ||
             selectBoxOptionValue === selectBoxValue
@@ -533,6 +536,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.1.1';
+OP.version = '1.1.2';
 
 export default OP;

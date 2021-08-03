@@ -400,6 +400,9 @@ function OP(source, state = {}) {
         }
         setChildLast(parent, selectBoxFakeOption);
         selectBoxFakeOptions.push(selectBoxFakeOption);
+        if ("" === selectBoxOptionValueReal) {
+            selectBoxOptionValue = null;
+        }
         if (
             isArray(selectBoxValue) && hasValue(selectBoxOptionValue, selectBoxValue) ||
             selectBoxOptionValue === selectBoxValue

@@ -40,7 +40,7 @@ function OP(source, state = {}) {
 
     let {fire, hooks} = hook($);
 
-    $.state = state = fromStates(OP.state, state);
+    $.state = state = fromStates({}, OP.state, state);
 
     $.options = {};
     $.source = source;
@@ -536,6 +536,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.1.2';
+OP.version = '1.1.3';
 
 export default OP;

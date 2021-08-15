@@ -40,7 +40,7 @@ function OP(source, state = {}) {
 
     let {fire, hooks} = hook($);
 
-    $.state = state = fromStates(OP.state, state);
+    $.state = state = fromStates({}, OP.state, state);
 
     $.options = {};
     $.source = source;

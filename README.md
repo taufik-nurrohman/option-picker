@@ -22,10 +22,10 @@ Contribute
 Release Notes
 -------------
 
-### 1.1.2
+### 1.1.4
 
- - Bug fixes.
  - Changed CSS classes to follow the [BEM](http://getbem.com) approach.
+ - Maintenance.
 
 ### 1.0.1
 

@@ -22,6 +22,10 @@ Contribute
 Release Notes
 -------------
 
+### 1.2.0
+
+ - Added CSS variables for easy integration with third-party applications.
+
 ### 1.1.4
 
  - Changed CSS classes to follow the [BEM](http://getbem.com) approach.

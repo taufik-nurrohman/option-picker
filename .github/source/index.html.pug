@@ -72,8 +72,14 @@ block style
     | }
     |
     | /* Add Bootstrap-like focus ring effect */
-    | .option-picker--focus {
-    |   box-shadow: 0 0 0 3px rgba(0, 0, 255, .25);
+    | .option-picker--focus,
+    | .option-picker--focus:hover {
+    |   --shadow-option-picker--focus: 0 0 0 3px rgba(0, 0, 255, .25);
+    |   --shadow-option-picker--hover: 0 0 0 3px rgba(0, 0, 255, .25);
+    |   --shadow-option-picker: 0 0 0 3px rgba(0, 0, 255, .25);
+    |   --stroke-option-picker--focus: #00f;
+    |   --stroke-option-picker--hover: #00f;
+    |   --stroke-option-picker: #00f;
     | }
 
 block content

@@ -5,7 +5,7 @@
     <meta content="#000" name="theme-color">
     <meta content="width=device-width" name="viewport">
     <meta content="Just a generic custom `&lt;select&gt;` element with accessibility in mind." name="description">
-    <title>Option Picker 1.1.4</title>
+    <title>Option Picker 1.2.0</title>
     <link href="index.min.css" rel="stylesheet">
     <style>
       * {
@@ -67,15 +67,21 @@
       }
 
       /* Add Bootstrap-like focus ring effect */
-      .option-picker--focus {
-        box-shadow: 0 0 0 3px rgba(0, 0, 255, .25);
+      .option-picker--focus,
+      .option-picker--focus:hover {
+        --shadow-option-picker--focus: 0 0 0 3px rgba(0, 0, 255, .25);
+        --shadow-option-picker--hover: 0 0 0 3px rgba(0, 0, 255, .25);
+        --shadow-option-picker: 0 0 0 3px rgba(0, 0, 255, .25);
+        --stroke-option-picker--focus: #00f;
+        --stroke-option-picker--hover: #00f;
+        --stroke-option-picker: #00f;
       }
     </style>
   </head>
   <body>
     <p>Do you like this project? Please support my <a href="https://github.com/mecha-cms">Mecha CMS</a> project too. Thank you!</p>
     <header>
-      <h1>Option Picker 1.1.4</h1>
+      <h1>Option Picker 1.2.0</h1>
       <p>Just a generic custom <code>&lt;select&gt;</code> element with accessibility in mind.</p>
       <hr>
     </header>

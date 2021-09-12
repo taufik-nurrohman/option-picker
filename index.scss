@@ -1,19 +1,40 @@
 $name: 'option-picker';
 
-$color-active-focus: #fff !default;
-$color-active: #00f !default;
-$color-back-active-focus: #00f !default;
-$color-back-active: none !default;
-$color-back-focus: #00f !default;
-$color-back-lock-focus: #666 !default;
-$color-back: #fff !default;
-$color-border-focus: #00f !default;
-$color-border-lock: #666 !default;
-$color-border: #000 !default;
-$color-focus: #fff !default;
-$color-lock-focus: #fff !default;
-$color-lock: #666 !default;
-$color: #000 !default;
+:root {
+  --color-#{$name}--disabled: #666;
+  --color-#{$name}: #000;
+  --color-#{$name}__option--active: #fff;
+  --color-#{$name}__option--disabled: #666;
+  --color-#{$name}__option--hover: #fff;
+  --color-#{$name}__option--selected: #00f;
+  --color-#{$name}__option-group--disabled: #666;
+  --color-#{$name}__option-group: #000;
+  --color-#{$name}__options--disabled: #666;
+  --fill-#{$name}--disabled: #eee;
+  --fill-#{$name}: #fff;
+  --fill-#{$name}__option--active: #009;
+  --fill-#{$name}__option--disabled: none;
+  --fill-#{$name}__option--hover: #00f;
+  --fill-#{$name}__option--selected: none;
+  --fill-#{$name}__option: none;
+  --fill-#{$name}__options--disabled: #eee;
+  --fill-#{$name}__options: #fff;
+  --font-face-#{$name}: inherit;
+  --font-height-#{$name}: 1.5em;
+  --font-size-#{$name}: inherit;
+  --radius-#{$name}: 0;
+  --radius-#{$name}__options: 0;
+  --shadow-#{$name}: none;
+  --shadow-#{$name}__options: 0 1px 2px rgba(0, 0, 0, .4);
+  --stroke-#{$name}--disabled: #666;
+  --stroke-#{$name}--focus: #00f;
+  --stroke-#{$name}--open: #00f;
+  --stroke-#{$name}: #000;
+  --stroke-#{$name}__options--disabled: #999;
+  --stroke-#{$name}__options--open: #00f;
+  --stroke-#{$name}__options: #000;
+  --width-#{$name}: 12em;
+}
 
 .#{$name} {
   &,
@@ -23,48 +44,97 @@ $color: #000 !default;
 }
 
 .#{$name} {
-  position: relative;
-  background: $color-back;
-  color: $color;
-  border: 1px solid $color-border;
-  font: inherit;
-  line-height: 1.5em;
-  display: inline-block;
-  vertical-align: middle;
-  width: 12em;
-  padding: .25em;
-  cursor: pointer;
-  outline: 0;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
   -moz-user-select: none;
-  user-select: none;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   -webkit-tap-highlight-color: transparent;
-  &--focus {
-    border-color: $color-border-focus;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  background: var(--fill-#{$name});
+  border-color: var(--stroke-#{$name});
+  border-radius: var(--radius-#{$name});
+  border: 1px solid;
+  box-shadow: var(--shadow-#{$name});
+  color: var(--color-#{$name});
+  cursor: pointer;
+  display: inline-block;
+  font-family: var(--font-face-#{$name});
+  font-size: var(--font-size-#{$name});
+  font: inherit;
+  height: var(--height-#{$name}, auto);
+  line-height: var(--font-height-#{$name});
+  max-height: var(--height-max-#{$name}, 100%);
+  max-width: var(--width-max-#{$name}, 100%);
+  min-height: var(--height-min-#{$name}, 0);
+  min-width: var(--width-min-#{$name}, 0);
+  outline: 0;
+  padding: .25em;
+  position: relative;
+  user-select: none;
+  vertical-align: middle;
+  width: var(--width-#{$name}, auto);
+  $states: hover, focus, active;
+  @each $state in $states {
+    &:#{$state} {
+      background: var(--fill-#{$name}--#{$state}, var(--fill-#{$name}));
+      border-color: var(--stroke-#{$name}--#{$state}, var(--stroke-#{$name}));
+      box-shadow: var(--shadow-#{$name}--#{$state}, var(--shadow-#{$name}));
+      color: var(--color-#{$name}--#{$state}, var(--color-#{$name}));
+    }
+  }
+  $states: focus, disabled;
+  @each $state in $states {
+    &--#{$state} {
+      background: var(--fill-#{$name}--#{$state}, var(--fill-#{$name}));
+      border-color: var(--stroke-#{$name}--#{$state}, var(--stroke-#{$name}));
+      box-shadow: var(--shadow-#{$name}--#{$state}, var(--shadow-#{$name}));
+      color: var(--color-#{$name}--#{$state}, var(--color-#{$name}));
+    }
   }
   &::after {
+    border-bottom: 0 solid var(--stroke-#{$name});
+    border-left: .35em solid transparent;
+    border-right: .35em solid transparent;
+    border-top: .45em solid var(--stroke-#{$name});
     content: "";
-    width: 0;
     height: 0;
-    border-top: 6px solid $color-border;
-    border-right: 5px solid transparent;
-    border-bottom: 0;
-    border-left: 5px solid transparent;
-    position: absolute;
-    top: 50%;
-    margin-top: -3px;
-    right: .5em;
     pointer-events: none;
+    position: absolute;
+    right: .5em;
+    top: calc(50% - (.45em / 2));
+    width: 0;
   }
   &--open {
+    &.#{$name}--down {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    &.#{$name}--up {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
     &::after {
-      border-top: 0;
-      border-bottom: 6px solid;
+      border-bottom-color: var(--stroke-#{$name}--open, var(--stroke-#{$name}));
+      border-bottom-width: .45em;
+      border-top-color: var(--stroke-#{$name}--open, var(--stroke-#{$name}));
+      border-top-width: 0;
     }
     .#{$name}__options {
+      background: var(--fill-#{$name}__options--open, var(--fill-#{$name}__options, var(--fill-#{$name})));
+      border-color: var(--stroke-#{$name}__options--open, var(--stroke-#{$name}__options, var(--stroke-#{$name})));
+      color: var(--color-#{$name}__options--open, var(--stroke-#{$name}__options, var(--stroke-#{$name})));
       display: block;
+    }
+    &.#{$name}--down {
+      .#{$name}__options {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+      }
+    }
+    &.#{$name}--up {
+      .#{$name}__options {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
     }
   }
   * {
@@ -72,85 +142,97 @@ $color: #000 !default;
   }
 }
 
-.#{$name}__group {
+.#{$name}__option-group {
   display: block;
   padding: 0 .5em;
   &[title] {
     &::before {
       content: attr(title);
       display: block;
-      margin: 0 -.5em;
-      padding: 0 .5em;
       font-weight: bold;
-      white-space: nowrap;
+      margin: 0 -.5em;
       overflow: hidden;
+      padding: 0 .5em;
       text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    $states: disabled;
+    @each $state in $states {
+      &--#{$state} {
+        color: var(--color-#{$state}__option-group--#{$state}, var(--color-#{$state}__option-group));
+      }
     }
   }
   .#{$name}__option {
-    padding-left: 1.5em;
     margin: 0 -.5em;
-  }
-}
-
-.#{$name}__option {
-  display: block;
-  padding: 0 .5em;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  &:hover {
-    background: $color-back-focus;
-    color: $color-focus;
-  }
-  &--active {
-    background: $color-back-active;
-    color: $color-active;
-    &:hover {
-      background: $color-back-active-focus;
-      color: $color-active-focus;
-    }
-  }
-  &--lock {
-    color: $color-lock;
-    cursor: not-allowed;
-    &:hover {
-      background: $color-back-lock-focus;
-      color: $color-lock-focus;
-    }
+    padding-left: 1.5em;
   }
 }
 
 .#{$name}__options {
+  background: var(--fill-#{$name}__options, var(--fill-#{$name}));
+  border: inherit;
+  border-color: var(--stroke-#{$name}__options, var(--stroke-#{$name}));
+  border-radius: var(--radius-#{$name}__options, var(--radius-#{$name}));
+  box-shadow: var(--shadow-#{$name}__options);
+  color: var(--color-#{$name}__options, var(--color-#{$name}));
+  display: none;
+  overflow: auto;
   position: fixed;
   z-index: 9999;
-  background: $color-back;
-  border: inherit;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
-  overflow: auto;
-  display: none;
+  .#{$name}__option {
+    background: var(--fill-#{$name}__option);
+    color: var(--color-#{$name}__option);
+    cursor: pointer;
+    display: block;
+    font: inherit;
+    overflow: hidden;
+    padding: 0 .5em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    $states: hover, focus, active;
+    @each $state in $states {
+      &:not(.#{$name}__option--disabled):#{$state} {
+        background: var(--fill-#{$name}__option--#{$state}, var(--fill-#{$name}__option));
+        color: var(--color-#{$name}__option--#{$state}, var(--color-#{$name}__option));
+      }
+    }
+    $states: selected, disabled;
+    @each $state in $states {
+      &--#{$state} {
+        background: var(--fill-#{$name}__option--#{$state}, var(--fill-#{$name}__option));
+        color: var(--color-#{$name}__option--#{$state}, var(--color-#{$name}__option));
+      }
+    }
+    &--disabled {
+      cursor: not-allowed;
+    }
+  }
 }
 
 .#{$name}__source {
+  left: -9999px;
   position: fixed;
   top: -9999px;
-  left: -9999px;
-  &[disabled] {
+  &:disabled {
     + .#{$name} {
-      color: $color-lock;
-      border-color: $color-border-lock;
+      background: var(--fill-#{$name}--disabled, var(--fill-#{$name}));
+      border-color: var(--stroke-#{$name}--disabled, var(--stroke-#{$name}));
+      color: var(--color-#{$name}--disabled, var(--color-#{$name}));
       cursor: not-allowed;
       &::after {
-        border-top-color: $color-border-lock;
+        border-top-color: var(--stroke-#{$name}--disabled, var(--stroke-#{$name}));
       }
       .#{$name}__option {
-        color: inherit;
+        color: var(--color-#{$name}--disabled, var(--color-#{$name}));
       }
-      .#{$name}__values,
       .#{$name}__options {
+        background: var(--fill-#{$name}__options--disabled, var(--fill-#{$name}--disabled), var(--fill-#{$name}));
+        border-color: var(--stroke-#{$name}__options--disabled, var(--stroke-#{$name}--disabled, var(--stroke-#{$name})));
+        color: var(--color-#{$name}__options--disabled, var(--color-#{$name}--disabled, var(--color-#{$name})));
+      }
+      .#{$name}__options,
+      .#{$name}__values {
         pointer-events: none;
       }
     }
@@ -162,13 +244,14 @@ $color: #000 !default;
         display: none;
       }
       .#{$name}__options {
-        display: block;
-        position: relative;
-        z-index: 1;
+        border-color: inherit;
         border-width: 0;
         border-top-width: inherit;
         box-shadow: none;
+        display: block;
         margin: .25em -.25em -.25em;
+        position: relative;
+        z-index: 1;
       }
       .#{$name}__values {
         margin: 0;
@@ -186,16 +269,12 @@ $color: #000 !default;
 
 .#{$name}__values {
   margin-right: 1.25em;
-  padding: 0 .25em;
-  white-space: nowrap;
   overflow: hidden;
+  padding: 0 .25em;
   text-overflow: ellipsis;
+  white-space: nowrap;
   .#{$name}__value {
     display: inline;
-    margin: 0;
-    padding: 0;
-    background: none;
-    color: inherit;
     font: inherit;
   }
 }

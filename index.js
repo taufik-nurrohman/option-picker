@@ -524,7 +524,7 @@
         }
 
         function getOptionFakeSelected(selectBoxFakeOption) {
-            return hasClass(selectBoxFakeOption, classNameOptionM + 'active');
+            return hasClass(selectBoxFakeOption, classNameOptionM + 'selected');
         }
 
         function letOptionSelected(selectBoxOption) {
@@ -533,7 +533,7 @@
         }
 
         function letOptionFakeSelected(selectBoxFakeOption) {
-            letClass(selectBoxFakeOption, classNameOptionM + 'active');
+            letClass(selectBoxFakeOption, classNameOptionM + 'selected');
         }
 
         function setOptionSelected(selectBoxOption) {
@@ -542,7 +542,7 @@
         }
 
         function setOptionFakeSelected(selectBoxFakeOption) {
-            setClass(selectBoxFakeOption, classNameOptionM + 'active');
+            setClass(selectBoxFakeOption, classNameOptionM + 'selected');
         }
 
         function setLabelContent(content) {
@@ -571,7 +571,6 @@
             classNameOptionB = classNameE + 'option',
             classNameOptionM = classNameOptionB + '--',
             classNameOptionsB = classNameE + 'options',
-            classNameOptionsM = classNameOptionsB + '--',
             classNameValueB = classNameE + 'value',
             classNameValuesB = classNameE + 'values',
             selectBox = setElement(source, {
@@ -728,7 +727,7 @@
             let key = e.key,
                 selectBoxOptionIndexCurrent = selectBox.selectedIndex,
                 selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndexCurrent],
-                selectBoxFakeOptionIsDisabled = selectBoxFakeOption => hasClass(selectBoxFakeOption, classNameOptionM + 'lock'),
+                selectBoxFakeOptionIsDisabled = selectBoxFakeOption => hasClass(selectBoxFakeOption, classNameOptionM + 'disabled'),
                 doClick = selectBoxFakeOption => onSelectBoxFakeOptionClick.call(selectBoxFakeOption),
                 isOpen = isEnter();
             if (KEY_ARROW_DOWN === key) {
@@ -799,7 +798,7 @@
         function setSelectBoxFakeOptions(selectBoxItem, parent) {
             if ('optgroup' === getName(selectBoxItem)) {
                 let selectBoxFakeOptionGroup = setElement('span', {
-                        'class': classNameE + 'group'
+                        'class': classNameOptionB + '-group' + (selectBoxItem.disabled ? ' ' + classNameOptionM + 'disabled' : "")
                     }),
                     selectBoxItems = getChildren(selectBoxItem);
                 selectBoxFakeOptionGroup.title = selectBoxItem.label;
@@ -828,7 +827,7 @@
             $.options[selectBoxOptionValue] = selectBoxOptionText;
             let selectBoxOptionIsDisabled = selectBoxItem.disabled;
             if (selectBoxOptionIsDisabled) {
-                setClass(selectBoxFakeOption, classNameOptionM + 'lock');
+                setClass(selectBoxFakeOption, classNameOptionM + 'disabled');
             } else {
                 onEvent('click', selectBoxFakeOption, onSelectBoxFakeOptionClick);
             }
@@ -838,8 +837,8 @@
                 selectBoxOptionValue = null;
             }
             if (isArray(selectBoxValue) && hasValue(selectBoxOptionValue, selectBoxValue) || selectBoxOptionValue === selectBoxValue) {
-                setClass(selectBoxFakeOption, classNameOptionM + 'active');
-                setLabelContent(doValue(selectBoxOptionText, selectBoxOptionValueReal, selectBoxOptionIndex, classNameOptionB + ' ' + (selectBoxOptionIsDisabled ? ' ' + classNameOptionM + 'lock' : "")));
+                setClass(selectBoxFakeOption, classNameOptionM + 'selected');
+                setLabelContent(doValue(selectBoxOptionText, selectBoxOptionValueReal, selectBoxOptionIndex, classNameOptionB + ' ' + (selectBoxOptionIsDisabled ? ' ' + classNameOptionM + 'disabled' : "")));
                 setOptionSelected(selectBoxItem);
             } else {
                 letOptionSelected(selectBoxItem);
@@ -868,13 +867,15 @@
                         'bottom': heightWindow - top - selectBoxFakeBorderBottomWidth,
                         'max-height': heightMax + selectBoxFakeBorderTopWidth
                     });
-                    setClass(selectBoxFakeDropDown, classNameOptionsM + 'flip');
+                    letClass(selectBoxFake, classNameM + 'down');
+                    setClass(selectBoxFake, classNameM + 'up');
                 } else {
-                    letClass(selectBoxFakeDropDown, classNameOptionsM + 'flip');
+                    letClass(selectBoxFake, classNameM + 'up');
+                    setClass(selectBoxFake, classNameM + 'down');
                 }
             }
             let selectBoxFakeOption = selectBoxFakeOptions.find(selectBoxFakeOption => {
-                return hasClass(selectBoxFakeOption, classNameOptionM + 'active');
+                return hasClass(selectBoxFakeOption, classNameOptionM + 'selected');
             });
             if (selectBoxFakeOption) {
                 let height = getSize(selectBoxFakeOption)[1],
@@ -911,7 +912,8 @@
             }
         }
         if (selectBoxSize) {
-            // Force `open` class
+            // Force `down` and `open` class
+            setClass(selectBoxFake, classNameM + 'down');
             setClass(selectBoxFake, classNameM + 'open');
         }
         $.get = (parseValue = true) => {
@@ -940,7 +942,7 @@
             setValue(fromValue(value));
             selectBoxFakeOptions.forEach((selectBoxFakeOption, index) => {
                 let selectBoxOption = selectBoxOptions[index];
-                toggleClass(selectBoxFakeOption, classNameOptionM + 'active', selectBoxOption && getOptionSelected(selectBoxOption));
+                toggleClass(selectBoxFakeOption, classNameOptionM + 'selected', selectBoxOption && getOptionSelected(selectBoxOption));
             });
             fire('change', getLot());
             return $;
@@ -955,6 +957,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.1.4';
+    OP.version = '1.2.0';
     return OP;
 });

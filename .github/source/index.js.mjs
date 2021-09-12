@@ -326,7 +326,7 @@ function OP(source, state = {}) {
             !selectBoxSize && doExit();
             // offEventDefault(e);
         } else if (KEY_START === key) {
-            selectBoxOptionIndexCurrent = 0;
+            selectBoxOptionIndexCurrent = -1;
             while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
                 if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                     break;

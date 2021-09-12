@@ -53,9 +53,9 @@
   color: var(--color-option-picker);
   cursor: pointer;
   display: inline-block;
+  font: inherit;
   font-family: var(--font-face-option-picker);
   font-size: var(--font-size-option-picker);
-  font: inherit;
   height: var(--height-option-picker, auto);
   line-height: var(--font-height-option-picker);
   max-height: var(--height-max-option-picker, 100%);

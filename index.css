@@ -21,7 +21,6 @@
   --font-height-option-picker: 1.5em;
   --font-size-option-picker: inherit;
   --radius-option-picker: 0;
-  --radius-option-picker__options: 0;
   --shadow-option-picker: none;
   --shadow-option-picker__options: 0 1px 2px rgba(0, 0, 0, .4);
   --stroke-option-picker--disabled: #666;
@@ -46,9 +45,9 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   background: var(--fill-option-picker);
+  border: 1px solid;
   border-color: var(--stroke-option-picker);
   border-radius: var(--radius-option-picker);
-  border: 1px solid;
   box-shadow: var(--shadow-option-picker);
   color: var(--color-option-picker);
   cursor: pointer;
@@ -157,31 +156,6 @@
   outline: 0;
 }
 
-.option-picker__option-group {
-  display: block;
-  padding: 0 .5em;
-}
-
-.option-picker__option-group[title]::before {
-  content: attr(title);
-  display: block;
-  font-weight: bold;
-  margin: 0 -.5em;
-  overflow: hidden;
-  padding: 0 .5em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.option-picker__option-group[title]--disabled {
-  color: var(--color-disabled__option-group--disabled, var(--color-disabled__option-group));
-}
-
-.option-picker__option-group .option-picker__option {
-  margin: 0 -.5em;
-  padding-left: 1.5em;
-}
-
 .option-picker__options {
   background: var(--fill-option-picker__options, var(--fill-option-picker));
   border: inherit;
@@ -234,6 +208,31 @@
 
 .option-picker__options .option-picker__option--disabled {
   cursor: not-allowed;
+}
+
+.option-picker__option-group {
+  display: block;
+  padding: 0 .5em;
+}
+
+.option-picker__option-group[title]::before {
+  content: attr(title);
+  display: block;
+  font-weight: bold;
+  margin: 0 -.5em;
+  overflow: hidden;
+  padding: 0 .5em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.option-picker__option-group[title]--disabled {
+  color: var(--color-disabled__option-group--disabled, var(--color-disabled__option-group));
+}
+
+.option-picker__option-group .option-picker__option {
+  margin: 0 -.5em;
+  padding-left: 1.5em;
 }
 
 .option-picker__source {

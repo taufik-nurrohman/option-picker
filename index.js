@@ -594,6 +594,8 @@
             selectBoxFakeLabel = setElement('div', '\u200c', {
                 'class': classNameValuesB
             }),
+            selectBoxFakeBorderBottomWidth = 0,
+            selectBoxFakeBorderTopWidth = 0,
             selectBoxFakeDropDown = setElement('div', {
                 'class': classNameOptionsB,
                 'tabindex': '-1'
@@ -716,10 +718,12 @@
             if (selectBoxSize) {
                 return doEnter();
             }
-            doToggle() && setSelectBoxFakeOptionsPosition(selectBoxFake);
+            selectBoxFakeBorderBottomWidth = toNumber(getStyle(selectBoxFake, 'border-bottom-width'));
+            selectBoxFakeBorderTopWidth = toNumber(getStyle(selectBoxFake, 'border-top-width')), doToggle() && setSelectBoxFakeOptionsPosition(selectBoxFake);
         }
 
         function onSelectBoxFakeFocus(e) {
+            selectBoxOptionIndex = selectBox.selectedIndex;
             doFocus();
         }
 
@@ -742,7 +746,7 @@
                 if (selectBoxFakeOption) {
                     doClick(selectBoxFakeOption), doToggle(isOpen);
                 }
-                if (_keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex - 1])) {
+                if (selectBoxMultiple && _keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex - 1])) {
                     // TODO: Preserve selection on the previous option
                     setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
                     setOptionFakeSelected(selectBoxFakeOption);
@@ -758,7 +762,7 @@
                 if (selectBoxFakeOption) {
                     doClick(selectBoxFakeOption), doToggle(isOpen);
                 }
-                if (_keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex + 1])) {
+                if (selectBoxMultiple && _keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex + 1])) {
                     // TODO: Preserve selection on the next option
                     setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
                     setOptionFakeSelected(selectBoxFakeOption);
@@ -812,7 +816,7 @@
         }
 
         function onSelectBoxWindow() {
-            isEnter() && setSelectBoxFakeOptionsPosition(selectBoxFake);
+            isEnter() && setSelectBoxFakeOptionsPosition(selectBoxFake, 1);
         }
 
         function setSelectBoxFakeOptions(selectBoxItem, parent) {
@@ -866,9 +870,7 @@
             ++selectBoxOptionIndex;
         }
 
-        function setSelectBoxFakeOptionsPosition(selectBoxFake) {
-            let selectBoxFakeBorderTopWidth = toNumber(getStyle(selectBoxFake, 'border-top-width')),
-                selectBoxFakeBorderBottomWidth = toNumber(getStyle(selectBoxFake, 'border-bottom-width'));
+        function setSelectBoxFakeOptionsPosition(selectBoxFake, useEvent) {
             if (!selectBoxSize) {
                 let [left, top, width, height] = getRect(selectBoxFake),
                     heightWindow = getSize(W)[1],
@@ -894,18 +896,20 @@
                     setClass(selectBoxFake, classNameM + 'down');
                 }
             }
-            let selectBoxFakeOption = selectBoxFakeOptions.find(selectBoxFakeOption => {
-                return hasClass(selectBoxFakeOption, classNameOptionM + 'selected');
-            });
-            if (selectBoxFakeOption) {
-                let height = getSize(selectBoxFakeOption)[1],
-                    heightParent = getSize(selectBoxFakeDropDown)[1],
-                    [left, top] = getOffset(selectBoxFakeOption),
-                    topScroll = getScroll(selectBoxFakeDropDown)[1];
-                if (top < topScroll) {
-                    setScroll(selectBoxFakeDropDown, [left, top]);
-                } else if (top + height - heightParent > topScroll) {
-                    setScroll(selectBoxFakeDropDown, [left, top + height - heightParent]);
+            if (!useEvent) {
+                let selectBoxFakeOption = selectBoxFakeOptions.find(selectBoxFakeOption => {
+                    return hasClass(selectBoxFakeOption, classNameOptionM + 'selected');
+                });
+                if (selectBoxFakeOption) {
+                    let height = getSize(selectBoxFakeOption)[1],
+                        heightParent = getSize(selectBoxFakeDropDown)[1],
+                        [left, top] = getOffset(selectBoxFakeOption),
+                        topScroll = getScroll(selectBoxFakeDropDown)[1];
+                    if (top < topScroll) {
+                        setScroll(selectBoxFakeDropDown, [left, top]);
+                    } else if (top + height - heightParent > topScroll) {
+                        setScroll(selectBoxFakeDropDown, [left, top + height - heightParent]);
+                    }
                 }
             }
             fire('fit', getLot());

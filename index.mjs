@@ -28,14 +28,14 @@ function OP(source, state = {}) {
 
     const $ = this;
 
+    // Already instantiated, skip!
+    if (source[name]) {
+        return source[name];
+    }
+
     // Return new instance if `OP` was called without the `new` operator
     if (!isInstance($, OP)) {
         return new OP(source, state);
-    }
-
-    // Already instantiated, skip!
-    if (source[name]) {
-        return;
     }
 
     let {fire, hooks} = hook($);
@@ -49,7 +49,7 @@ function OP(source, state = {}) {
     OP.instances[source.id || source.name || toObjectCount(OP.instances)] = $;
 
     // Mark current DOM as active option picker to prevent duplicate instance
-    source[name] = 1;
+    source[name] = $;
 
     function getLot() {
         return [toValue(getValue()), $.options];
@@ -223,12 +223,13 @@ function OP(source, state = {}) {
         let selectBoxFakeOption = this,
             selectBoxOption = selectBoxFakeOption[PROP_SOURCE],
             selectBoxValuePrevious = selectBoxValue;
+        selectBoxOptionIndex = selectBoxFakeOption[PROP_INDEX];
         selectBoxValue = selectBoxFakeOption[PROP_VALUE];
         let selectBoxFakeLabelContent = [],
             content, index, value;
         e && e.isTrusted && onSelectBoxFocus();
         offEventDefault(e);
-        if (selectBoxMultiple && _keyIsCtrl) {
+        if (selectBoxMultiple && (_keyIsCtrl || _keyIsShift)) {
             if (getOptionFakeSelected(selectBoxFakeOption)) {
                 letOptionSelected(selectBoxOption);
                 letOptionFakeSelected(selectBoxFakeOption);
@@ -276,6 +277,7 @@ function OP(source, state = {}) {
         if (selectBoxIsDisabled()) {
             return;
         }
+        selectBoxOptionIndex = selectBox.selectedIndex;
         if (selectBoxSize) {
             return doEnter();
         }
@@ -290,29 +292,47 @@ function OP(source, state = {}) {
         _keyIsCtrl = e.ctrlKey;
         _keyIsShift = e.shiftKey;
         let key = e.key,
-            selectBoxOptionIndexCurrent = selectBox.selectedIndex,
+            selectBoxOptionIndexCurrent = selectBoxOptionIndex,
             selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndexCurrent],
             selectBoxFakeOptionIsDisabled = selectBoxFakeOption => hasClass(selectBoxFakeOption, classNameOptionM + 'disabled'),
             doClick = selectBoxFakeOption => onSelectBoxFakeOptionClick.call(selectBoxFakeOption),
-            isOpen = isEnter();
+            isOpen = isEnter(); // Cache the enter state
         if (KEY_ARROW_DOWN === key) {
+            // Continue walking down until it finds an option that is not disabled
             while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
                 if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                     break;
                 }
             }
-            selectBoxFakeOption && (doClick(selectBoxFakeOption), doToggle(isOpen));
+            if (selectBoxFakeOption) {
+                doClick(selectBoxFakeOption), doToggle(isOpen);
+            }
+            if (_keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex - 1])) {
+                // TODO: Preserve selection on the previous option
+                setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
+                setOptionFakeSelected(selectBoxFakeOption);
+            }
             offEventDefault(e);
         } else if (KEY_ARROW_UP === key) {
+            // Continue walking up until it finds an option that is not disabled
             while (selectBoxFakeOption = selectBoxFakeOptions[--selectBoxOptionIndexCurrent]) {
                 if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                     break;
                 }
             }
-            selectBoxFakeOption && (doClick(selectBoxFakeOption), doToggle(isOpen));
+            if (selectBoxFakeOption) {
+                doClick(selectBoxFakeOption), doToggle(isOpen);
+            }
+            if (_keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex + 1])) {
+                // TODO: Preserve selection on the next option
+                setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
+                setOptionFakeSelected(selectBoxFakeOption);
+            }
             offEventDefault(e);
         } else if (KEY_END === key) {
+            // Start from the last option position + 1
             selectBoxOptionIndexCurrent = toCount(selectBoxOptions);
+            // Continue walking up until it finds an option that is not disabled
             while (selectBoxFakeOption = selectBoxFakeOptions[--selectBoxOptionIndexCurrent]) {
                 if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                     break;
@@ -326,7 +346,9 @@ function OP(source, state = {}) {
             !selectBoxSize && doExit();
             // offEventDefault(e);
         } else if (KEY_START === key) {
+            // Start from the first option position - 1
             selectBoxOptionIndexCurrent = -1;
+            // Continue walking up until it finds an option that is not disabled
             while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
                 if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                     break;
@@ -339,7 +361,7 @@ function OP(source, state = {}) {
             !selectBoxSize && doExit();
             // offEventDefault(e);
         }
-        isOpen && !_keyIsCtrl && !_keyIsShift && setSelectBoxFakeOptionsPosition(selectBoxFake);
+        isEnter() && !_keyIsCtrl && !_keyIsShift && setSelectBoxFakeOptionsPosition(selectBoxFake);
     }
 
     function onSelectBoxFakeKeyUp() {
@@ -539,6 +561,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.2.1';
+OP.version = '1.2.2';
 
 export default OP;

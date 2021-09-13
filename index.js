@@ -27,6 +27,9 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define(factory) : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.OP = factory());
 })(this, function() {
     'use strict';
+    var hasValue = function hasValue(x, data) {
+        return -1 !== data.indexOf(x);
+    };
     var isArray = function isArray(x) {
         return Array.isArray(x);
     };
@@ -59,35 +62,6 @@
     };
     var isString = function isString(x) {
         return 'string' === typeof x;
-    };
-    var fromStates = function fromStates() {
-        for (var _len = arguments.length, lot = new Array(_len), _key = 0; _key < _len; _key++) {
-            lot[_key] = arguments[_key];
-        }
-        return Object.assign.apply(Object, [{}].concat(lot));
-    };
-    var fromValue = function fromValue(x) {
-        if (isArray(x)) {
-            return x.map(function(v) {
-                return fromValue(x);
-            });
-        }
-        if (isObject(x)) {
-            for (var k in x) {
-                x[k] = fromValue(x[k]);
-            }
-            return x;
-        }
-        if (false === x) {
-            return 'false';
-        }
-        if (null === x) {
-            return 'null';
-        }
-        if (true === x) {
-            return 'true';
-        }
-        return "" + x;
     };
     var toArray = function toArray(x) {
         return isArray(x) ? x : [x];
@@ -146,6 +120,61 @@
             return true;
         }
         return x;
+    };
+    var fromStates = function fromStates() {
+        for (var _len = arguments.length, lot = new Array(_len), _key = 0; _key < _len; _key++) {
+            lot[_key] = arguments[_key];
+        }
+        var out = lot.shift();
+        for (var i = 0, j = toCount(lot); i < j; ++i) {
+            for (var k in lot[i]) {
+                // Assign value
+                if (!isSet(out[k])) {
+                    out[k] = lot[i][k];
+                    continue;
+                } // Merge array
+                if (isArray(out[k]) && isArray(lot[i][k])) {
+                    out[k] = [
+                        /* Clone! */
+                    ].concat(out[k]);
+                    for (var ii = 0, jj = toCount(lot[i][k]); ii < jj; ++ii) {
+                        if (!hasValue(lot[i][k][ii], out[k])) {
+                            out[k].push(lot[i][k][ii]);
+                        }
+                    } // Merge object recursive
+                } else if (isObject(out[k]) && isObject(lot[i][k])) {
+                    out[k] = fromStates({
+                        /* Clone! */
+                    }, out[k], lot[i][k]); // Replace value
+                } else {
+                    out[k] = lot[i][k];
+                }
+            }
+        }
+        return out;
+    };
+    var fromValue = function fromValue(x) {
+        if (isArray(x)) {
+            return x.map(function(v) {
+                return fromValue(x);
+            });
+        }
+        if (isObject(x)) {
+            for (var k in x) {
+                x[k] = fromValue(x[k]);
+            }
+            return x;
+        }
+        if (false === x) {
+            return 'false';
+        }
+        if (null === x) {
+            return 'null';
+        }
+        if (true === x) {
+            return 'true';
+        }
+        return "" + x;
     };
     var D = document;
     var W = window;
@@ -385,9 +414,6 @@
         node.scrollTop = data[1];
         return node;
     };
-    var hasValue = function hasValue(x, data) {
-        return -1 !== data.indexOf(x);
-    };
 
     function hook($) {
         var hooks = {};
@@ -453,12 +479,12 @@
 
     function OP(source, state = {}) {
         if (!source) return;
-        const $ = this; // Return new instance if `OP` was called without the `new` operator
+        const $ = this; // Already instantiated, skip!
+        if (source[name]) {
+            return source[name];
+        } // Return new instance if `OP` was called without the `new` operator
         if (!isInstance($, OP)) {
             return new OP(source, state);
-        } // Already instantiated, skip!
-        if (source[name]) {
-            return;
         }
         let {
             fire,
@@ -468,7 +494,7 @@
         $.options = {};
         $.source = source; // Store current instance to `OP.instances`
         OP.instances[source.id || source.name || toObjectCount(OP.instances)] = $; // Mark current DOM as active option picker to prevent duplicate instance
-        source[name] = 1;
+        source[name] = $;
 
         function getLot() {
             return [toValue(getValue()), $.options];
@@ -630,6 +656,7 @@
             let selectBoxFakeOption = this,
                 selectBoxOption = selectBoxFakeOption[PROP_SOURCE],
                 selectBoxValuePrevious = selectBoxValue;
+            selectBoxOptionIndex = selectBoxFakeOption[PROP_INDEX];
             selectBoxValue = selectBoxFakeOption[PROP_VALUE];
             let selectBoxFakeLabelContent = [],
                 content,
@@ -637,7 +664,7 @@
                 value;
             e && e.isTrusted && onSelectBoxFocus();
             offEventDefault(e);
-            if (selectBoxMultiple && _keyIsCtrl) {
+            if (selectBoxMultiple && (_keyIsCtrl || _keyIsShift)) {
                 if (getOptionFakeSelected(selectBoxFakeOption)) {
                     letOptionSelected(selectBoxOption);
                     letOptionFakeSelected(selectBoxFakeOption);
@@ -685,6 +712,7 @@
             if (selectBoxIsDisabled()) {
                 return;
             }
+            selectBoxOptionIndex = selectBox.selectedIndex;
             if (selectBoxSize) {
                 return doEnter();
             }
@@ -699,29 +727,46 @@
             _keyIsCtrl = e.ctrlKey;
             _keyIsShift = e.shiftKey;
             let key = e.key,
-                selectBoxOptionIndexCurrent = selectBox.selectedIndex,
+                selectBoxOptionIndexCurrent = selectBoxOptionIndex,
                 selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndexCurrent],
                 selectBoxFakeOptionIsDisabled = selectBoxFakeOption => hasClass(selectBoxFakeOption, classNameOptionM + 'disabled'),
                 doClick = selectBoxFakeOption => onSelectBoxFakeOptionClick.call(selectBoxFakeOption),
-                isOpen = isEnter();
+                isOpen = isEnter(); // Cache the enter state
             if (KEY_ARROW_DOWN === key) {
+                // Continue walking down until it finds an option that is not disabled
                 while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
                     if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                         break;
                     }
                 }
-                selectBoxFakeOption && (doClick(selectBoxFakeOption), doToggle(isOpen));
+                if (selectBoxFakeOption) {
+                    doClick(selectBoxFakeOption), doToggle(isOpen);
+                }
+                if (_keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex - 1])) {
+                    // TODO: Preserve selection on the previous option
+                    setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
+                    setOptionFakeSelected(selectBoxFakeOption);
+                }
                 offEventDefault(e);
             } else if (KEY_ARROW_UP === key) {
+                // Continue walking up until it finds an option that is not disabled
                 while (selectBoxFakeOption = selectBoxFakeOptions[--selectBoxOptionIndexCurrent]) {
                     if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                         break;
                     }
                 }
-                selectBoxFakeOption && (doClick(selectBoxFakeOption), doToggle(isOpen));
+                if (selectBoxFakeOption) {
+                    doClick(selectBoxFakeOption), doToggle(isOpen);
+                }
+                if (_keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex + 1])) {
+                    // TODO: Preserve selection on the next option
+                    setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
+                    setOptionFakeSelected(selectBoxFakeOption);
+                }
                 offEventDefault(e);
             } else if (KEY_END === key) {
-                selectBoxOptionIndexCurrent = toCount(selectBoxOptions);
+                // Start from the last option position + 1
+                selectBoxOptionIndexCurrent = toCount(selectBoxOptions); // Continue walking up until it finds an option that is not disabled
                 while (selectBoxFakeOption = selectBoxFakeOptions[--selectBoxOptionIndexCurrent]) {
                     if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                         break;
@@ -734,7 +779,8 @@
             } else if (KEY_ESCAPE === key) {
                 !selectBoxSize && doExit(); // offEventDefault(e);
             } else if (KEY_START === key) {
-                selectBoxOptionIndexCurrent = -1;
+                // Start from the first option position - 1
+                selectBoxOptionIndexCurrent = -1; // Continue walking up until it finds an option that is not disabled
                 while (selectBoxFakeOption = selectBoxFakeOptions[++selectBoxOptionIndexCurrent]) {
                     if (!selectBoxFakeOptionIsDisabled(selectBoxFakeOption)) {
                         break;
@@ -746,7 +792,7 @@
                 selectBoxFakeOption && doClick(selectBoxFakeOption);
                 !selectBoxSize && doExit(); // offEventDefault(e);
             }
-            isOpen && !_keyIsCtrl && !_keyIsShift && setSelectBoxFakeOptionsPosition(selectBoxFake);
+            isEnter() && !_keyIsCtrl && !_keyIsShift && setSelectBoxFakeOptionsPosition(selectBoxFake);
         }
 
         function onSelectBoxFakeKeyUp() {
@@ -931,6 +977,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.2.1';
+    OP.version = '1.2.2';
     return OP;
 });

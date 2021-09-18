@@ -152,7 +152,7 @@ function OP(source, state = {}) {
 
         selectBoxFake = setElement('div', {
             'class': classNameB,
-            'tabindex': '0',
+            'tabindex': selectBoxIsDisabled() ? false : '0',
             'title': selectBoxTitle
         }),
         selectBoxFakeLabel = setElement('div', '\u200c', {
@@ -566,6 +566,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.2.2';
+OP.version = '1.2.3';
 
 export default OP;

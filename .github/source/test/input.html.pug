@@ -1,0 +1,59 @@
+extends ../_index.pug
+
+block state
+  - const title = 'Option Picker'
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+
+block script
+  script
+    | const picker = new OP(document.querySelector('input'));
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        input(list='list-123' name='test' type='text')
+        datalist#list-123
+          option Apple
+          option Apricot
+          option Avocado
+          option Banana
+          option Blackberry
+          option Blueberry
+          option Cempedak
+          option Cherry
+          option Coconut
+          option Currant
+          option Damson
+          option Durian
+          option Elderberry
+          option Fig
+          option Grape
+          option Guava
+          option Honeyberry
+          option Jambul
+          option Kiwi
+          option Kumquat
+          option Lemon
+          option Lime
+          option Lychee
+          option Mango
+          option Melon
+          option Nectarine
+          option Orange
+          option Papaya
+          option Peach
+          option Pear
+          option Pineapple
+          option Plum
+          option Quince
+          option Rambutan
+          option Raspberry
+          option Salak
+          option Strawberry
+          option Tamarind
+          option Watermelon
+          option Yuzup
+      p
+        button(type='submit') Submit

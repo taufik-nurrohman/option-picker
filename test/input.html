@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Just a generic custom `&lt;select&gt;` element with accessibility in mind." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <main>
+      <form method="get" target="_blank">
+        <p><input list="list-123" name="test" type="text"><datalist id="list-123">
+            <option>Apple</option>
+            <option>Apricot</option>
+            <option>Avocado</option>
+            <option>Banana</option>
+            <option>Blackberry</option>
+            <option>Blueberry</option>
+            <option>Cempedak</option>
+            <option>Cherry</option>
+            <option>Coconut</option>
+            <option>Currant</option>
+            <option>Damson</option>
+            <option>Durian</option>
+            <option>Elderberry</option>
+            <option>Fig</option>
+            <option>Grape</option>
+            <option>Guava</option>
+            <option>Honeyberry</option>
+            <option>Jambul</option>
+            <option>Kiwi</option>
+            <option>Kumquat</option>
+            <option>Lemon</option>
+            <option>Lime</option>
+            <option>Lychee</option>
+            <option>Mango</option>
+            <option>Melon</option>
+            <option>Nectarine</option>
+            <option>Orange</option>
+            <option>Papaya</option>
+            <option>Peach</option>
+            <option>Pear</option>
+            <option>Pineapple</option>
+            <option>Plum</option>
+            <option>Quince</option>
+            <option>Rambutan</option>
+            <option>Raspberry</option>
+            <option>Salak</option>
+            <option>Strawberry</option>
+            <option>Tamarind</option>
+            <option>Watermelon</option>
+            <option>Yuzup</option>
+          </datalist></p>
+        <p><button type="submit">Submit</button></p>
+      </form>
+    </main>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker = new OP(document.querySelector('input'));
+    </script>
+  </body>
+</html>

@@ -26,12 +26,12 @@ function OP(source, state = {}) {
 
     if (!source) return;
 
-    const $ = this;
-
     // Already instantiated, skip!
     if (source[name]) {
         return source[name];
     }
+
+    const $ = this;
 
     // Return new instance if `OP` was called without the `new` operator
     if (!isInstance($, OP)) {

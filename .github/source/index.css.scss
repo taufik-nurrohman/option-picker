@@ -197,11 +197,11 @@ $name: 'option-picker';
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    $states: disabled;
-    @each $state in $states {
-      &--#{$state} {
-        color: var(--color-#{$state}__option-group--#{$state}, var(--color-#{$state}__option-group));
-      }
+  }
+  $states: disabled;
+  @each $state in $states {
+    &--#{$state} {
+      color: var(--color-#{$state}__option-group--#{$state}, var(--color-#{$state}__option-group));
     }
   }
   .#{$name}__option {

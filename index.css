@@ -62,96 +62,83 @@
   min-height: var(--height-min-option-picker, 0);
   min-width: var(--width-min-option-picker, 0);
   outline: 0;
-  padding: .25em;
+  padding: 0.25em;
   position: relative;
   user-select: none;
   vertical-align: middle;
   width: var(--width-option-picker, auto);
 }
-
 .option-picker:hover {
   background: var(--fill-option-picker--hover, var(--fill-option-picker));
   border-color: var(--stroke-option-picker--hover, var(--stroke-option-picker));
   box-shadow: var(--shadow-option-picker--hover, var(--shadow-option-picker));
   color: var(--color-option-picker--hover, var(--color-option-picker));
 }
-
 .option-picker:focus {
   background: var(--fill-option-picker--focus, var(--fill-option-picker));
   border-color: var(--stroke-option-picker--focus, var(--stroke-option-picker));
   box-shadow: var(--shadow-option-picker--focus, var(--shadow-option-picker));
   color: var(--color-option-picker--focus, var(--color-option-picker));
 }
-
 .option-picker:active {
   background: var(--fill-option-picker--active, var(--fill-option-picker));
   border-color: var(--stroke-option-picker--active, var(--stroke-option-picker));
   box-shadow: var(--shadow-option-picker--active, var(--shadow-option-picker));
   color: var(--color-option-picker--active, var(--color-option-picker));
 }
-
 .option-picker--focus {
   background: var(--fill-option-picker--focus, var(--fill-option-picker));
   border-color: var(--stroke-option-picker--focus, var(--stroke-option-picker));
   box-shadow: var(--shadow-option-picker--focus, var(--shadow-option-picker));
   color: var(--color-option-picker--focus, var(--color-option-picker));
 }
-
 .option-picker--disabled {
   background: var(--fill-option-picker--disabled, var(--fill-option-picker));
   border-color: var(--stroke-option-picker--disabled, var(--stroke-option-picker));
   box-shadow: var(--shadow-option-picker--disabled, var(--shadow-option-picker));
   color: var(--color-option-picker--disabled, var(--color-option-picker));
 }
-
 .option-picker::after {
   border-bottom: 0 solid var(--stroke-option-picker);
-  border-left: .35em solid transparent;
-  border-right: .35em solid transparent;
+  border-left: 0.35em solid transparent;
+  border-right: 0.35em solid transparent;
   border-top: 0.45em solid var(--stroke-option-picker);
   content: "";
   height: 0;
   pointer-events: none;
   position: absolute;
-  right: .5em;
-  top: calc(50% - (.45em / 2));
+  right: 0.5em;
+  top: calc(50% - 0.225em);
   width: 0;
 }
-
 .option-picker--open.option-picker--down {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
-
 .option-picker--open.option-picker--up {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-
 .option-picker--open::after {
   border-bottom-color: var(--stroke-option-picker--open, var(--stroke-option-picker));
-  border-bottom-width: .45em;
+  border-bottom-width: 0.45em;
   border-top-color: var(--stroke-option-picker--open, var(--stroke-option-picker));
   border-top-width: 0;
 }
-
 .option-picker--open .option-picker__options {
   background: var(--fill-option-picker__options--open, var(--fill-option-picker__options, var(--fill-option-picker)));
   border-color: var(--stroke-option-picker__options--open, var(--stroke-option-picker__options, var(--stroke-option-picker)));
   color: var(--color-option-picker__options--open, var(--stroke-option-picker__options, var(--stroke-option-picker)));
   display: block;
 }
-
 .option-picker--open.option-picker--down .option-picker__options {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-
 .option-picker--open.option-picker--up .option-picker__options {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
-
 .option-picker * {
   outline: 0;
 }
@@ -168,7 +155,6 @@
   position: fixed;
   z-index: 9999;
 }
-
 .option-picker__options .option-picker__option {
   background: var(--fill-option-picker__option);
   color: var(--color-option-picker__option);
@@ -176,62 +162,53 @@
   display: block;
   font: inherit;
   overflow: hidden;
-  padding: 0 .5em;
+  padding: 0 0.5em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .option-picker__options .option-picker__option:not(.option-picker__option--disabled):hover {
   background: var(--fill-option-picker__option--hover, var(--fill-option-picker__option));
   color: var(--color-option-picker__option--hover, var(--color-option-picker__option));
 }
-
 .option-picker__options .option-picker__option:not(.option-picker__option--disabled):focus {
   background: var(--fill-option-picker__option--focus, var(--fill-option-picker__option));
   color: var(--color-option-picker__option--focus, var(--color-option-picker__option));
 }
-
 .option-picker__options .option-picker__option:not(.option-picker__option--disabled):active {
   background: var(--fill-option-picker__option--active, var(--fill-option-picker__option));
   color: var(--color-option-picker__option--active, var(--color-option-picker__option));
 }
-
 .option-picker__options .option-picker__option--selected {
   background: var(--fill-option-picker__option--selected, var(--fill-option-picker__option));
   color: var(--color-option-picker__option--selected, var(--color-option-picker__option));
 }
-
 .option-picker__options .option-picker__option--disabled {
   background: var(--fill-option-picker__option--disabled, var(--fill-option-picker__option));
   color: var(--color-option-picker__option--disabled, var(--color-option-picker__option));
 }
-
 .option-picker__options .option-picker__option--disabled {
   cursor: not-allowed;
 }
 
 .option-picker__option-group {
   display: block;
-  padding: 0 .5em;
+  padding: 0 0.5em;
 }
-
 .option-picker__option-group[title]::before {
   content: attr(title);
   display: block;
   font-weight: bold;
-  margin: 0 -.5em;
+  margin: 0 -0.5em;
   overflow: hidden;
-  padding: 0 .5em;
+  padding: 0 0.5em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.option-picker__option-group[title]--disabled {
+.option-picker__option-group--disabled {
   color: var(--color-disabled__option-group--disabled, var(--color-disabled__option-group));
 }
-
 .option-picker__option-group .option-picker__option {
-  margin: 0 -.5em;
+  margin: 0 -0.5em;
   padding-left: 1.5em;
 }
 
@@ -240,56 +217,46 @@
   position: fixed;
   top: -9999px;
 }
-
 .option-picker__source:disabled + .option-picker {
   background: var(--fill-option-picker--disabled, var(--fill-option-picker));
   border-color: var(--stroke-option-picker--disabled, var(--stroke-option-picker));
   color: var(--color-option-picker--disabled, var(--color-option-picker));
   cursor: not-allowed;
 }
-
 .option-picker__source:disabled + .option-picker::after {
   border-top-color: var(--stroke-option-picker--disabled, var(--stroke-option-picker));
 }
-
 .option-picker__source:disabled + .option-picker .option-picker__option {
   color: var(--color-option-picker--disabled, var(--color-option-picker));
 }
-
 .option-picker__source:disabled + .option-picker .option-picker__options {
   background: var(--fill-option-picker__options--disabled, var(--fill-option-picker--disabled), var(--fill-option-picker));
   border-color: var(--stroke-option-picker__options--disabled, var(--stroke-option-picker--disabled, var(--stroke-option-picker)));
   color: var(--color-option-picker__options--disabled, var(--color-option-picker--disabled, var(--color-option-picker)));
 }
-
 .option-picker__source:disabled + .option-picker .option-picker__options,
 .option-picker__source:disabled + .option-picker .option-picker__values {
   pointer-events: none;
 }
-
 .option-picker__source[size] + .option-picker {
   height: auto;
 }
-
 .option-picker__source[size] + .option-picker::after {
   display: none;
 }
-
 .option-picker__source[size] + .option-picker .option-picker__options {
   border-color: inherit;
   border-width: 0;
   border-top-width: inherit;
   box-shadow: none;
   display: block;
-  margin: .25em -.25em -.25em;
+  margin: 0.25em -0.25em -0.25em;
   position: relative;
   z-index: 1;
 }
-
 .option-picker__source[size] + .option-picker .option-picker__values {
   margin: 0;
 }
-
 .option-picker__source[multiple] + .option-picker .option-picker__values {
   white-space: normal;
 }
@@ -297,11 +264,10 @@
 .option-picker__values {
   margin-right: 1.25em;
   overflow: hidden;
-  padding: 0 .25em;
+  padding: 0 0.25em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .option-picker__values .option-picker__value {
   display: inline;
   font: inherit;

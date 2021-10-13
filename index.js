@@ -478,11 +478,11 @@
     const KEY_TAB = 'Tab';
 
     function OP(source, state = {}) {
-        if (!source) return;
-        const $ = this; // Already instantiated, skip!
+        if (!source) return; // Already instantiated, skip!
         if (source[name]) {
             return source[name];
-        } // Return new instance if `OP` was called without the `new` operator
+        }
+        const $ = this; // Return new instance if `OP` was called without the `new` operator
         if (!isInstance($, OP)) {
             return new OP(source, state);
         }

@@ -258,6 +258,11 @@
 .option-picker__source[size] + .option-picker .option-picker__values {
   margin: 0;
 }
+.option-picker__source[size] + .option-picker .option-picker__values[contenteditable] {
+  -moz-user-select: text;
+  -webkit-user-select: text;
+  user-select: text;
+}
 .option-picker__source[multiple] + .option-picker .option-picker__values {
   white-space: normal;
 }

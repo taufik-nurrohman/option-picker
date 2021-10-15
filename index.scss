@@ -254,6 +254,11 @@ $states: focus, disabled;
       }
       .#{$name}__values {
         margin: 0;
+        &[contenteditable] {
+          -moz-user-select: text;
+          -webkit-user-select: text;
+          user-select: text;
+        }
       }
     }
   }

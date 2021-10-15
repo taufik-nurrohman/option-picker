@@ -140,6 +140,7 @@ function OP(source, state = {}) {
             'class': classNameE + 'source',
             'tabindex': '-1'
         }),
+        selectBoxInput = 'input' === getName(selectBox),
         selectBoxIsDisabled = () => selectBox.disabled,
         selectBoxItems = getChildren(selectBox),
         selectBoxMultiple = selectBox.multiple,
@@ -155,8 +156,9 @@ function OP(source, state = {}) {
             'tabindex': selectBoxIsDisabled() ? false : '0',
             'title': selectBoxTitle
         }),
-        selectBoxFakeLabel = setElement('div', '\u200c', {
-            'class': classNameValuesB
+        selectBoxFakeLabel = setElement('div', selectBoxInput ? "" : '\u200c', {
+            'class': classNameValuesB,
+            'contenteditable': selectBoxInput ? "" : false
         }),
         selectBoxFakeBorderBottomWidth = 0,
         selectBoxFakeBorderTopWidth = 0,
@@ -167,7 +169,15 @@ function OP(source, state = {}) {
         selectBoxFakeOptions = [],
 
         _keyIsCtrl = false,
-        _keyIsShift = false;
+        _keyIsShift = false,
+
+        list = selectBox.list;
+
+    if (selectBoxInput && list) {
+        selectBoxItems = getChildren(list);
+        selectBoxOptions = list.options;
+        selectBoxSize = null;
+    }
 
     if (selectBoxMultiple && !selectBoxSize) {
         selectBox.size = selectBoxSize = state.size;

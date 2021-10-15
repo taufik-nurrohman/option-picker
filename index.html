@@ -5,7 +5,7 @@
     <meta content="#000" name="theme-color">
     <meta content="width=device-width" name="viewport">
     <meta content="Just a generic custom `&lt;select&gt;` element with accessibility in mind." name="description">
-    <title>Option Picker 1.2.3</title>
+    <title>Option Picker 1.2.4</title>
     <link href="index.min.css" rel="stylesheet">
     <style>
       * {
@@ -13,8 +13,8 @@
       }
       :root {
         background: #fff;
-        color: #000;
         border-top: 4px solid;
+        color: #000;
         font: normal normal 16px/1.25 serif;
       }
       a {
@@ -33,13 +33,13 @@
       header,
       main,
       nav {
-        max-width: 700px;
         margin: 0 auto;
+        max-width: 700px;
       }
       hr {
         border: 0;
-        color: inherit;
         border-top: 1px dashed;
+        color: inherit;
         height: 0;
       }
       pre {
@@ -47,8 +47,8 @@
         word-wrap: break-word;
       }
       pre code {
-        display: block;
         background: #eee;
+        display: block;
         padding: 1em;
       }
       table {
@@ -67,21 +67,16 @@
       }
 
       /* Add Bootstrap-like focus ring effect */
-      .option-picker--focus,
-      .option-picker--focus:hover {
+      .option-picker--focus {
         --shadow-option-picker--focus: 0 0 0 3px rgba(0, 0, 255, .25);
-        --shadow-option-picker--hover: 0 0 0 3px rgba(0, 0, 255, .25);
         --shadow-option-picker: 0 0 0 3px rgba(0, 0, 255, .25);
-        --stroke-option-picker--focus: #00f;
-        --stroke-option-picker--hover: #00f;
-        --stroke-option-picker: #00f;
       }
     </style>
   </head>
   <body>
     <p>Do you like this project? Please support my <a href="https://github.com/mecha-cms">Mecha CMS</a> project too. Thank you!</p>
     <header>
-      <h1>Option Picker 1.2.3</h1>
+      <h1>Option Picker 1.2.4</h1>
       <p>Just a generic custom <code>&lt;select&gt;</code> element with accessibility in mind.</p>
       <hr>
     </header>
@@ -112,7 +107,7 @@
       </form>
       <h2>Features</h2>
       <ul>
-        <li>Light-weight, no dependencies. It uses vanilla JavaScript.</li>
+        <li>Light-weight, no dependencies.</li>
         <li>Simple <abbr title="Application Programming Interface">API</abbr>. Easy to master.</li>
         <li>Responsive. It tries to place the option menus inside an area that is visible within the browser window.</li>
         <li>Care about accessibility. Interacts very well using the keyboard keys. Free from the focus traps.</li>
@@ -135,7 +130,7 @@
     &lt;/p&gt;
     &lt;script src="<a href="index.min.js" target="_blank">./index.min.js</a>"&gt;&lt;/script&gt;
     &lt;script&gt;
-    const picker = new OP(document.querySelector('select'));
+      const picker = new OP(document.querySelector('select'));
     &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
@@ -190,7 +185,6 @@ const picker = new OP(document.querySelector('select'));</code></pre>
           </tr>
         </tbody>
       </table>
-      <pre><code>const picker = new OP(<var>source</var>, <var>state</var> = {});</code></pre>
       <h2>Methods and Properties</h2>
       <h3>OP.instances</h3>
       <p>Return the option picker instances.</p>

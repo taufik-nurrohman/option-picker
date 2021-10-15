@@ -981,6 +981,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.2.3';
+    OP.version = '1.2.4';
     return OP;
 });

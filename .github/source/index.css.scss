@@ -22,8 +22,6 @@ $name: 'option-picker';
   --font-face-#{$name}: inherit;
   --font-height-#{$name}: 1.5em;
   --font-size-#{$name}: inherit;
-  --radius-#{$name}: 0;
-  // --radius-#{$name}__options: 0;
   --shadow-#{$name}: none;
   --shadow-#{$name}__options: 0 1px 2px rgba(0, 0, 0, .4);
   --stroke-#{$name}--disabled: #666;
@@ -40,6 +38,7 @@ $name: 'option-picker';
   &,
   & * {
     box-sizing: border-box;
+    font: inherit;
   }
 }
 
@@ -52,12 +51,11 @@ $name: 'option-picker';
   background: var(--fill-#{$name});
   border: 1px solid;
   border-color: var(--stroke-#{$name});
-  border-radius: var(--radius-#{$name});
+  border-radius: var(--corner-#{$name});
   box-shadow: var(--shadow-#{$name});
   color: var(--color-#{$name});
   cursor: pointer;
   display: inline-block;
-  font: inherit;
   font-family: var(--font-face-#{$name});
   font-size: var(--font-size-#{$name});
   height: var(--height-#{$name}, auto);
@@ -81,20 +79,13 @@ $name: 'option-picker';
       color: var(--color-#{$name}--#{$state}, var(--color-#{$name}));
     }
   }
-  $states: focus, disabled;
-  @each $state in $states {
-    &--#{$state} {
-      background: var(--fill-#{$name}--#{$state}, var(--fill-#{$name}));
-      border-color: var(--stroke-#{$name}--#{$state}, var(--stroke-#{$name}));
-      box-shadow: var(--shadow-#{$name}--#{$state}, var(--shadow-#{$name}));
-      color: var(--color-#{$name}--#{$state}, var(--color-#{$name}));
-    }
-  }
   &::after {
-    border-bottom: 0 solid var(--stroke-#{$name});
-    border-left: .35em solid transparent;
-    border-right: .35em solid transparent;
-    border-top: .45em solid var(--stroke-#{$name});
+    border: 0 solid transparent;
+    border-bottom-color: inherit;
+    border-left-width: .35em;
+    border-right-width: .35em;
+    border-top-color: inherit;
+    border-top-width: .45em;
     content: "";
     height: 0;
     pointer-events: none;
@@ -113,9 +104,7 @@ $name: 'option-picker';
       border-top-right-radius: 0;
     }
     &::after {
-      border-bottom-color: var(--stroke-#{$name}--open, var(--stroke-#{$name}));
       border-bottom-width: .45em;
-      border-top-color: var(--stroke-#{$name}--open, var(--stroke-#{$name}));
       border-top-width: 0;
     }
     .#{$name}__options {
@@ -142,11 +131,21 @@ $name: 'option-picker';
   }
 }
 
+$states: focus, disabled;
+@each $state in $states {
+  .#{$name}.#{$name}--#{$state} {
+    background: var(--fill-#{$name}--#{$state}, var(--fill-#{$name}));
+    border-color: var(--stroke-#{$name}--#{$state}, var(--stroke-#{$name}));
+    box-shadow: var(--shadow-#{$name}--#{$state}, var(--shadow-#{$name}));
+    color: var(--color-#{$name}--#{$state}, var(--color-#{$name}));
+  }
+}
+
 .#{$name}__options {
   background: var(--fill-#{$name}__options, var(--fill-#{$name}));
   border: inherit;
   border-color: var(--stroke-#{$name}__options, var(--stroke-#{$name}));
-  border-radius: var(--radius-#{$name}__options, var(--radius-#{$name}));
+  border-radius: var(--corner-#{$name}__options, var(--corner-#{$name}));
   box-shadow: var(--shadow-#{$name}__options);
   color: var(--color-#{$name}__options, var(--color-#{$name}));
   display: none;

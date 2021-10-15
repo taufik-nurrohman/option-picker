@@ -22,7 +22,7 @@ Contribute
 Release Notes
 -------------
 
-### 1.2.3
+### 1.2.4
 
  - Added CSS variables for easy integration with third-party applications.
 

@@ -566,6 +566,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.2.3';
+OP.version = '1.2.4';
 
 export default OP;

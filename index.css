@@ -20,7 +20,6 @@
   --font-face-option-picker: inherit;
   --font-height-option-picker: 1.5em;
   --font-size-option-picker: inherit;
-  --radius-option-picker: 0;
   --shadow-option-picker: none;
   --shadow-option-picker__options: 0 1px 2px rgba(0, 0, 0, .4);
   --stroke-option-picker--disabled: #666;
@@ -36,6 +35,7 @@
 .option-picker,
 .option-picker * {
   box-sizing: border-box;
+  font: inherit;
 }
 
 .option-picker {
@@ -47,12 +47,11 @@
   background: var(--fill-option-picker);
   border: 1px solid;
   border-color: var(--stroke-option-picker);
-  border-radius: var(--radius-option-picker);
+  border-radius: var(--corner-option-picker);
   box-shadow: var(--shadow-option-picker);
   color: var(--color-option-picker);
   cursor: pointer;
   display: inline-block;
-  font: inherit;
   font-family: var(--font-face-option-picker);
   font-size: var(--font-size-option-picker);
   height: var(--height-option-picker, auto);
@@ -86,23 +85,13 @@
   box-shadow: var(--shadow-option-picker--active, var(--shadow-option-picker));
   color: var(--color-option-picker--active, var(--color-option-picker));
 }
-.option-picker--focus {
-  background: var(--fill-option-picker--focus, var(--fill-option-picker));
-  border-color: var(--stroke-option-picker--focus, var(--stroke-option-picker));
-  box-shadow: var(--shadow-option-picker--focus, var(--shadow-option-picker));
-  color: var(--color-option-picker--focus, var(--color-option-picker));
-}
-.option-picker--disabled {
-  background: var(--fill-option-picker--disabled, var(--fill-option-picker));
-  border-color: var(--stroke-option-picker--disabled, var(--stroke-option-picker));
-  box-shadow: var(--shadow-option-picker--disabled, var(--shadow-option-picker));
-  color: var(--color-option-picker--disabled, var(--color-option-picker));
-}
 .option-picker::after {
-  border-bottom: 0 solid var(--stroke-option-picker);
-  border-left: 0.35em solid transparent;
-  border-right: 0.35em solid transparent;
-  border-top: 0.45em solid var(--stroke-option-picker);
+  border: 0 solid transparent;
+  border-bottom-color: inherit;
+  border-left-width: 0.35em;
+  border-right-width: 0.35em;
+  border-top-color: inherit;
+  border-top-width: 0.45em;
   content: "";
   height: 0;
   pointer-events: none;
@@ -120,9 +109,7 @@
   border-top-right-radius: 0;
 }
 .option-picker--open::after {
-  border-bottom-color: var(--stroke-option-picker--open, var(--stroke-option-picker));
   border-bottom-width: 0.45em;
-  border-top-color: var(--stroke-option-picker--open, var(--stroke-option-picker));
   border-top-width: 0;
 }
 .option-picker--open .option-picker__options {
@@ -143,11 +130,25 @@
   outline: 0;
 }
 
+.option-picker.option-picker--focus {
+  background: var(--fill-option-picker--focus, var(--fill-option-picker));
+  border-color: var(--stroke-option-picker--focus, var(--stroke-option-picker));
+  box-shadow: var(--shadow-option-picker--focus, var(--shadow-option-picker));
+  color: var(--color-option-picker--focus, var(--color-option-picker));
+}
+
+.option-picker.option-picker--disabled {
+  background: var(--fill-option-picker--disabled, var(--fill-option-picker));
+  border-color: var(--stroke-option-picker--disabled, var(--stroke-option-picker));
+  box-shadow: var(--shadow-option-picker--disabled, var(--shadow-option-picker));
+  color: var(--color-option-picker--disabled, var(--color-option-picker));
+}
+
 .option-picker__options {
   background: var(--fill-option-picker__options, var(--fill-option-picker));
   border: inherit;
   border-color: var(--stroke-option-picker__options, var(--stroke-option-picker));
-  border-radius: var(--radius-option-picker__options, var(--radius-option-picker));
+  border-radius: var(--corner-option-picker__options, var(--corner-option-picker));
   box-shadow: var(--shadow-option-picker__options);
   color: var(--color-option-picker__options, var(--color-option-picker));
   display: none;

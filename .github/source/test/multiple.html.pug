@@ -11,7 +11,7 @@ block script
 
 block content
   main
-    p Press #[kbd ⌘] key while clicking on the available options to select more than one option. #[code multiple] attribute needs to be added to the #[code &lt;select&gt;] element to enable this feature.
+    p Press #[kbd Control] key while clicking on the available options to select more than one option. #[code multiple] attribute needs to be added to the #[code &lt;select&gt;] element to enable this feature.
     form(method='get' target='_blank')
       p
         select(multiple name='test[]' size='4')
@@ -22,4 +22,4 @@ block content
           option Option 5
       p
         button(type='submit') Submit
-    p #[strong TODO:] Add #[kbd ⇧] + Click, #[kbd ⇧+↑], and #[kbd ⇧+↓] feature.
+    p #[strong TODO:] Add #[kbd Shift] + Click, #[kbd Shift]#[kbd ArrowDown], and #[kbd Shift]#[kbd ArrowUp] feature.

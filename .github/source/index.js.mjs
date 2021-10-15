@@ -138,7 +138,7 @@ function OP(source, state = {}) {
 
         selectBox = setElement(source, {
             'class': classNameE + 'source',
-            'tabindex': '-1'
+            'tabindex': -1
         }),
         selectBoxInput = 'input' === getName(selectBox),
         selectBoxIsDisabled = () => selectBox.disabled,
@@ -153,7 +153,7 @@ function OP(source, state = {}) {
 
         selectBoxFake = setElement('div', {
             'class': classNameB,
-            'tabindex': selectBoxIsDisabled() ? false : '0',
+            'tabindex': selectBoxIsDisabled() ? false : 0,
             'title': selectBoxTitle
         }),
         selectBoxFakeLabel = setElement('div', selectBoxInput ? "" : '\u200c', {
@@ -164,7 +164,7 @@ function OP(source, state = {}) {
         selectBoxFakeBorderTopWidth = 0,
         selectBoxFakeDropDown = setElement('div', {
             'class': classNameOptionsB,
-            'tabindex': '-1'
+            'tabindex': -1
         }),
         selectBoxFakeOptions = [],
 
@@ -376,7 +376,11 @@ function OP(source, state = {}) {
             !selectBoxSize && doExit();
             // offEventDefault(e);
         }
-        isEnter() && !_keyIsCtrl && !_keyIsShift && setSelectBoxFakeOptionsPosition(selectBoxFake);
+        if (isEnter() && !_keyIsCtrl && !_keyIsShift) {
+            selectBoxFakeBorderBottomWidth = toNumber(getStyle(selectBoxFake, 'border-bottom-width'));
+            selectBoxFakeBorderTopWidth = toNumber(getStyle(selectBoxFake, 'border-top-width')),
+            setSelectBoxFakeOptionsPosition(selectBoxFake);
+        }
     }
 
     function onSelectBoxFakeKeyUp() {

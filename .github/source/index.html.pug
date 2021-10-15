@@ -72,7 +72,7 @@ block style
     | }
     |
     | /* Add Bootstrap-like focus ring effect */
-    | .option-picker--focus {
+    | .option-picker.option-picker--focus {
     |   --shadow-option-picker--focus: 0 0 0 3px rgba(0, 0, 255, .25);
     |   --shadow-option-picker: 0 0 0 3px rgba(0, 0, 255, .25);
     | }
@@ -86,14 +86,14 @@ block content
   main
     form(method='get' target='_blank')
       p
-        select(name='test-1')
+        select#test-1(name='test-1')
           option(value='1') Option 1
           option(value='2') Option 2
           option(value='3') Option 3
           option(disabled value='4') Option 4
           option Option 5
       p
-        select(name='test-2')
+        select#test-2(name='test-2')
           optgroup(label='Group 1')
             option(value='1') Option 1
             option(value='2') Option 2
@@ -104,6 +104,7 @@ block content
             option(value='#f00') Red
             option(value='#0f0') Green
             option(value='#00f') Blue
+      p Test connection with #[code &lt;label&gt;] element: #[label(for='test-1' style={'cursor':'pointer','text-decoration':'underline'}) click here to focus!]
       p: button(type='submit') Submit
     h2 Features
     ul

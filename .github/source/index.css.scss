@@ -51,7 +51,7 @@ $name: 'option-picker';
   background: var(--fill-#{$name});
   border: 1px solid;
   border-color: var(--stroke-#{$name});
-  border-radius: var(--corner-#{$name});
+  border-radius: var(--arc-#{$name});
   box-shadow: var(--shadow-#{$name});
   color: var(--color-#{$name});
   cursor: pointer;
@@ -70,13 +70,12 @@ $name: 'option-picker';
   user-select: none;
   vertical-align: middle;
   width: var(--width-#{$name}, auto);
-  $states: hover, focus, active;
-  @each $state in $states {
-    &:#{$state} {
-      background: var(--fill-#{$name}--#{$state}, var(--fill-#{$name}));
-      border-color: var(--stroke-#{$name}--#{$state}, var(--stroke-#{$name}));
-      box-shadow: var(--shadow-#{$name}--#{$state}, var(--shadow-#{$name}));
-      color: var(--color-#{$name}--#{$state}, var(--color-#{$name}));
+  @each $v in (hover, focus, active) {
+    &:#{$v} {
+      background: var(--fill-#{$name}--#{$v}, var(--fill-#{$name}));
+      border-color: var(--stroke-#{$name}--#{$v}, var(--stroke-#{$name}));
+      box-shadow: var(--shadow-#{$name}--#{$v}, var(--shadow-#{$name}));
+      color: var(--color-#{$name}--#{$v}, var(--color-#{$name}));
     }
   }
   &::after {
@@ -131,13 +130,12 @@ $name: 'option-picker';
   }
 }
 
-$states: focus, disabled;
-@each $state in $states {
-  .#{$name}.#{$name}--#{$state} {
-    background: var(--fill-#{$name}--#{$state}, var(--fill-#{$name}));
-    border-color: var(--stroke-#{$name}--#{$state}, var(--stroke-#{$name}));
-    box-shadow: var(--shadow-#{$name}--#{$state}, var(--shadow-#{$name}));
-    color: var(--color-#{$name}--#{$state}, var(--color-#{$name}));
+@each $v in (focus, disabled) {
+  .#{$name}.#{$name}--#{$v} {
+    background: var(--fill-#{$name}--#{$v}, var(--fill-#{$name}));
+    border-color: var(--stroke-#{$name}--#{$v}, var(--stroke-#{$name}));
+    box-shadow: var(--shadow-#{$name}--#{$v}, var(--shadow-#{$name}));
+    color: var(--color-#{$name}--#{$v}, var(--color-#{$name}));
   }
 }
 
@@ -145,7 +143,7 @@ $states: focus, disabled;
   background: var(--fill-#{$name}__options, var(--fill-#{$name}));
   border: inherit;
   border-color: var(--stroke-#{$name}__options, var(--stroke-#{$name}));
-  border-radius: var(--corner-#{$name}__options, var(--corner-#{$name}));
+  border-radius: var(--arc-#{$name}__options, var(--arc-#{$name}));
   box-shadow: var(--shadow-#{$name}__options);
   color: var(--color-#{$name}__options, var(--color-#{$name}));
   display: none;
@@ -162,18 +160,19 @@ $states: focus, disabled;
     padding: 0 .5em;
     text-overflow: ellipsis;
     white-space: nowrap;
-    $states: hover, focus, active;
-    @each $state in $states {
-      &:not(.#{$name}__option--disabled):#{$state} {
-        background: var(--fill-#{$name}__option--#{$state}, var(--fill-#{$name}__option));
-        color: var(--color-#{$name}__option--#{$state}, var(--color-#{$name}__option));
+    &[hidden] {
+      display: none;
+    }
+    @each $v in (hover, focus, active) {
+      &:not(.#{$name}__option--disabled):#{$v} {
+        background: var(--fill-#{$name}__option--#{$v}, var(--fill-#{$name}__option));
+        color: var(--color-#{$name}__option--#{$v}, var(--color-#{$name}__option));
       }
     }
-    $states: selected, disabled;
-    @each $state in $states {
-      &--#{$state} {
-        background: var(--fill-#{$name}__option--#{$state}, var(--fill-#{$name}__option));
-        color: var(--color-#{$name}__option--#{$state}, var(--color-#{$name}__option));
+    @each $v in (selected, disabled) {
+      &--#{$v} {
+        background: var(--fill-#{$name}__option--#{$v}, var(--fill-#{$name}__option));
+        color: var(--color-#{$name}__option--#{$v}, var(--color-#{$name}__option));
       }
     }
     &--disabled {
@@ -197,10 +196,9 @@ $states: focus, disabled;
       white-space: nowrap;
     }
   }
-  $states: disabled;
-  @each $state in $states {
-    &--#{$state} {
-      color: var(--color-#{$state}__option-group--#{$state}, var(--color-#{$state}__option-group));
+  @each $v in (disabled) {
+    &--#{$v} {
+      color: var(--color-#{$v}__option-group--#{$v}, var(--color-#{$v}__option-group));
     }
   }
   .#{$name}__option {

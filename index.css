@@ -47,7 +47,7 @@
   background: var(--fill-option-picker);
   border: 1px solid;
   border-color: var(--stroke-option-picker);
-  border-radius: var(--corner-option-picker);
+  border-radius: var(--arc-option-picker);
   box-shadow: var(--shadow-option-picker);
   color: var(--color-option-picker);
   cursor: pointer;
@@ -148,7 +148,7 @@
   background: var(--fill-option-picker__options, var(--fill-option-picker));
   border: inherit;
   border-color: var(--stroke-option-picker__options, var(--stroke-option-picker));
-  border-radius: var(--corner-option-picker__options, var(--corner-option-picker));
+  border-radius: var(--arc-option-picker__options, var(--arc-option-picker));
   box-shadow: var(--shadow-option-picker__options);
   color: var(--color-option-picker__options, var(--color-option-picker));
   display: none;
@@ -166,6 +166,9 @@
   padding: 0 0.5em;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.option-picker__options .option-picker__option[hidden] {
+  display: none;
 }
 .option-picker__options .option-picker__option:not(.option-picker__option--disabled):hover {
   background: var(--fill-option-picker__option--hover, var(--fill-option-picker__option));

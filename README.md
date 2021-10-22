@@ -22,6 +22,10 @@ Contribute
 Release Notes
 -------------
 
+### main
+
+ - TODO
+
 ### 1.2.4
 
  - Added CSS variables for easy integration with third-party applications.

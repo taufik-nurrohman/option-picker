@@ -357,6 +357,16 @@
         }
         return node;
     };
+    var setText = function setText(node, content, trim) {
+        if (trim === void 0) {
+            trim = true;
+        }
+        if (null === content) {
+            return node;
+        }
+        var state = 'textContent';
+        return hasState(node, state) && (node[state] = trim ? content.trim() : content), node;
+    };
     var toggleClass = function toggleClass(node, name, force) {
         return node.classList.toggle(name, force), node;
     };
@@ -368,6 +378,15 @@
             timer && clearTimeout(timer);
             timer = setTimeout(function() {
                 return then.apply(_this, _arguments);
+            }, time);
+        };
+    };
+    var delay = function delay(then, time) {
+        return function() {
+            var _arguments2 = arguments,
+                _this2 = this;
+            setTimeout(function() {
+                return then.apply(_this2, _arguments2);
             }, time);
         };
     };
@@ -490,6 +509,7 @@
     const KEY_ESCAPE = 'Escape';
     const KEY_START = 'Home';
     const KEY_TAB = 'Tab';
+    const ZERO_WIDTH_SPACE = '\u200c';
 
     function selectElementContents(node) {
         let range = D.createRange();
@@ -570,7 +590,7 @@
         }
 
         function setLabelContent(content) {
-            content = content || '\u200c';
+            content = content || ZERO_WIDTH_SPACE;
             selectBoxFakeLabel.title = content.replace(/<.*?>/g, "");
             setHTML(selectBoxFakeLabel, content);
         }
@@ -594,6 +614,7 @@
         let classNameB = state['class'],
             classNameE = classNameB + '__',
             classNameM = classNameB + '--',
+            classNameInputB = classNameE + 'input',
             classNameOptionB = classNameE + 'option',
             classNameOptionM = classNameOptionB + '--',
             classNameOptionsB = classNameE + 'options',
@@ -603,7 +624,15 @@
                 'class': classNameE + 'source',
                 'tabindex': -1
             }),
-            selectBoxInput = 'input' === getName(selectBox),
+            selectBoxFakeInput = 'input' === getName(selectBox) ? setElement('span', "", {
+                'class': classNameInputB
+            }) : null,
+            selectBoxPlaceholder = selectBoxFakeInput ? source.placeholder : "",
+            selectBoxFakeInputPlaceholder = setElement('span', selectBoxPlaceholder),
+            selectBoxFakeInputValue = setElement('span', "", {
+                'contenteditable': "",
+                'tabindex': 0
+            }),
             selectBoxIsDisabled = () => selectBox.disabled,
             selectBoxItems = getChildren(selectBox),
             selectBoxMultiple = selectBox.multiple,
@@ -615,14 +644,13 @@
             selectBoxValue = getValue(),
             selectBoxFake = setElement('div', {
                 'class': classNameB,
-                'tabindex': selectBoxInput || selectBoxIsDisabled() ? false : 0,
+                'tabindex': selectBoxFakeInput || selectBoxIsDisabled() ? false : 0,
                 'title': selectBoxTitle
             }),
-            selectBoxFakeLabel = setElement('div', selectBoxInput ? "" : '\u200c', {
-                'class': classNameValuesB,
-                'contenteditable': selectBoxInput ? "" : false,
-                'tabindex': selectBoxInput ? 0 : false
+            selectBoxFakeLabel = setElement('div', ZERO_WIDTH_SPACE, {
+                'class': classNameValuesB
             }),
+            selectBoxList = selectBox.list,
             selectBoxFakeBorderBottomWidth = 0,
             selectBoxFakeBorderTopWidth = 0,
             selectBoxFakeDropDown = setElement('div', {
@@ -631,17 +659,20 @@
             }),
             selectBoxFakeOptions = [],
             _keyIsCtrl = false,
-            _keyIsShift = false,
-            list = selectBox.list;
-        if (selectBoxInput && list) {
-            selectBoxItems = getChildren(list);
-            selectBoxOptions = list.options;
+            _keyIsShift = false;
+        if (selectBoxFakeInput && selectBoxList) {
+            selectBoxItems = getChildren(selectBoxList);
+            selectBoxOptions = selectBoxList.options;
             selectBoxSize = null;
         }
         if (selectBoxMultiple && !selectBoxSize) {
             selectBox.size = selectBoxSize = state.size;
         }
-        setChildLast(selectBoxFake, selectBoxFakeLabel);
+        if (selectBoxFakeInput) {
+            setChildLast(selectBoxFakeInput, selectBoxFakeInputValue);
+            setChildLast(selectBoxFakeInput, selectBoxFakeInputPlaceholder);
+        }
+        setChildLast(selectBoxFake, selectBoxFakeInput || selectBoxFakeLabel);
         setNext(selectBox, selectBoxFake);
 
         function doBlur() {
@@ -667,6 +698,12 @@
             fire('exit', getLot());
         }
 
+        function doFit() {
+            selectBoxFakeBorderBottomWidth = toNumber(getStyle(selectBoxFake, 'border-bottom-width'));
+            selectBoxFakeBorderTopWidth = toNumber(getStyle(selectBoxFake, 'border-top-width'));
+            setSelectBoxFakeOptionsPosition(selectBoxFake);
+        }
+
         function doToggle(force) {
             toggleClass(selectBoxFake, classNameM + 'open', force);
             let isOpen = isEnter();
@@ -674,8 +711,12 @@
             return isOpen;
         }
 
-        function doValue(content, value, index, classNames) {
-            return '<span class="' + classNameValueB + ' ' + classNames + '" data-index="' + index + '"' + (value ? ' data-value="' + value + '"' : "") + '>' + content + '</span>';
+        function doValue(content, index, value, classNames) {
+            return setElement('span', content, {
+                'class': classNameValueB + ' ' + classNames,
+                'data-index': index,
+                'data-value': value
+            }).outerHTML;
         }
 
         function isEnter() {
@@ -683,22 +724,22 @@
         }
 
         function onSelectBoxFocus() {
-            (selectBoxInput ? selectBoxFakeLabel : selectBoxFake).focus();
+            (selectBoxFakeInput ? selectBoxFakeInputValue : selectBoxFake).focus();
         }
 
         function onSelectBoxFakeOptionClick(e) {
             if (selectBoxIsDisabled()) {
                 return;
             }
-            let selectBoxFakeOption = this,
+            let selectBoxFakeLabelContent = [],
+                content,
+                index,
+                value,
+                selectBoxFakeOption = this,
                 selectBoxOption = selectBoxFakeOption[PROP_SOURCE],
                 selectBoxValuePrevious = selectBoxValue;
             selectBoxOptionIndex = selectBoxFakeOption[PROP_INDEX];
             selectBoxValue = selectBoxFakeOption[PROP_VALUE];
-            let selectBoxFakeLabelContent = [],
-                content,
-                index,
-                value;
             e && e.isTrusted && onSelectBoxFocus();
             offEventDefault(e);
             if (selectBoxMultiple && (_keyIsCtrl || _keyIsShift)) {
@@ -709,13 +750,12 @@
                     setOptionSelected(selectBoxOption);
                     setOptionFakeSelected(selectBoxFakeOption);
                 }
-                for (let i = 0, j = toCount(selectBoxOptions); i < j; ++i) {
+                for (let i = 0, j = toCount(selectBoxOptions), v; i < j; ++i) {
                     if (getOptionSelected(selectBoxOptions[i])) {
-                        content = getText(selectBoxFakeOptions[i]);
-                        index = selectBoxFakeOptions[i][PROP_INDEX];
-                        value = selectBoxFakeOptions[i][PROP_VALUE];
-                        content = doValue(content, value, index, getClasses(selectBoxFakeOptions[i], false));
-                        selectBoxFakeLabelContent.push(content);
+                        content = getText(v = selectBoxFakeOptions[i]);
+                        index = v[PROP_INDEX];
+                        value = v[PROP_VALUE];
+                        selectBoxFakeLabelContent.push(doValue(content, index, value, getClasses(v, false)));
                     }
                 }
                 setLabelContent(selectBoxFakeLabelContent.join('<span>' + state.join + '</span>'));
@@ -723,14 +763,14 @@
                 return;
             }
             content = getText(selectBoxFakeOption);
-            if (selectBoxInput) {
-                setValue(content);
-            }
             index = selectBoxFakeOption[PROP_INDEX];
             value = selectBoxFakeOption[PROP_VALUE];
-            content = doValue(content, value, index, getClasses(selectBoxFakeOption, false));
-            setLabelContent(content);
-            selectBoxInput && selectElementContents(selectBoxFakeLabel);
+            if (content && selectBoxFakeInput) {
+                setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
+                setText(selectBoxFakeInputValue, content);
+            }
+            setLabelContent(doValue(content, index, value, getClasses(selectBoxFakeOption, false)));
+            selectBoxFakeInput && selectElementContents(selectBoxFakeInputValue);
             selectBoxFakeOptions.forEach(selectBoxFakeOption => {
                 if (selectBoxValue === selectBoxFakeOption[PROP_VALUE]) {
                     setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
@@ -757,11 +797,10 @@
             if (selectBoxSize) {
                 return doEnter();
             }
-            if (selectBoxInput) {
-                selectBoxFakeLabel.focus();
+            if (selectBoxFakeInput) {
+                selectBoxFakeInputValue.focus();
             } else {
-                selectBoxFakeBorderBottomWidth = toNumber(getStyle(selectBoxFake, 'border-bottom-width'));
-                selectBoxFakeBorderTopWidth = toNumber(getStyle(selectBoxFake, 'border-top-width')), doToggle() && setSelectBoxFakeOptionsPosition(selectBoxFake);
+                doToggle() && doFit();
             }
         }
 
@@ -789,11 +828,6 @@
                 if (selectBoxFakeOption) {
                     doClick(selectBoxFakeOption), doToggle(isOpen);
                 }
-                if (selectBoxMultiple && _keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex - 1])) {
-                    // TODO: Preserve selection on the previous option
-                    setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
-                    setOptionFakeSelected(selectBoxFakeOption);
-                }
                 offEventDefault(e);
             } else if (KEY_ARROW_UP === key) {
                 // Continue walking up until it finds an option that is not disabled and not hidden
@@ -804,11 +838,6 @@
                 }
                 if (selectBoxFakeOption) {
                     doClick(selectBoxFakeOption), doToggle(isOpen);
-                }
-                if (selectBoxMultiple && _keyIsShift && (selectBoxFakeOption = selectBoxFakeOptions[selectBoxOptionIndex + 1])) {
-                    // TODO: Preserve selection on the next option
-                    setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
-                    setOptionFakeSelected(selectBoxFakeOption);
                 }
                 offEventDefault(e);
             } else if (KEY_END === key) {
@@ -840,21 +869,18 @@
                 selectBoxFakeOption && doClick(selectBoxFakeOption);
                 !selectBoxSize && doExit(); // offEventDefault(e);
             }
-            if (isEnter() && !_keyIsCtrl && !_keyIsShift) {
-                selectBoxFakeBorderBottomWidth = toNumber(getStyle(selectBoxFake, 'border-bottom-width'));
-                selectBoxFakeBorderTopWidth = toNumber(getStyle(selectBoxFake, 'border-top-width')), setSelectBoxFakeOptionsPosition(selectBoxFake);
-            }
+            isEnter() && !_keyIsCtrl && !_keyIsShift && doFit();
         }
 
         function onSelectBoxFakeKeyUp() {
             _keyIsCtrl = _keyIsShift = false;
         }
 
-        function onSelectBoxFakeLabelBlur() {
+        function onSelectBoxFakeInputValueBlur() {
             doBlur();
         }
 
-        function onSelectBoxFakeLabelFocus() {
+        function onSelectBoxFakeInputValueFocus() {
             let value = getText(this),
                 selectBoxOption,
                 selectBoxFakeOption;
@@ -871,22 +897,20 @@
                     letOptionFakeSelected(selectBoxFakeOption);
                 }
             }
-            doFocus();
-            selectBoxFakeBorderBottomWidth = toNumber(getStyle(selectBoxFake, 'border-bottom-width'));
-            selectBoxFakeBorderTopWidth = toNumber(getStyle(selectBoxFake, 'border-top-width')), doToggle() && setSelectBoxFakeOptionsPosition(selectBoxFake);
+            doFocus(), doToggle() && doFit();
         }
-
-        function onSelectBoxFakeLabelKeyDown(e) {
-            onSelectBoxFakeKeyDown.call(this, e);
-        }
-        let bounce = debounce((value, keyIsPrintable) => {
+        let bounce = debounce((self, key) => {
+            let value = getText(self);
+            for (let i = 0, j = toCount(selectBoxFakeOptions); i < j; ++i) {
+                selectBoxFakeOptions[i].hidden = false;
+            }
             if (null === value) {
-                for (let i = 0, j = toCount(selectBoxFakeOptions); i < j; ++i) {
-                    selectBoxFakeOptions[i].hidden = false;
-                }
-            } else if (keyIsPrintable) {
+                setHTML(selectBoxFakeInputPlaceholder, selectBoxPlaceholder);
+            } else {
+                setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
                 value = toCaseLower(value);
-                let first;
+                let first,
+                    isNavigating = KEY_ARROW_DOWN === key || KEY_ARROW_UP === key;
                 for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
                     letOptionSelected(selectBoxFakeOptions[i][PROP_SOURCE]);
                     letOptionFakeSelected(selectBoxFakeOptions[i]);
@@ -894,7 +918,7 @@
                     if (v && toCaseLower(v).includes(value)) {
                         !first && (first = selectBoxFakeOptions[i]);
                     } else {
-                        selectBoxFakeOptions[i].hidden = true;
+                        selectBoxFakeOptions[i].hidden = !isNavigating;
                     }
                 } // Always select the first match, but do not update the value
                 if (first) {
@@ -903,17 +927,29 @@
                     setOptionFakeSelected(first);
                 }
             }
-        }, 10);
-
-        function onSelectBoxFakeLabelKeyUp(e) {
-            onSelectBoxFakeKeyUp();
-            let key = e.key,
-                keyIsPrintable = key && 1 === toCount(key),
-                value = getText(selectBoxFakeLabel);
-            if (KEY_ENTER !== key) {
-                doEnter();
+            if (KEY_ENTER !== key && KEY_ESCAPE !== key && KEY_TAB !== key) {
+                doEnter(), doFit();
             }
-            bounce(value, keyIsPrintable);
+        }, 0);
+
+        function onSelectBoxFakeInputValueKeyDown(e) {
+            let t = this,
+                key = e.key;
+            onSelectBoxFakeKeyDown.call(t, e), bounce(t, key);
+        }
+
+        function onSelectBoxFakeInputValueKeyUp() {
+            onSelectBoxFakeKeyUp();
+        }
+        let wait = delay((input, placeholder) => {
+            let value = getText(input);
+            setHTML(placeholder, null !== value ? ZERO_WIDTH_SPACE : selectBoxPlaceholder);
+            setText(input, value);
+            selectElementContents(input);
+        }, 0);
+
+        function onSelectBoxFakeInputValuePaste() {
+            wait(selectBoxFakeInputValue, selectBoxFakeInputPlaceholder);
         }
 
         function onSelectBoxParentClick(e) {
@@ -975,7 +1011,7 @@
             }
             if (isArray(selectBoxValue) && hasValue(selectBoxOptionValue, selectBoxValue) || selectBoxOptionValue === selectBoxValue) {
                 setClass(selectBoxFakeOption, classNameOptionM + 'selected');
-                setLabelContent(doValue(selectBoxOptionText, selectBoxOptionValueReal, selectBoxOptionIndex, classNameOptionB + ' ' + (selectBoxOptionIsDisabled ? ' ' + classNameOptionM + 'disabled' : "")));
+                setLabelContent(doValue(selectBoxOptionText, selectBoxOptionIndex, selectBoxOptionValueReal, getClasses(selectBoxFakeOption, false)));
                 setOptionSelected(selectBoxItem);
             } else {
                 letOptionSelected(selectBoxItem);
@@ -1031,11 +1067,12 @@
         onEvent('click', selectBoxParent, onSelectBoxParentClick);
         onEvent('focus', selectBox, onSelectBoxFocus);
         onEvent('click', selectBoxFake, onSelectBoxFakeClick);
-        if (selectBoxInput) {
-            onEvent('blur', selectBoxFakeLabel, onSelectBoxFakeLabelBlur);
-            onEvent('focus', selectBoxFakeLabel, onSelectBoxFakeLabelFocus);
-            onEvent('keydown', selectBoxFakeLabel, onSelectBoxFakeLabelKeyDown);
-            onEvent('keyup', selectBoxFakeLabel, onSelectBoxFakeLabelKeyUp);
+        if (selectBoxFakeInput) {
+            onEvent('blur', selectBoxFakeInputValue, onSelectBoxFakeInputValueBlur);
+            onEvent('focus', selectBoxFakeInputValue, onSelectBoxFakeInputValueFocus);
+            onEvent('keydown', selectBoxFakeInputValue, onSelectBoxFakeInputValueKeyDown);
+            onEvent('keyup', selectBoxFakeInputValue, onSelectBoxFakeInputValueKeyUp);
+            onEvent('paste', selectBoxFakeInputValue, onSelectBoxFakeInputValuePaste);
         } else {
             onEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
             onEvent('focus', selectBoxFake, onSelectBoxFakeFocus);
@@ -1074,11 +1111,12 @@
             offEvent('focus', selectBox, onSelectBoxFocus);
             letClass(selectBox, classNameE + 'source');
             offEvent('click', selectBoxFake, onSelectBoxFakeClick);
-            if (selectBoxInput) {
-                offEvent('blur', selectBoxFakeLabel, onSelectBoxFakeLabelBlur);
-                offEvent('focus', selectBoxFakeLabel, onSelectBoxFakeLabelFocus);
-                offEvent('keydown', selectBoxFakeLabel, onSelectBoxFakeLabelKeyDown);
-                offEvent('keyup', selectBoxFakeLabel, onSelectBoxFakeLabelKeyUp);
+            if (selectBoxFakeInput) {
+                offEvent('blur', selectBoxFakeInputValue, onSelectBoxFakeInputValueBlur);
+                offEvent('focus', selectBoxFakeInputValue, onSelectBoxFakeInputValueFocus);
+                offEvent('keydown', selectBoxFakeInputValue, onSelectBoxFakeInputValueKeyDown);
+                offEvent('keyup', selectBoxFakeInputValue, onSelectBoxFakeInputValueKeyUp);
+                offEvent('paste', selectBoxFakeInputValue, onSelectBoxFakeInputValuePaste);
             } else {
                 offEvent('blur', selectBoxFake, onSelectBoxFakeBlur);
                 offEvent('focus', selectBoxFake, onSelectBoxFakeFocus);

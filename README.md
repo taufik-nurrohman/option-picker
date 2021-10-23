@@ -22,9 +22,9 @@ Contribute
 Release Notes
 -------------
 
-### main
+### 1.3.0
 
- - TODO
+ - Added ability to convert `<input>` element with `list` attribute.
 
 ### 1.2.4
 

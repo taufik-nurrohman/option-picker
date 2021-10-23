@@ -252,11 +252,6 @@ $name: 'option-picker';
       }
       .#{$name}__values {
         margin: 0;
-        &[contenteditable] {
-          -moz-user-select: text;
-          -webkit-user-select: text;
-          user-select: text;
-        }
       }
     }
   }
@@ -269,14 +264,50 @@ $name: 'option-picker';
   }
 }
 
+.#{$name}__input {
+  span {
+    display: block;
+    height: 100%;
+    outline: 0;
+    position: relative;
+    z-index: 1;
+    * {
+      // Remove (hide) line-break in option editor
+      display: inline;
+      font: inherit;
+    }
+    + span {
+      bottom: 0;
+      left: 0;
+      opacity: .5;
+      padding: inherit;
+      position: absolute;
+      right: 0;
+      top: 0;
+      white-space: nowrap;
+      z-index: 0;
+    }
+  }
+  span {
+    position: relative;
+    z-index: 1;
+    + span {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 0;
+    }
+  }
+}
+
+.#{$name}__input,
 .#{$name}__values {
+  display: block;
   margin-right: 1.25em;
   overflow: hidden;
   padding: 0 .25em;
+  position: relative;
   text-overflow: ellipsis;
   white-space: nowrap;
-  .#{$name}__value {
-    display: inline;
-    font: inherit;
-  }
 }

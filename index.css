@@ -299,6 +299,10 @@
   z-index: 0;
 }
 
+.option-picker__input {
+  cursor: text;
+}
+
 .option-picker__input,
 .option-picker__values {
   display: block;

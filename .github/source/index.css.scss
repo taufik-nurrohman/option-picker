@@ -301,6 +301,10 @@ $name: 'option-picker';
   }
 }
 
+.#{$name}__input {
+  cursor: text;
+}
+
 .#{$name}__input,
 .#{$name}__values {
   display: block;

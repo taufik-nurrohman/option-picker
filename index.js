@@ -504,6 +504,7 @@
         PROP_VALUE = 'v';
     const KEY_ARROW_DOWN = 'ArrowDown';
     const KEY_ARROW_UP = 'ArrowUp';
+    const KEY_DELETE_LEFT = 'Backspace';
     const KEY_END = 'End';
     const KEY_ENTER = 'Enter';
     const KEY_ESCAPE = 'Escape';
@@ -770,7 +771,9 @@
                 setText(selectBoxFakeInputValue, content);
             }
             setLabelContent(doValue(content, index, value, getClasses(selectBoxFakeOption, false)));
-            selectBoxFakeInput && selectElementContents(selectBoxFakeInputValue);
+            if (selectBoxFakeInput) {
+                selectElementContents(selectBoxFakeInputValue), setValue(content);
+            }
             selectBoxFakeOptions.forEach(selectBoxFakeOption => {
                 if (selectBoxValue === selectBoxFakeOption[PROP_VALUE]) {
                     setOptionSelected(selectBoxFakeOption[PROP_SOURCE]);
@@ -900,31 +903,40 @@
             doFocus(), doToggle() && doFit();
         }
         let bounce = debounce((self, key) => {
-            let value = getText(self);
-            for (let i = 0, j = toCount(selectBoxFakeOptions); i < j; ++i) {
-                selectBoxFakeOptions[i].hidden = false;
-            }
+            let value = getText(self),
+                keyIsPrintable = key && 1 === toCount(key),
+                selectBoxFakeOption;
             if (null === value) {
                 setHTML(selectBoxFakeInputPlaceholder, selectBoxPlaceholder);
+                for (let i = 0, j = toCount(selectBoxFakeOptions); i < j; ++i) {
+                    setHTML(selectBoxFakeOption = selectBoxFakeOptions[i], getText(selectBoxFakeOption));
+                    selectBoxFakeOption.hidden = false;
+                }
             } else {
                 setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
-                value = toCaseLower(value);
-                let first,
-                    isNavigating = KEY_ARROW_DOWN === key || KEY_ARROW_UP === key;
-                for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
-                    letOptionSelected(selectBoxFakeOptions[i][PROP_SOURCE]);
-                    letOptionFakeSelected(selectBoxFakeOptions[i]);
-                    v = getText(selectBoxFakeOptions[i]);
-                    if (v && toCaseLower(v).includes(value)) {
-                        !first && (first = selectBoxFakeOptions[i]);
-                    } else {
-                        selectBoxFakeOptions[i].hidden = !isNavigating;
+                if (keyIsPrintable || KEY_DELETE_LEFT === key) {
+                    value = toCaseLower(value);
+                    let first;
+                    for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
+                        letOptionSelected((selectBoxFakeOption = selectBoxFakeOptions[i])[PROP_SOURCE]);
+                        letOptionFakeSelected(selectBoxFakeOption);
+                        v = getText(selectBoxFakeOption);
+                        if (v && toCaseLower(v).includes(value)) {
+                            !first && (first = selectBoxFakeOption);
+                            setHTML(selectBoxFakeOption, v.replace(new RegExp(value.replace(/[!$^*()+=[]{}|:<>,.?\/-]/g, '\\$&'), 'gi'), $0 => {
+                                return '<mark>' + $0 + '</mark>';
+                            }));
+                            selectBoxFakeOption.hidden = false;
+                        } else {
+                            setHTML(selectBoxFakeOption, v);
+                            selectBoxFakeOption.hidden = true;
+                        }
+                    } // Always select the first match, but do not update the value
+                    if (first) {
+                        selectBoxOptionIndex = first[PROP_INDEX];
+                        setOptionSelected(first[PROP_SOURCE]);
+                        setOptionFakeSelected(first);
                     }
-                } // Always select the first match, but do not update the value
-                if (first) {
-                    selectBoxOptionIndex = first[PROP_INDEX];
-                    setOptionSelected(first[PROP_SOURCE]);
-                    setOptionFakeSelected(first);
                 }
             }
             if (KEY_ENTER !== key && KEY_ESCAPE !== key && KEY_TAB !== key) {

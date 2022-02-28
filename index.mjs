@@ -1,4 +1,4 @@
-import {D, W, getAttribute, getChildren, getClasses, getHTML, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, letText, setAttribute, setChildLast, setClass, setData, setElement, setHTML, setNext, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
+import {D, W, getAttribute, getChildren, getClasses, getHTML, getName, getParent, getStyle, getText, hasAttribute, hasClass, letAttribute, letClass, letElement, letText, setAttribute, setChildLast, setClass, setData, setElement, setHTML, setStyle, setStyles, setText, toggleClass} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getOffset, getRect, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
@@ -225,7 +225,7 @@ function OP(source, state = {}) {
     }
 
     setChildLast(selectBoxFake, selectBoxFakeInput || selectBoxFakeLabel);
-    setNext(selectBox, selectBoxFake);
+    getParent(selectBox).insertBefore(selectBoxFake, selectBox.nextSibling);
 
     function doBlur() {
         letClass(selectBoxFake, classNameM + 'focus');
@@ -733,6 +733,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.3.0';
+OP.version = '1.3.1';
 
 export default OP;

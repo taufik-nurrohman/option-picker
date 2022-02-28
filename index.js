@@ -2,7 +2,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright © 2021 Taufik Nurrohman <https://github.com/taufik-nurrohman>
+ * Copyright © 2022 Taufik Nurrohman <https://github.com/taufik-nurrohman>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to deal
@@ -204,9 +204,6 @@
     var getName = function getName(node) {
         return toCaseLower(node && node.nodeName || "") || null;
     };
-    var getNext = function getNext(node) {
-        return node.nextElementSibling || null;
-    };
     var getParent = function getParent(node, query) {
         if (query) {
             return node.closest(query) || null;
@@ -335,9 +332,6 @@
         }
         var state = 'innerHTML';
         return hasState(node, state) && (node[state] = trim ? content.trim() : content), node;
-    };
-    var setNext = function setNext(current, node) {
-        return getParent(current).insertBefore(node, getNext(current)), node;
     };
     var setStyle = function setStyle(node, style, value) {
         if (isNumber(value)) {
@@ -674,7 +668,7 @@
             setChildLast(selectBoxFakeInput, selectBoxFakeInputPlaceholder);
         }
         setChildLast(selectBoxFake, selectBoxFakeInput || selectBoxFakeLabel);
-        setNext(selectBox, selectBoxFake);
+        getParent(selectBox).insertBefore(selectBoxFake, selectBox.nextSibling);
 
         function doBlur() {
             letClass(selectBoxFake, classNameM + 'focus');
@@ -1158,6 +1152,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.3.0';
+    OP.version = '1.3.1';
     return OP;
 });

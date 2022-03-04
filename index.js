@@ -199,7 +199,9 @@
             toArray = true;
         }
         var value = (getState(node, 'className') || "").trim();
-        return toArray ? value.split(/\s+/) : value;
+        return toArray ? value.split(/\s+/).filter(function(v) {
+            return "" !== v;
+        }) : value;
     };
     var getName = function getName(node) {
         return toCaseLower(node && node.nodeName || "") || null;
@@ -1152,6 +1154,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.3.1';
+    OP.version = '1.3.2';
     return OP;
 });

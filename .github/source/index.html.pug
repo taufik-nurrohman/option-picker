@@ -64,7 +64,7 @@ block style
     |   text-align: left;
     |   vertical-align: top;
     | }
-    | body > p:first-child {
+    | [role='alert'] {
     |   background: #ffa;
     |   border: 1px dashed;
     |   margin-top: 0;
@@ -78,7 +78,7 @@ block style
     | }
 
 block content
-  p Do you like this project? Please support my #[a(href='https://github.com/mecha-cms') Mecha CMS] project too. Thank you!
+  p(role='alert') Do you like this project? Please support my #[a(href='https://github.com/mecha-cms') Mecha CMS] project too. Thank you!
   header
     h1= title
     p Just a generic custom #[code &lt;select&gt;] element with accessibility in mind.

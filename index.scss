@@ -36,7 +36,11 @@ $name: 'option-picker';
 
 .#{$name} {
   &,
-  & * {
+  &::before,
+  &::after,
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
     font: inherit;
   }

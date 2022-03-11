@@ -2,19 +2,26 @@ extends ../_index.pug
 
 block state
   - const title = 'Option Picker'
-  - const scripts = ['../index.min.js']
+  - const scripts = ['../index.js']
   - const styles = ['../index.min.css']
 
 block script
   script
-    | const picker = new OP(document.querySelector('input'));
+    | const sources = document.querySelectorAll('input');
+    | sources.forEach(source => new OP(source));
 
 block content
   main
     form(method='get' target='_blank')
       p
-        input(list='list-123' name='test' placeholder='Select name…' type='text')
-        datalist#list-123
+        input(list='list-0' name='test-0' placeholder='Select color…' type='text' value='Blue')
+        datalist#list-0
+          option Green
+          option Red
+          option Blue
+      p
+        input(list='list-1' name='test-1' placeholder='Select name…' type='text')
+        datalist#list-1
           option Abbie Matthews
           option Akira Horton
           option Aldo Wilcox
@@ -215,5 +222,7 @@ block content
           option Yosef Hoover
           option Yoselin Richard
           option Zander Curry
+      p
+        input(list='list-2' name='test-2' placeholder='Test empty…' type='text')
       p
         button(type='submit') Submit

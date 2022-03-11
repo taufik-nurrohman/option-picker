@@ -179,7 +179,7 @@ function OP(source, state = {}) {
         selectBoxOptionIndex = 0,
         selectBoxOptions = selectBox.options,
         selectBoxParent = state.parent || D,
-        selectBoxSize = selectBox.size,
+        selectBoxSize = 'input' === getName(selectBox) ? 0 : selectBox.size,
         selectBoxTitle = selectBox.title,
         selectBoxValue = getValue(),
 
@@ -208,15 +208,18 @@ function OP(source, state = {}) {
         _keyIsCtrl = false,
         _keyIsShift = false;
 
+    if (selectBoxMultiple && !selectBoxSize) {
+        selectBox.size = selectBoxSize = state.size;
+    }
 
     if (selectBoxFakeInput && selectBoxList) {
         selectBoxItems = getChildren(selectBoxList);
         selectBoxOptions = selectBoxList.options;
         selectBoxSize = null;
-    }
-
-    if (selectBoxMultiple && !selectBoxSize) {
-        selectBox.size = selectBoxSize = state.size;
+        if (selectBoxValue) {
+            setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
+            setText(selectBoxFakeInputValue, selectBoxValue);
+        }
     }
 
     if (selectBoxFakeInput) {
@@ -280,7 +283,7 @@ function OP(source, state = {}) {
     }
 
     function onSelectBoxFakeOptionClick(e) {
-        if (selectBoxIsDisabled()) {
+        if (!selectBoxOptions || selectBoxIsDisabled()) {
             return;
         }
         let selectBoxFakeLabelContent = [],
@@ -362,6 +365,9 @@ function OP(source, state = {}) {
     }
 
     function onSelectBoxFakeKeyDown(e) {
+        if (!selectBoxOptions) {
+            return;
+        }
         _keyIsCtrl = e.ctrlKey;
         _keyIsShift = e.shiftKey;
         let key = e.key,
@@ -437,6 +443,9 @@ function OP(source, state = {}) {
     }
 
     function onSelectBoxFakeInputValueFocus() {
+        if (!selectBoxOptions) {
+            return;
+        }
         let t = this,
             value = getText(t),
             selectBoxOption,
@@ -711,6 +720,9 @@ function OP(source, state = {}) {
     };
 
     $.set = value => {
+        if (!selectBoxOptions) {
+            return $;
+        }
         setValue(fromValue(value));
         selectBoxFakeOptions.forEach((selectBoxFakeOption, index) => {
             let selectBoxOption = selectBoxOptions[index];
@@ -735,6 +747,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.3.3';
+OP.version = '1.3.4';
 
 export default OP;

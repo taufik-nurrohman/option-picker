@@ -176,8 +176,10 @@
         }
         return "" + x;
     };
-    var D$1 = document;
-    var W$1 = window;
+    var D = document;
+    var W = window;
+    var B = D.body;
+    var R = D.documentElement;
     var getAttribute = function getAttribute(node, attribute, parseValue) {
         if (parseValue === void 0) {
             parseValue = true;
@@ -217,7 +219,7 @@
         if (parseValue === void 0) {
             parseValue = true;
         }
-        var value = W$1.getComputedStyle(node).getPropertyValue(style);
+        var value = W.getComputedStyle(node).getPropertyValue(style);
         if (parseValue) {
             value = toValue(value);
         }
@@ -246,6 +248,9 @@
     };
     var hasState = function hasState(node, state) {
         return state in node;
+    };
+    var isWindow = function isWindow(node) {
+        return node === W;
     };
     var letAttribute = function letAttribute(node, attribute) {
         return node.removeAttribute(attribute), node;
@@ -310,7 +315,7 @@
         return setAttribute(node, 'data-' + datum, value);
     };
     var setElement = function setElement(node, content, attributes) {
-        node = isString(node) ? D$1.createElement(node) : node;
+        node = isString(node) ? D.createElement(node) : node;
         if (isObject(content)) {
             attributes = content;
             content = false;
@@ -386,13 +391,6 @@
                 return then.apply(_this2, _arguments2);
             }, time);
         };
-    };
-    var D = document;
-    var W = window;
-    var B = D.body;
-    var R = D.documentElement;
-    var isWindow = function isWindow(node) {
-        return node === W;
     };
     var getOffset = function getOffset(node) {
         return [node.offsetLeft, node.offsetTop];
@@ -517,9 +515,9 @@
     const ZERO_WIDTH_SPACE = '\u200c';
 
     function selectElementContents(node) {
-        let range = D$1.createRange();
+        let range = D.createRange();
         range.selectNodeContents(node);
-        let selection = W$1.getSelection();
+        let selection = W.getSelection();
         selection.removeAllRanges();
         selection.addRange(range);
     }
@@ -643,8 +641,8 @@
             selectBoxMultiple = selectBox.multiple,
             selectBoxOptionIndex = 0,
             selectBoxOptions = selectBox.options,
-            selectBoxParent = state.parent || D$1,
-            selectBoxSize = selectBox.size,
+            selectBoxParent = state.parent || D,
+            selectBoxSize = 'input' === getName(selectBox) ? 0 : selectBox.size,
             selectBoxTitle = selectBox.title,
             selectBoxValue = getValue(),
             selectBoxFake = setElement('div', {
@@ -665,13 +663,17 @@
             selectBoxFakeOptions = [],
             _keyIsCtrl = false,
             _keyIsShift = false;
+        if (selectBoxMultiple && !selectBoxSize) {
+            selectBox.size = selectBoxSize = state.size;
+        }
         if (selectBoxFakeInput && selectBoxList) {
             selectBoxItems = getChildren(selectBoxList);
             selectBoxOptions = selectBoxList.options;
             selectBoxSize = null;
-        }
-        if (selectBoxMultiple && !selectBoxSize) {
-            selectBox.size = selectBoxSize = state.size;
+            if (selectBoxValue) {
+                setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
+                setText(selectBoxFakeInputValue, selectBoxValue);
+            }
         }
         if (selectBoxFakeInput) {
             setChildLast(selectBoxFakeInput, selectBoxFakeInputValue);
@@ -733,7 +735,7 @@
         }
 
         function onSelectBoxFakeOptionClick(e) {
-            if (selectBoxIsDisabled()) {
+            if (!selectBoxOptions || selectBoxIsDisabled()) {
                 return;
             }
             let selectBoxFakeLabelContent = [],
@@ -817,6 +819,9 @@
         }
 
         function onSelectBoxFakeKeyDown(e) {
+            if (!selectBoxOptions) {
+                return;
+            }
             _keyIsCtrl = e.ctrlKey;
             _keyIsShift = e.shiftKey;
             let key = e.key,
@@ -888,6 +893,9 @@
         }
 
         function onSelectBoxFakeInputValueFocus() {
+            if (!selectBoxOptions) {
+                return;
+            }
             let t = this,
                 value = getText(t),
                 selectBoxOption,
@@ -1040,7 +1048,7 @@
         function setSelectBoxFakeOptionsPosition(selectBoxFake, useEvent) {
             if (!selectBoxSize) {
                 let [left, top, width, height] = getRect(selectBoxFake),
-                    heightWindow = getSize(W$1)[1],
+                    heightWindow = getSize(W)[1],
                     heightMax = heightWindow - top - height;
                 setStyles(selectBoxFakeDropDown, {
                     'bottom': "",
@@ -1081,7 +1089,7 @@
             }
             fire('fit', getLot());
         }
-        onEvents(['resize', 'scroll'], W$1, onSelectBoxWindow);
+        onEvents(['resize', 'scroll'], W, onSelectBoxWindow);
         onEvent('click', selectBoxParent, onSelectBoxParentClick);
         onEvent('focus', selectBox, onSelectBoxFocus);
         onEvent('click', selectBoxFake, onSelectBoxFakeClick);
@@ -1124,7 +1132,7 @@
                 return $; // Already ejected
             }
             delete source[name];
-            offEvents(['resize', 'scroll'], W$1, onSelectBoxWindow);
+            offEvents(['resize', 'scroll'], W, onSelectBoxWindow);
             offEvent('click', selectBoxParent, onSelectBoxParentClick);
             offEvent('focus', selectBox, onSelectBoxFocus);
             letClass(selectBox, classNameE + 'source');
@@ -1146,6 +1154,9 @@
             return fire('pop', getLot());
         };
         $.set = value => {
+            if (!selectBoxOptions) {
+                return $;
+            }
             setValue(fromValue(value));
             selectBoxFakeOptions.forEach((selectBoxFakeOption, index) => {
                 let selectBoxOption = selectBoxOptions[index];
@@ -1164,6 +1175,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.3.3';
+    OP.version = '1.3.4';
     return OP;
 });

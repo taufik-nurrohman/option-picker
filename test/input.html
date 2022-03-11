@@ -10,7 +10,12 @@
   <body>
     <main>
       <form method="get" target="_blank">
-        <p><input list="list-123" name="test" placeholder="Select name…" type="text"><datalist id="list-123">
+        <p><input list="list-0" name="test-0" placeholder="Select color…" type="text" value="Blue"><datalist id="list-0">
+            <option>Green</option>
+            <option>Red</option>
+            <option>Blue</option>
+          </datalist></p>
+        <p><input list="list-1" name="test-1" placeholder="Select name…" type="text"><datalist id="list-1">
             <option>Abbie Matthews</option>
             <option>Akira Horton</option>
             <option>Aldo Wilcox</option>
@@ -212,12 +217,14 @@
             <option>Yoselin Richard</option>
             <option>Zander Curry</option>
           </datalist></p>
+        <p><input list="list-2" name="test-2" placeholder="Test empty…" type="text"></p>
         <p><button type="submit">Submit</button></p>
       </form>
     </main>
-    <script src="../index.min.js"></script>
+    <script src="../index.js"></script>
     <script>
-      const picker = new OP(document.querySelector('input'));
+      const sources = document.querySelectorAll('input');
+      sources.forEach(source => new OP(source));
     </script>
   </body>
 </html>

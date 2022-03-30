@@ -522,7 +522,7 @@ function OP(source, state = {}) {
         onSelectBoxFakeKeyUp();
     }
 
-    let wait = delay((input, placeholder) => {
+    let waitForPaste = delay((input, placeholder) => {
             let value = getText(input);
             setHTML(placeholder, null !== value ? ZERO_WIDTH_SPACE : selectBoxPlaceholder);
             setText(input, value);
@@ -530,7 +530,7 @@ function OP(source, state = {}) {
         }, 0);
 
     function onSelectBoxFakeInputValuePaste() {
-        wait(selectBoxFakeInputValue, selectBoxFakeInputPlaceholder);
+        waitForPaste(selectBoxFakeInputValue, selectBoxFakeInputPlaceholder);
     }
 
     function onSelectBoxParentClick(e) {
@@ -747,6 +747,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.3.4';
+OP.version = '1.3.5';
 
 export default OP;

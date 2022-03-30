@@ -967,7 +967,7 @@
         function onSelectBoxFakeInputValueKeyUp() {
             onSelectBoxFakeKeyUp();
         }
-        let wait = delay((input, placeholder) => {
+        let waitForPaste = delay((input, placeholder) => {
             let value = getText(input);
             setHTML(placeholder, null !== value ? ZERO_WIDTH_SPACE : selectBoxPlaceholder);
             setText(input, value);
@@ -975,7 +975,7 @@
         }, 0);
 
         function onSelectBoxFakeInputValuePaste() {
-            wait(selectBoxFakeInputValue, selectBoxFakeInputPlaceholder);
+            waitForPaste(selectBoxFakeInputValue, selectBoxFakeInputPlaceholder);
         }
 
         function onSelectBoxParentClick(e) {
@@ -1175,6 +1175,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.3.4';
+    OP.version = '1.3.5';
     return OP;
 });

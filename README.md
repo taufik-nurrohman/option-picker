@@ -16,7 +16,7 @@ Contribute
  - Install [Git](https://en.wikipedia.org/wiki/Git) and [Node.js](https://en.wikipedia.org/wiki/Node.js)
  - Run `git clone https://github.com/taufik-nurrohman/option-picker.git`
  - Run `cd option-picker && npm install --save-dev`
- - Edit the files in the `.github/source` folder.
+ - Edit the files in the `.github/factory` folder.
  - Run `npm run pack` to generate the production ready files.
 
 ---
@@ -56,7 +56,7 @@ This project exists thanks to all the people who contribute.
 Release Notes
 -------------
 
-### 1.3.4
+### 1.3.5
 
  - Added ability to convert `<input>` element with `list` attribute.
  - Fixed the custom select box insertion node that does not consider the text node.

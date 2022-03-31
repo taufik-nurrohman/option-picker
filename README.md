@@ -19,8 +19,6 @@ Contribute
  - Edit the files in the `.github/factory` folder.
  - Run `npm run pack` to generate the production ready files.
 
----
-
 Contributors
 ------------
 
@@ -52,6 +50,8 @@ This project exists thanks to all the people who contribute.
 <a href="https://opencollective.com/option-picker/organization/7/website"><img src="https://opencollective.com/option-picker/organization/7/avatar.svg"></a>
 <a href="https://opencollective.com/option-picker/organization/8/website"><img src="https://opencollective.com/option-picker/organization/8/avatar.svg"></a>
 <a href="https://opencollective.com/option-picker/organization/9/website"><img src="https://opencollective.com/option-picker/organization/9/avatar.svg"></a>
+
+---
 
 Release Notes
 -------------

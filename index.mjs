@@ -467,10 +467,8 @@ function OP(source, state = {}) {
         doFocus(), (doToggle() && doFit());
     }
 
-    let bounce = debounce((self, key) => {
-            let value = getText(self),
-                keyIsPrintable = key && 1 === toCount(key),
-                selectBoxFakeOption;
+    let bounce = debounce((self, key, valuePrev) => {
+            let value = getText(self), first, selectBoxFakeOption;
             if (null === value) {
                 setHTML(selectBoxFakeInputPlaceholder, selectBoxPlaceholder);
                 for (let i = 0, j = toCount(selectBoxFakeOptions); i < j; ++i) {
@@ -479,9 +477,7 @@ function OP(source, state = {}) {
                 }
             } else {
                 setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
-                if (keyIsPrintable || KEY_DELETE_LEFT === key) {
-                    value = toCaseLower(value);
-                    let first;
+                if (valuePrev !== (value = toCaseLower(value)) && KEY_ARROW_DOWN !== key && KEY_ARROW_UP !== key) {
                     for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
                         letOptionSelected((selectBoxFakeOption = selectBoxFakeOptions[i])[PROP_SOURCE]);
                         letOptionFakeSelected(selectBoxFakeOption);
@@ -505,17 +501,18 @@ function OP(source, state = {}) {
                     } else {
                         // No match!
                     }
+                    valuePrev = value;
                 }
             }
             if (KEY_ENTER !== key && KEY_ESCAPE !== key && KEY_TAB !== key) {
                 doEnter(), doFit();
             }
-        }, 0);
+        }, 1);
 
     function onSelectBoxFakeInputValueKeyDown(e) {
         let t = this,
             key = e.key;
-        onSelectBoxFakeKeyDown.call(t, e), bounce(t, key);
+        onSelectBoxFakeKeyDown.call(t, e), bounce(t, key, getText(t));
     }
 
     function onSelectBoxFakeInputValueKeyUp() {
@@ -527,7 +524,7 @@ function OP(source, state = {}) {
             setHTML(placeholder, null !== value ? ZERO_WIDTH_SPACE : selectBoxPlaceholder);
             setText(input, value);
             selectElementContents(input);
-        }, 0);
+        }, 1);
 
     function onSelectBoxFakeInputValuePaste() {
         waitForPaste(selectBoxFakeInputValue, selectBoxFakeInputPlaceholder);
@@ -747,6 +744,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.3.5';
+OP.version = '1.3.6';
 
 export default OP;

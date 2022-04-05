@@ -277,8 +277,7 @@ $name: 'option-picker';
     z-index: 1;
     * {
       // Remove (hide) line-break in option editor
-      display: inline;
-      font: inherit;
+      display: none;
     }
     + span {
       bottom: 0;

@@ -203,6 +203,18 @@
             return "" !== v;
         }) : value;
     };
+    var getHTML = function getHTML(node, trim) {
+        if (trim === void 0) {
+            trim = true;
+        }
+        var state = 'innerHTML';
+        if (!hasState(node, state)) {
+            return false;
+        }
+        var content = node[state];
+        content = trim ? content.trim() : content;
+        return "" !== content ? content : null;
+    };
     var getName = function getName(node) {
         return toCaseLower(node && node.nodeName || "") || null;
     };
@@ -505,6 +517,8 @@
         PROP_SOURCE = '$',
         PROP_VALUE = 'v';
     const KEY_ARROW_DOWN = 'ArrowDown';
+    const KEY_ARROW_LEFT = 'ArrowLeft';
+    const KEY_ARROW_RIGHT = 'ArrowRight';
     const KEY_ARROW_UP = 'ArrowUp';
     const KEY_END = 'End';
     const KEY_ENTER = 'Enter';
@@ -927,7 +941,7 @@
                 }
             } else {
                 setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
-                if (valuePrev !== (value = toCaseLower(value)) && KEY_ARROW_DOWN !== key && KEY_ARROW_UP !== key) {
+                if (valuePrev !== (value = toCaseLower(value)) && KEY_ARROW_DOWN !== key && KEY_ARROW_LEFT !== key && KEY_ARROW_RIGHT !== key && KEY_ARROW_UP !== key && KEY_ENTER !== key) {
                     for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
                         letOptionSelected((selectBoxFakeOption = selectBoxFakeOptions[i])[PROP_SOURCE]);
                         letOptionFakeSelected(selectBoxFakeOption);
@@ -949,6 +963,23 @@
                         setOptionFakeSelected(first);
                     }
                     valuePrev = value;
+                } else {
+                    let marked = 0;
+                    for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
+                        selectBoxFakeOption = selectBoxFakeOptions[i];
+                        v = getHTML(selectBoxFakeOption);
+                        if (hasValue('</mark>', v)) {
+                            ++marked;
+                        }
+                    } // Reset all filter(s) if there is only one or none option marked
+                    if (marked <= 1) {
+                        for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
+                            selectBoxFakeOption = selectBoxFakeOptions[i];
+                            v = getText(selectBoxFakeOption);
+                            setHTML(selectBoxFakeOption, v);
+                            selectBoxFakeOption.hidden = false;
+                        }
+                    }
                 }
             }
             if (KEY_ENTER !== key && KEY_ESCAPE !== key && KEY_TAB !== key) {

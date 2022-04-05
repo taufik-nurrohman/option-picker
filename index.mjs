@@ -477,7 +477,13 @@ function OP(source, state = {}) {
                 }
             } else {
                 setHTML(selectBoxFakeInputPlaceholder, ZERO_WIDTH_SPACE);
-                if (valuePrev !== (value = toCaseLower(value)) && KEY_ARROW_DOWN !== key && KEY_ARROW_UP !== key) {
+                if (valuePrev !== (value = toCaseLower(value)) && (
+                    KEY_ARROW_DOWN !== key &&
+                    KEY_ARROW_LEFT !== key &&
+                    KEY_ARROW_RIGHT !== key &&
+                    KEY_ARROW_UP !== key &&
+                    KEY_ENTER !== key
+                )) {
                     for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
                         letOptionSelected((selectBoxFakeOption = selectBoxFakeOptions[i])[PROP_SOURCE]);
                         letOptionFakeSelected(selectBoxFakeOption);
@@ -502,6 +508,24 @@ function OP(source, state = {}) {
                         // No match!
                     }
                     valuePrev = value;
+                } else {
+                    let marked = 0;
+                    for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
+                        selectBoxFakeOption = selectBoxFakeOptions[i];
+                        v = getHTML(selectBoxFakeOption);
+                        if (hasValue('</mark>', v)) {
+                            ++marked;
+                        }
+                    }
+                    // Reset all filter(s) if there is only one or none option marked
+                    if (marked <= 1) {
+                        for (let i = 0, j = toCount(selectBoxFakeOptions), v; i < j; ++i) {
+                            selectBoxFakeOption = selectBoxFakeOptions[i];
+                            v = getText(selectBoxFakeOption);
+                            setHTML(selectBoxFakeOption, v);
+                            selectBoxFakeOption.hidden = false;
+                        }
+                    }
                 }
             }
             if (KEY_ENTER !== key && KEY_ESCAPE !== key && KEY_TAB !== key) {

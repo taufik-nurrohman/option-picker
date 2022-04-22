@@ -891,7 +891,7 @@
                 selectBoxFakeOption && (doClick(selectBoxFakeOption), doToggle(isOpen));
                 offEventDefault(e);
             } else if (KEY_TAB === key) {
-                selectBoxFakeOption && doClick(selectBoxFakeOption);
+                !selectBoxFakeInput && selectBoxFakeOption && doClick(selectBoxFakeOption);
                 !selectBoxSize && doExit(); // offEventDefault(e);
             }
             isEnter() && !_keyIsCtrl && !_keyIsShift && doFit();
@@ -902,6 +902,10 @@
         }
 
         function onSelectBoxFakeInputValueBlur() {
+            let value = getText(selectBoxFakeInputValue);
+            if (null !== value) {
+                setValue(fromValue(value));
+            }
             doBlur();
         }
 
@@ -935,6 +939,7 @@
                 selectBoxFakeOption;
             if (null === value) {
                 setHTML(selectBoxFakeInputPlaceholder, selectBoxPlaceholder);
+                selectBoxFakeDropDown.hidden = false;
                 for (let i = 0, j = toCount(selectBoxFakeOptions); i < j; ++i) {
                     setHTML(selectBoxFakeOption = selectBoxFakeOptions[i], getText(selectBoxFakeOption));
                     selectBoxFakeOption.hidden = false;
@@ -961,6 +966,9 @@
                         selectBoxOptionIndex = first[PROP_INDEX];
                         setOptionSelected(first[PROP_SOURCE]);
                         setOptionFakeSelected(first);
+                        selectBoxFakeDropDown.hidden = false; // No match!
+                    } else {
+                        selectBoxFakeDropDown.hidden = true;
                     }
                     valuePrev = value;
                 } else {
@@ -1204,6 +1212,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.3.6';
+    OP.version = '1.3.7';
     return OP;
 });

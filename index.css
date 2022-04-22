@@ -160,6 +160,9 @@
   position: fixed;
   z-index: 9999;
 }
+.option-picker__options[hidden] {
+  display: none;
+}
 .option-picker__options .option-picker__option {
   background: var(--fill-option-picker__option);
   color: var(--color-option-picker__option);

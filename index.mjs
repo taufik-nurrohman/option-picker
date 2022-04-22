@@ -427,7 +427,7 @@ function OP(source, state = {}) {
             selectBoxFakeOption && (doClick(selectBoxFakeOption), doToggle(isOpen));
             offEventDefault(e);
         } else if (KEY_TAB === key) {
-            selectBoxFakeOption && doClick(selectBoxFakeOption);
+            !selectBoxFakeInput && selectBoxFakeOption && doClick(selectBoxFakeOption);
             !selectBoxSize && doExit();
             // offEventDefault(e);
         }
@@ -439,6 +439,10 @@ function OP(source, state = {}) {
     }
 
     function onSelectBoxFakeInputValueBlur() {
+        let value = getText(selectBoxFakeInputValue);
+        if (null !== value) {
+            setValue(fromValue(value));
+        }
         doBlur();
     }
 
@@ -471,6 +475,7 @@ function OP(source, state = {}) {
             let value = getText(self), first, selectBoxFakeOption;
             if (null === value) {
                 setHTML(selectBoxFakeInputPlaceholder, selectBoxPlaceholder);
+                selectBoxFakeDropDown.hidden = false;
                 for (let i = 0, j = toCount(selectBoxFakeOptions); i < j; ++i) {
                     setHTML(selectBoxFakeOption = selectBoxFakeOptions[i], getText(selectBoxFakeOption));
                     selectBoxFakeOption.hidden = false;
@@ -504,8 +509,10 @@ function OP(source, state = {}) {
                         selectBoxOptionIndex = first[PROP_INDEX];
                         setOptionSelected(first[PROP_SOURCE]);
                         setOptionFakeSelected(first);
+                        selectBoxFakeDropDown.hidden = false;
+                    // No match!
                     } else {
-                        // No match!
+                        selectBoxFakeDropDown.hidden = true;
                     }
                     valuePrev = value;
                 } else {
@@ -768,6 +775,6 @@ OP.state = {
     'size': 5
 };
 
-OP.version = '1.3.6';
+OP.version = '1.3.7';
 
 export default OP;

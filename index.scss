@@ -154,6 +154,9 @@ $name: 'option-picker';
   overflow: auto;
   position: fixed;
   z-index: 9999;
+  &[hidden] {
+    display: none;
+  }
   .#{$name}__option {
     background: var(--fill-#{$name}__option);
     color: var(--color-#{$name}__option);

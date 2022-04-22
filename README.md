@@ -56,9 +56,10 @@ This project exists thanks to all the people who contribute.
 Release Notes
 -------------
 
-### 1.3.6
+### 1.3.7
 
  - Added ability to convert `<input>` element with `list` attribute.
+ - Allowed user to input any value using the `<input>` mode.
  - Fixed the custom select box insertion node that does not consider the text node.
 
 ### 1.2.4

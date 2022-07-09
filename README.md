@@ -50,32 +50,3 @@ This project exists thanks to all the people who contribute.
 <a href="https://opencollective.com/option-picker/organization/7/website"><img src="https://opencollective.com/option-picker/organization/7/avatar.svg"></a>
 <a href="https://opencollective.com/option-picker/organization/8/website"><img src="https://opencollective.com/option-picker/organization/8/avatar.svg"></a>
 <a href="https://opencollective.com/option-picker/organization/9/website"><img src="https://opencollective.com/option-picker/organization/9/avatar.svg"></a>
-
----
-
-Release Notes
--------------
-
-### 1.3.7
-
- - Added ability to convert `<input>` element with `list` attribute.
- - Allowed user to input any value using the `<input>` mode.
- - Fixed the custom select box insertion node that does not consider the text node.
-
-### 1.2.4
-
- - Added CSS variables for easy integration with third-party applications.
-
-### 1.1.4
-
- - Changed CSS classes to follow the [BEM](http://getbem.com) approach.
- - Maintenance.
-
-### 1.0.1
-
- - Fixed broken `picker.pop()` response.
- - Removed `picker.value` property.
-
-### 1.0.0
-
- - Initial release.

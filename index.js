@@ -23,9 +23,9 @@
  * SOFTWARE.
  *
  */
-(function(global, factory) {
+(function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define(factory) : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.OP = factory());
-})(this, function() {
+})(this, function () {
     'use strict';
     var hasValue = function hasValue(x, data) {
         return -1 !== data.indexOf(x);
@@ -67,7 +67,7 @@
         return isArray(x) ? x : [x];
     };
     var toCaseCamel = function toCaseCamel(x) {
-        return x.replace(/[-_.](\w)/g, function(m0, m1) {
+        return x.replace(/[-_.](\w)/g, function (m0, m1) {
             return toCaseUpper(m1);
         });
     };
@@ -97,7 +97,7 @@
     };
     var toValue = function toValue(x) {
         if (isArray(x)) {
-            return x.map(function(v) {
+            return x.map(function (v) {
                 return toValue(v);
             });
         }
@@ -155,7 +155,7 @@
     };
     var fromValue = function fromValue(x) {
         if (isArray(x)) {
-            return x.map(function(v) {
+            return x.map(function (v) {
                 return fromValue(x);
             });
         }
@@ -199,7 +199,7 @@
             toArray = true;
         }
         var value = (getState(node, 'className') || "").trim();
-        return toArray ? value.split(/\s+/).filter(function(v) {
+        return toArray ? value.split(/\s+/).filter(function (v) {
             return "" !== v;
         }) : value;
     };
@@ -386,20 +386,20 @@
     };
     var debounce = function debounce(then, time) {
         var timer;
-        return function() {
+        return function () {
             var _arguments = arguments,
                 _this = this;
             timer && clearTimeout(timer);
-            timer = setTimeout(function() {
+            timer = setTimeout(function () {
                 return then.apply(_this, _arguments);
             }, time);
         };
     };
     var delay = function delay(then, time) {
-        return function() {
+        return function () {
             var _arguments2 = arguments,
                 _this2 = this;
-            setTimeout(function() {
+            setTimeout(function () {
                 return then.apply(_this2, _arguments2);
             }, time);
         };
@@ -444,7 +444,7 @@
             if (!isSet(hooks[name])) {
                 return $;
             }
-            hooks[name].forEach(function(then) {
+            hooks[name].forEach(function (then) {
                 return then.apply($, data);
             });
             return $;
@@ -494,7 +494,7 @@
         return e && e.preventDefault();
     };
     var offEvents = function offEvents(names, node, then) {
-        names.forEach(function(name) {
+        names.forEach(function (name) {
             return offEvent(name, node, then);
         });
     };
@@ -508,7 +508,7 @@
         if (options === void 0) {
             options = false;
         }
-        names.forEach(function(name) {
+        names.forEach(function (name) {
             return onEvent(name, node, then, options);
         });
     };
@@ -1212,6 +1212,6 @@
         'parent': null,
         'size': 5
     };
-    OP.version = '1.3.8';
+    OP.version = '1.3.9';
     return OP;
 });

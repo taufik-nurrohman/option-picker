@@ -8,13 +8,7 @@ block state
 
 block script
   script
-    | const sources = document.querySelectorAll('select');
-    | sources.forEach(source => {
-    |     const picker = new OP(source);
-    |     picker.on('change', (value, values) => {
-    |         console.log([value, values]);
-    |     });
-    | });
+    | const picker = new OptionPicker(document.querySelector('select'));
 
 block style
   style
@@ -86,25 +80,12 @@ block content
   main
     form(method='get' target='_blank')
       p
-        select#test-1(name='test-1')
+        select(name='option')
           option(value='1') Option 1
           option(value='2') Option 2
           option(value='3') Option 3
           option(disabled value='4') Option 4
           option Option 5
-      p
-        select#test-2(name='test-2')
-          optgroup(label='Group 1')
-            option(value='1') Option 1
-            option(value='2') Option 2
-            option(value='3') Option 3
-            option(disabled value='4') Option 4
-            option Option 5
-          optgroup(label='Group 2')
-            option(value='#f00') Red
-            option(value='#0f0') Green
-            option(value='#00f') Blue
-      p Test connection with #[code &lt;label&gt;] element: #[label(for='test-1' style={'cursor':'pointer','text-decoration':'underline'}) click here to focus!]
       p: button(type='submit') Submit
     h2 Features
     ul
@@ -131,7 +112,7 @@ block content
       |     &lt;/p&gt;
       |     &lt;script src="#[a(href='index.min.js' target='_blank') ./index.min.js]"&gt;&lt;/script&gt;
       |     &lt;script&gt;
-      |       const picker = new OP(document.querySelector('select'));
+      |       const picker = new OptionPicker(document.querySelector('select'));
       |     &lt;/script&gt;
       |   &lt;/body&gt;
       | &lt;/html&gt;

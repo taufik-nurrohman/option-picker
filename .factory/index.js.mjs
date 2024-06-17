@@ -48,7 +48,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.0.0';
+OptionPicker.version = '%(version)';
 
 defineProperty(OptionPicker, 'name', {
     value: name

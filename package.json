@@ -52,7 +52,7 @@
     "url": "git+https://github.com/taufik-nurrohman/option-picker.git"
   },
   "scripts": {
-    "pack": "pack --clean=false --from=.github/factory --js-format=umd --js-name=OP --js-top='%(js.license)' --mjs=true --scss=true --to=."
+    "pack": "pack --clean=false --from=.factory --js-format=umd --js-name=OptionPicker --js-top='%(js.license)' --mjs=true --scss=true --to=."
   },
-  "version": "1.3.10"
+  "version": "2.0.0"
 }

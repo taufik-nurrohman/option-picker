@@ -1,0 +1,73 @@
+$name: 'option-picker';
+
+.#{$name} {
+  &,
+  & * {
+    box-sizing: border-box;
+    color: inherit;
+    font: inherit;
+    outline: 0;
+  }
+}
+
+.#{$name} {
+  border: 1px solid;
+  cursor: text;
+  display: inline-flex;
+  flex-wrap: wrap;
+  position: relative;
+  vertical-align: middle;
+  &__self {
+    left: -9999px;
+    position: fixed;
+    top: -9999px;
+    &:disabled {
+      + .#{$name} {
+        color: rgba(128, 128, 128);
+      }
+      + .#{$name} {
+        &,
+        & * {
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+  &__text {
+    flex: 1;
+    span {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      // Ensure height even when tag(s) is empty
+      &::after {
+        content: '\200c';
+      }
+      * {
+        display: inline; // Remove (hide) line-break in tag editor
+      }
+      br {
+        display: none;
+      }
+      + span {
+        bottom: 0;
+        left: 0;
+        opacity: 0.5;
+        padding: inherit;
+        position: absolute;
+        right: 0;
+        top: 0;
+        white-space: nowrap;
+        z-index: 0;
+      }
+    }
+  }
+  &__values {
+    border-color: inherit;
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1;
+    gap: 1px;
+    padding: 1px;
+  }
+}

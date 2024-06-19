@@ -1,0 +1,65 @@
+@charset "UTF-8";
+.option-picker,
+.option-picker * {
+  box-sizing: border-box;
+  color: inherit;
+  font: inherit;
+  outline: 0;
+}
+
+.option-picker {
+  border: 1px solid;
+  cursor: text;
+  display: inline-flex;
+  flex-wrap: wrap;
+  position: relative;
+  vertical-align: middle;
+}
+.option-picker__self {
+  left: -9999px;
+  position: fixed;
+  top: -9999px;
+}
+.option-picker__self:disabled + .option-picker {
+  color: gray;
+}
+.option-picker__self:disabled + .option-picker,
+.option-picker__self:disabled + .option-picker * {
+  cursor: not-allowed;
+}
+.option-picker__text {
+  flex: 1;
+}
+.option-picker__text span {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+.option-picker__text span::after {
+  content: "‌";
+}
+.option-picker__text span * {
+  display: inline;
+}
+.option-picker__text span br {
+  display: none;
+}
+.option-picker__text span + span {
+  bottom: 0;
+  left: 0;
+  opacity: 0.5;
+  padding: inherit;
+  position: absolute;
+  right: 0;
+  top: 0;
+  white-space: nowrap;
+  z-index: 0;
+}
+.option-picker__values {
+  border-color: inherit;
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  gap: 1px;
+  padding: 1px;
+}

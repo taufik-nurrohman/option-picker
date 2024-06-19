@@ -1,5 +1,5 @@
 import {fromStates} from '@taufik-nurrohman/from';
-import {getAttribute, getParentForm, letClass, letElement, setClass, setElement, setNext} from '@taufik-nurrohman/document';
+import {getAttributes, getName, getParentForm, getText, letClass, letElement, setChildLast, setClass, setElement, setNext, setText} from '@taufik-nurrohman/document';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, onEvent} from '@taufik-nurrohman/event';
@@ -11,8 +11,38 @@ function defineProperty(of, key, state) {
     Object.defineProperty(of, key, state);
 }
 
+function getOptions(self) {
+    const options = {};
+    const value = getValue(self);
+    if ('input' === getName(self)) {
+        // TODO
+    } else {
+        let selected = [];
+        for (let i = 0, j = toCount(self.options), v; i < j; ++i) {
+            let v = self.options[i],
+                attributes = getAttributes(v);
+            ['disabled', 'selected'].forEach(k => {
+                if (k in attributes) {
+                    attributes[k] = "" === attributes[k] ? true : attributes[k];
+                    if ('selected' === k) {
+                        selected.push(i);
+                    }
+                } else {
+                    attributes[k] = null;
+                }
+            });
+            options[v.value] = [getText(v) || v.value, attributes];
+        }
+        // If there is no selected option(s), get it from the current value
+        if (0 === toCount(selected) && options[value]) {
+            options[value][1].selected = true;
+        }
+    }
+    return options;
+}
+
 function getValue(self) {
-    return (self.value || getAttribute(self, 'value', false) || "").replace(/\r/g, "");
+    return (self.value || "").replace(/\r/g, "");
 }
 
 function isDisabled(self) {
@@ -84,17 +114,33 @@ $$.attach = function (self, state) {
     self = self || $.self;
     state = state || $.state;
     $._active = !isDisabled(self) && !isReadOnly(self);
-    $._options = {};
-    $._value = getValue(self);
+    $._options = getOptions(self);
+    $._value = getValue(self) || null;
     $.self = self;
     $.state = state;
-    let n = state.n;
+    let n = state.n,
+        isInput = 'input' === getName(self);
     const form = getParentForm(self);
     const mask = setElement('div', {
         'class': n,
         'tabindex': isDisabled(self) ? false : -1
     });
     $.mask = mask;
+    const maskValues = setElement('span', {
+        'class': n + '__values'
+    });
+    const text = setElement('span', {
+        'class': n + '__text'
+    });
+    const textInput = setElement('span', {
+        'contenteditable': isDisabled(self) || isReadOnly(self) || !isInput ? false : "",
+        'spellcheck': !isInput ? false : 'false'
+    });
+    const textInputHint = setElement('span', isInput ? self.placeholder + "" : "");
+    setChildLast(mask, maskValues);
+    setChildLast(maskValues, text);
+    setChildLast(text, textInput);
+    setChildLast(text, textInputHint);
     setClass(self, n + '__self');
     setNext(self, mask);
     if (form) {
@@ -112,6 +158,9 @@ $$.attach = function (self, state) {
     _mask.self = mask;
     _mask.text = null;
     $._mask = _mask;
+    // Attach the current value(s)
+    const option = $._options[$._value];
+    setText(textInput, isArray(option) ? option[0] : option);
     // Attach extension(s)
     if (isSet(state) && isArray(state.with)) {
         for (let i = 0, j = toCount(state.with); i < j; ++i) {
@@ -141,6 +190,7 @@ $$.detach = function () {
         {_mask, mask, self, state} = $;
     const form = getParentForm(self);
     $._active = false;
+    $._value = getValue(self) || null; // Update initial value to be the current value
     if (form) {
         offEvent('reset', form, onResetForm);
         offEvent('submit', form, onSubmitForm);

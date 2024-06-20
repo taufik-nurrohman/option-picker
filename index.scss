@@ -1,5 +1,19 @@
 $name: 'option-picker';
 
+%item {
+  border: 1px solid;
+  display: flex;
+  gap: 0.25em;
+  padding: 0 0.25em;
+}
+
+%items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  padding: 1px;
+}
+
 .#{$name} {
   &,
   & * {
@@ -12,11 +26,23 @@ $name: 'option-picker';
 
 .#{$name} {
   border: 1px solid;
-  cursor: text;
+  cursor: pointer;
   display: inline-flex;
   flex-wrap: wrap;
   position: relative;
   vertical-align: middle;
+  &--focus {
+    .#{$name}__value {
+      outline: 1px solid;
+      outline-offset: -2px;
+    }
+  }
+  &--open {
+    z-index: 9999;
+    .#{$name}__options {
+      display: flex;
+    }
+  }
   &__self {
     left: -9999px;
     position: fixed;
@@ -33,18 +59,47 @@ $name: 'option-picker';
       }
     }
   }
+  &__option {
+    @extend %item;
+    display: block;
+    &--disabled {
+      color: rgb(128, 128, 128);
+      cursor: not-allowed;
+    }
+    &--selected {
+      background: rgba(0, 0, 255, 0.5);
+    }
+    &:focus {
+      outline: 1px solid;
+      outline-offset: -2px;
+    }
+  }
+  &__options {
+    @extend %items;
+    background: #fff;
+    border: inherit;
+    display: none;
+    flex-direction: column;
+    left: -1px;
+    position: absolute;
+    top: 100%;
+    white-space: nowrap;
+  }
+  &__text,
+  &__value {
+    @extend %item;
+    overflow: hidden;
+    position: relative;
+  }
   &__text {
+    cursor: text;
     flex: 1;
     span {
       flex: 1;
       position: relative;
       z-index: 1;
-      // Ensure height even when tag(s) is empty
-      &::after {
-        content: '\200c';
-      }
       * {
-        display: inline; // Remove (hide) line-break in tag editor
+        display: inline; // Remove (hide) line-break in text box
       }
       br {
         display: none;
@@ -63,11 +118,6 @@ $name: 'option-picker';
     }
   }
   &__values {
-    border-color: inherit;
-    display: flex;
-    flex-wrap: wrap;
-    flex: 1;
-    gap: 1px;
-    padding: 1px;
+    @extend %items;
   }
 }

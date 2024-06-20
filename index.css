@@ -1,4 +1,20 @@
-@charset "UTF-8";
+.option-picker__text,
+.option-picker__value,
+.option-picker__option {
+  border: 1px solid;
+  display: flex;
+  gap: 0.25em;
+  padding: 0 0.25em;
+}
+
+.option-picker__values,
+.option-picker__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  padding: 1px;
+}
+
 .option-picker,
 .option-picker * {
   box-sizing: border-box;
@@ -9,11 +25,21 @@
 
 .option-picker {
   border: 1px solid;
-  cursor: text;
+  cursor: pointer;
   display: inline-flex;
   flex-wrap: wrap;
   position: relative;
   vertical-align: middle;
+}
+.option-picker--focus .option-picker__value {
+  outline: 1px solid;
+  outline-offset: -2px;
+}
+.option-picker--open {
+  z-index: 9999;
+}
+.option-picker--open .option-picker__options {
+  display: flex;
 }
 .option-picker__self {
   left: -9999px;
@@ -27,16 +53,43 @@
 .option-picker__self:disabled + .option-picker * {
   cursor: not-allowed;
 }
+.option-picker__option {
+  display: block;
+}
+.option-picker__option--disabled {
+  color: gray;
+  cursor: not-allowed;
+}
+.option-picker__option--selected {
+  background: rgba(0, 0, 255, 0.5);
+}
+.option-picker__option:focus {
+  outline: 1px solid;
+  outline-offset: -2px;
+}
+.option-picker__options {
+  background: #fff;
+  border: inherit;
+  display: none;
+  flex-direction: column;
+  left: -1px;
+  position: absolute;
+  top: 100%;
+  white-space: nowrap;
+}
+.option-picker__text,
+.option-picker__value {
+  overflow: hidden;
+  position: relative;
+}
 .option-picker__text {
+  cursor: text;
   flex: 1;
 }
 .option-picker__text span {
   flex: 1;
   position: relative;
   z-index: 1;
-}
-.option-picker__text span::after {
-  content: "‌";
 }
 .option-picker__text span * {
   display: inline;
@@ -54,12 +107,4 @@
   top: 0;
   white-space: nowrap;
   z-index: 0;
-}
-.option-picker__values {
-  border-color: inherit;
-  display: flex;
-  flex-wrap: wrap;
-  flex: 1;
-  gap: 1px;
-  padding: 1px;
 }

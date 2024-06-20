@@ -1,11 +1,48 @@
-import {fromStates} from '@taufik-nurrohman/from';
-import {getAttributes, getName, getParentForm, getText, letClass, letElement, setChildLast, setClass, setElement, setNext, setText} from '@taufik-nurrohman/document';
+import {delay} from '@taufik-nurrohman/tick';
+import {fromStates, fromValue} from '@taufik-nurrohman/from';
+import {getAttributes, getName, getNext, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setNext, setText, toggleClass} from '@taufik-nurrohman/document';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
-import {offEvent, onEvent} from '@taufik-nurrohman/event';
+import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
 import {toCount} from '@taufik-nurrohman/to';
 
+const KEY_ARROW_DOWN = 'ArrowDown';
+const KEY_ARROW_UP = 'ArrowUp';
+const KEY_BEGIN = 'Home';
+const KEY_END = 'End';
+const KEY_ENTER = 'Enter';
+const KEY_ESCAPE = 'Escape';
+const KEY_TAB = 'Tab';
+
 const name = 'OptionPicker';
+
+function createOptions(options) {
+    let $ = this,
+        {self, state} = $,
+        {n} = state;
+    n += '__option';
+    let values = getOptions(self);
+    for (let k in values) {
+        let v = values[k];
+        let {disabled, selected, value} = v[1];
+        let option = setElement('span', v[0], {
+            'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
+            'data-value': fromValue(value || k),
+            'tabindex': disabled ? false : -1
+        });
+        if (!disabled) {
+            onEvent('blur', option, onBlurOption);
+            onEvent('focus', option, onFocusOption);
+            onEvent('keydown', option, onKeyDownOption);
+            onEvent('mousedown', option, onPointerDownOption);
+            onEvent('touchstart', option, onPointerDownOption);
+        }
+        option._of = v[2];
+        option['_' + name] = $;
+        $._options[k] = option;
+        setChildLast(options, option);
+    }
+}
 
 function defineProperty(of, key, state) {
     Object.defineProperty(of, key, state);
@@ -31,7 +68,7 @@ function getOptions(self) {
                     attributes[k] = null;
                 }
             });
-            options[v.value] = [getText(v) || v.value, attributes];
+            options[v.value] = [getText(v) || v.value, attributes, v];
         }
         // If there is no selected option(s), get it from the current value
         if (0 === toCount(selected) && options[value]) {
@@ -97,6 +134,157 @@ defineProperty($$, 'value', {
     }
 });
 
+function onBlurMask() {
+    let $ = this,
+        picker = $['_' + name],
+        {state} = picker,
+        {n} = state;
+    letClass($, n += '--focus');
+    letClass($, n += '-self');
+}
+
+function onBlurOption() {
+    let $ = this,
+        picker = $['_' + name],
+        {mask, state} = picker,
+        {n} = state;
+    letClass(mask, n + '--focus-option');
+}
+
+function onBlurTextInput() {}
+
+function onFocusMask() {
+    let $ = this,
+        picker = $['_' + name],
+        {state} = picker,
+        {n} = state;
+    setClass($, n += '--focus');
+    setClass($, n += '-self');
+}
+
+function onFocusOption() {
+    let $ = this,
+        picker = $['_' + name],
+        {mask, state} = picker,
+        {n} = state;
+    setClass(mask, n + '--focus-option');
+}
+
+function onFocusTextInput() {}
+
+function onKeyDownMask(e) {
+    let $ = this, exit,
+        key = e.key,
+        keyIsCtrl = e.ctrlKey,
+        keyIsShift = e.shiftKey,
+        picker = $['_' + name],
+        {_options, self, state} = picker,
+        {n} = state,
+        option = _options[self.value];
+    if (KEY_ESCAPE === key) {
+        letClass($, n + '--open');
+        $.focus();
+        exit = true;
+    } else if (option) {
+        if (KEY_ARROW_DOWN === key || KEY_ENTER === key || ' ' === key) {
+            setClass($, n + '--open');
+            option.focus();
+            exit = true;
+        }
+    }
+    exit && offEventDefault(e);
+}
+
+function onKeyDownOption(e) {
+    let $ = this, exit,
+        key = e.key,
+        keyIsCtrl = e.ctrlKey,
+        keyIsShift = e.shiftKey,
+        picker = $['_' + name],
+        {_mask, _options, mask, self, state} = picker,
+        {input} = _mask,
+        {n} = state;
+    n += '__option';
+    let nextOption, prevOption;
+    if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
+        letClass(mask, state.n + '--open');
+        if (KEY_TAB !== key) {
+            mask.focus();
+            exit = true;
+        }
+    } else if (KEY_ARROW_DOWN === key) {
+        if (nextOption = getNext($)) {
+            while (nextOption && hasClass(nextOption, n + '--disabled')) {
+                nextOption = getNext(nextOption);
+            }
+            if (nextOption) {
+                letAttribute($._of, 'selected');
+                letClass($, n + '--selected');
+                nextOption.focus();
+                setAttribute(nextOption._of, 'selected', "");
+                setClass(nextOption, n + '--selected');
+                setText(input, getText(nextOption));
+            }
+        }
+        exit = true;
+    } else if (KEY_ARROW_UP === key) {
+        if (prevOption = getPrev($)) {
+            while (prevOption && hasClass(prevOption, n + '--disabled')) {
+                prevOption = getPrev(prevOption);
+            }
+            if (prevOption) {
+                letAttribute($._of, 'selected');
+                letClass($, n + '--selected');
+                prevOption.focus();
+                setAttribute(prevOption._of, 'selected', "");
+                setClass(prevOption, n + '--selected');
+                setText(input, getText(prevOption));
+            }
+        } else {
+            letClass(mask, state.n + '--open');
+            mask.focus();
+        }
+        exit = true;
+    }
+    exit && (offEventDefault(e), offEventPropagation(e));
+}
+
+function onPointerDownMask(e) {
+    let $ = this,
+        picker = $['_' + name],
+        {_options, self, state} = picker,
+        {n} = state;
+    n += '--open';
+    toggleClass($, n);
+    if (hasClass($, n) && _options[self.value]) {
+        _options[self.value].focus();
+    } else {
+        $.focus();
+    }
+    offEventDefault(e);
+}
+
+function onPointerDownOption(e) {
+    let $ = this,
+        picker = $['_' + name],
+        {_mask, _options, self, state} = picker,
+        {input} = _mask,
+        {n} = state;
+    n += '__option--selected';
+    for (let k in _options) {
+        let option = _options[k];
+        if ($ === option) {
+            continue;
+        }
+        letAttribute(option._of, 'selected');
+        letClass(option, n);
+    }
+    setAttribute($._of, 'selected', "");
+    setClass($, n);
+    setText(input, getText($));
+    offEventDefault(e);
+}
+
 function onResetForm(e) {
     let $ = this,
         picker = $['_' + name];
@@ -114,7 +302,7 @@ $$.attach = function (self, state) {
     self = self || $.self;
     state = state || $.state;
     $._active = !isDisabled(self) && !isReadOnly(self);
-    $._options = getOptions(self);
+    $._options = {};
     $._value = getValue(self) || null;
     $.self = self;
     $.state = state;
@@ -123,14 +311,18 @@ $$.attach = function (self, state) {
     const form = getParentForm(self);
     const mask = setElement('div', {
         'class': n,
-        'tabindex': isDisabled(self) ? false : -1
+        'tabindex': isDisabled(self) ? false : 0
     });
     $.mask = mask;
-    const maskValues = setElement('span', {
+    const maskOptions = setElement('div', {
+        'class': n + '__options'
+    });
+    createOptions.call($, maskOptions);
+    const maskValues = setElement('div', {
         'class': n + '__values'
     });
     const text = setElement('span', {
-        'class': n + '__text'
+        'class': n + '__' + (isInput ? 'text' : 'value')
     });
     const textInput = setElement('span', {
         'contenteditable': isDisabled(self) || isReadOnly(self) || !isInput ? false : "",
@@ -138,9 +330,12 @@ $$.attach = function (self, state) {
     });
     const textInputHint = setElement('span', isInput ? self.placeholder + "" : "");
     setChildLast(mask, maskValues);
+    setChildLast(mask, maskOptions);
     setChildLast(maskValues, text);
     setChildLast(text, textInput);
-    setChildLast(text, textInputHint);
+    if (isInput) {
+        setChildLast(text, textInputHint);
+    }
     setClass(self, n + '__self');
     setNext(self, mask);
     if (form) {
@@ -148,19 +343,25 @@ $$.attach = function (self, state) {
         onEvent('reset', form, onResetForm);
         onEvent('submit', form, onSubmitForm);
     }
+    onEvent('blur', mask, onBlurMask);
+    onEvent('focus', mask, onFocusMask);
+    onEvent('keydown', mask, onKeyDownMask);
+    onEvent('mousedown', mask, onPointerDownMask);
+    onEvent('touchstart', mask, onPointerDownMask);
     self.tabIndex = -1;
     mask['_' + name] = $;
     let _mask = {};
-    _mask.hint = null;
-    _mask.input = null;
+    _mask.hint = textInputHint;
+    _mask.input = textInput;
     _mask.of = self;
     _mask.options = null;
     _mask.self = mask;
-    _mask.text = null;
+    _mask.text = text;
     $._mask = _mask;
     // Attach the current value(s)
-    const option = $._options[$._value];
-    setText(textInput, isArray(option) ? option[0] : option);
+    let option = $._options[$._value];
+    setAttribute(option._of, 'selected', "");
+    setText(textInput, getText(option));
     // Attach extension(s)
     if (isSet(state) && isArray(state.with)) {
         for (let i = 0, j = toCount(state.with); i < j; ++i) {
@@ -195,6 +396,11 @@ $$.detach = function () {
         offEvent('reset', form, onResetForm);
         offEvent('submit', form, onSubmitForm);
     }
+    offEvent('blur', mask, onBlurMask);
+    offEvent('focus', mask, onFocusMask);
+    offEvent('keydown', mask, onKeyDownMask);
+    offEvent('mousedown', mask, onPointerDownMask);
+    offEvent('touchstart', mask, onPointerDownMask);
     // Detach extension(s)
     if (isArray(state.with)) {
         for (let i = 0, j = toCount(state.with); i < j; ++i) {

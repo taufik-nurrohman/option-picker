@@ -45,6 +45,9 @@
     var isNull = function isNull(x) {
         return null === x;
     };
+    var isNumber = function isNumber(x) {
+        return 'number' === typeof x;
+    };
     var isNumeric = function isNumeric(x) {
         return /^-?(?:\d*.)?\d+$/.test(x + "");
     };
@@ -63,8 +66,16 @@
     var isString = function isString(x) {
         return 'string' === typeof x;
     };
+    var toCaseCamel = function toCaseCamel(x) {
+        return x.replace(/[-_.](\w)/g, function (m0, m1) {
+            return toCaseUpper(m1);
+        });
+    };
     var toCaseLower = function toCaseLower(x) {
         return x.toLowerCase();
+    };
+    var toCaseUpper = function toCaseUpper(x) {
+        return x.toUpperCase();
     };
     var toCount = function toCount(x) {
         return x.length;
@@ -100,6 +111,13 @@
             return true;
         }
         return x;
+    };
+    var fromJSON = function fromJSON(x) {
+        var value = null;
+        try {
+            value = JSON.parse(x);
+        } catch (e) {}
+        return value;
     };
     var fromStates = function fromStates() {
         for (var _len = arguments.length, lot = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -157,6 +175,19 @@
         return "" + x;
     };
     var D = document;
+    var W = window;
+    var B = D.body;
+    var R = D.documentElement;
+    var getAttribute = function getAttribute(node, attribute, parseValue) {
+        if (parseValue === void 0) {
+            parseValue = true;
+        }
+        if (!hasAttribute(node, attribute)) {
+            return null;
+        }
+        var value = node.getAttribute(attribute);
+        return parseValue ? toValue(value) : value;
+    };
     var getAttributes = function getAttributes(node, parseValue) {
         if (parseValue === void 0) {
             parseValue = true;
@@ -175,6 +206,17 @@
     };
     var getChildLast = function getChildLast(parent) {
         return parent.lastElementChild || null;
+    };
+    var getDatum = function getDatum(node, datum, parseValue) {
+        if (parseValue === void 0) {
+            parseValue = true;
+        }
+        var value = getAttribute(node, 'data-' + datum, parseValue),
+            v = (value + "").trim();
+        if (parseValue && v && ('[' === v[0] && ']' === v.slice(-1) || '{' === v[0] && '}' === v.slice(-1)) && null !== (v = fromJSON(value))) {
+            return v;
+        }
+        return value;
     };
     var getHTML = function getHTML(node, trim) {
         if (trim === void 0) {
@@ -222,11 +264,17 @@
         content = trim ? content.trim() : content;
         return "" !== content ? content : null;
     };
+    var hasAttribute = function hasAttribute(node, attribute) {
+        return node.hasAttribute(attribute);
+    };
     var hasClass = function hasClass(node, value) {
         return node.classList.contains(value);
     };
     var hasState = function hasState(node, state) {
         return state in node;
+    };
+    var isWindow = function isWindow(node) {
+        return node === W;
     };
     var letAttribute = function letAttribute(node, attribute) {
         return node.removeAttribute(attribute), node;
@@ -237,6 +285,9 @@
     var letElement = function letElement(node) {
         var parent = getParent(node);
         return node.remove(), parent;
+    };
+    var letStyle = function letStyle(node, style) {
+        return node.style[toCaseCamel(style)] = null, node;
     };
     var setAttribute = function setAttribute(node, attribute, value) {
         if (true === value) {
@@ -288,6 +339,53 @@
     };
     var setNext = function setNext(current, node) {
         return getParent(current).insertBefore(node, getNext(current, true)), node;
+    };
+    var setStyle = function setStyle(node, style, value) {
+        if (isNumber(value)) {
+            value += 'px';
+        }
+        return node.style[toCaseCamel(style)] = fromValue(value), node;
+    };
+    var setStyles = function setStyles(node, styles) {
+        var value;
+        for (var style in styles) {
+            value = styles[style];
+            if (value || "" === value || 0 === value) {
+                setStyle(node, style, value);
+            } else {
+                letStyle(node, style);
+            }
+        }
+        return node;
+    };
+    var debounce = function debounce(then, time) {
+        var timer;
+        return function () {
+            var _arguments = arguments,
+                _this = this;
+            timer && clearTimeout(timer);
+            timer = setTimeout(function () {
+                return then.apply(_this, _arguments);
+            }, time);
+        };
+    };
+    var getRect = function getRect(node) {
+        var h, rect, w, x, y, X, Y;
+        if (isWindow(node)) {
+            x = node.pageXOffset || R.scrollLeft || B.scrollLeft;
+            y = node.pageYOffset || R.scrollTop || B.scrollTop;
+            w = node.innerWidth;
+            h = node.innerHeight;
+        } else {
+            rect = node.getBoundingClientRect();
+            x = rect.left;
+            y = rect.top;
+            w = rect.width;
+            h = rect.height;
+            X = rect.right;
+            Y = rect.bottom;
+        }
+        return [x, y, w, h, X, Y];
     };
 
     function hook($) {
@@ -360,6 +458,7 @@
     const KEY_ENTER = 'Enter';
     const KEY_ESCAPE = 'Escape';
     const KEY_TAB = 'Tab';
+    const bounce = debounce($ => $.fit(), 10);
     const name = 'OptionPicker';
 
     function createOptions(options, values) {
@@ -476,7 +575,6 @@
     OptionPicker.state = {
         'n': 'option-picker',
         'options': null,
-        'root': D,
         'with': []
     };
     OptionPicker.version = '2.0.0';
@@ -554,10 +652,8 @@
             picker = $['_' + name];
         if (KEY_ESCAPE === key) {
             picker.exit(exit = true);
-        } else if (KEY_ARROW_DOWN === key || KEY_ENTER === key || ' ' === key) {
-            picker.enter(exit = true, 'down');
-        } else if (KEY_ARROW_UP === key) {
-            picker.enter(exit = true, 'up');
+        } else if (KEY_ENTER === key || ' ' === key) {
+            picker.enter(exit = true).fit();
         }
         exit && offEventDefault(e);
     }
@@ -614,8 +710,7 @@
                 setAttribute(nextOption._of, 'selected', "");
                 setClass(nextOption, n + '--selected');
                 setHTML(input || value, getHTML(nextOption));
-            } else if (hasClass(mask, state.n + '--open-up')) {
-                picker.exit(exit);
+                self.value = getDatum(nextOption, 'value');
             }
         } else if (KEY_ARROW_UP === key) {
             exit = true;
@@ -644,8 +739,7 @@
                 setAttribute(prevOption._of, 'selected', "");
                 setClass(prevOption, n + '--selected');
                 setHTML(input || value, getHTML(prevOption));
-            } else if (hasClass(mask, state.n + '--open-down')) {
-                picker.exit(exit);
+                self.value = getDatum(prevOption, 'value');
             }
         }
         exit && (offEventDefault(e), offEventPropagation(e));
@@ -660,7 +754,7 @@
             {
                 n
             } = state;
-        picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true), offEventDefault(e);
+        picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit(), offEventDefault(e);
     }
 
     function onPointerDownOption(e) {
@@ -691,21 +785,24 @@
         setAttribute($._of, 'selected', "");
         setClass($, n);
         setHTML(input || value, getHTML($));
+        self.value = getDatum($, 'value');
         offEventDefault(e);
     }
 
     function onPointerDownRoot(e) {
         let $ = this,
-            picker = $['_' + name],
-            {
-                mask,
-                state
-            } = picker,
-            {
-                n
-            } = state,
-            target = e.target;
-        if (picker && mask !== target && mask !== getParent(target, '.' + n)) {
+            picker = $['_' + name];
+        if (!picker) {
+            return;
+        }
+        let {
+            mask,
+            state
+        } = picker, {
+            n
+        } = state,
+        target = e.target;
+        if (mask !== target && mask !== getParent(target, '.' + n)) {
             picker.exit();
             delete $['_' + name];
         }
@@ -715,6 +812,16 @@
         let $ = this,
             picker = $['_' + name];
         picker.let().fire('reset', [e]);
+    }
+
+    function onResizeWindow() {
+        let $ = this,
+            picker = $['_' + name];
+        picker && bounce(picker);
+    }
+
+    function onScrollWindow() {
+        onResizeWindow.call(this);
     }
 
     function onSubmitForm(e) {
@@ -733,8 +840,7 @@
         $.state = state;
         let isInput = 'input' === getName(self),
             {
-                n,
-                root
+                n
             } = state;
         const arrow = setElement('span', {
             'class': n + '__arrow'
@@ -781,14 +887,14 @@
             onEvent('reset', form, onResetForm);
             onEvent('submit', form, onSubmitForm);
         }
-        if (root) {
-            onEvent('mousedown', root, onPointerDownRoot);
-            onEvent('touchstart', root, onPointerDownRoot);
-        }
         onEvent('blur', mask, onBlurMask);
         onEvent('focus', mask, onFocusMask);
         onEvent('keydown', mask, onKeyDownMask);
+        onEvent('mousedown', R, onPointerDownRoot);
         onEvent('mousedown', mask, onPointerDownMask);
+        onEvent('resize', W, onResizeWindow);
+        onEvent('scroll', W, onScrollWindow);
+        onEvent('touchstart', R, onPointerDownRoot);
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
         mask['_' + name] = $;
@@ -797,7 +903,7 @@
         _mask.input = isInput ? textInput : null;
         _mask.of = self;
         _mask.options = maskOptions;
-        _mask.root = root || null;
+        _mask.root = R;
         _mask.self = mask;
         _mask[isInput ? 'text' : 'value'] = text;
         $._mask = _mask; // Attach the current value(s)
@@ -830,10 +936,7 @@
                 mask,
                 self,
                 state
-            } = $,
-            {
-                root
-            } = state;
+            } = $;
         const form = getParentForm(self);
         $._active = false;
         $._value = getValue(self) || null; // Update initial value to be the current value
@@ -841,14 +944,14 @@
             offEvent('reset', form, onResetForm);
             offEvent('submit', form, onSubmitForm);
         }
-        if (root) {
-            offEvent('mousedown', root, onPointerDownRoot);
-            offEvent('touchstart', root, onPointerDownRoot);
-        }
         offEvent('blur', mask, onBlurMask);
         offEvent('focus', mask, onFocusMask);
         offEvent('keydown', mask, onKeyDownMask);
+        offEvent('mousedown', R, onPointerDownRoot);
         offEvent('mousedown', mask, onPointerDownMask);
+        offEvent('resize', W, onResizeWindow);
+        offEvent('scroll', W, onScrollWindow);
+        offEvent('touchstart', R, onPointerDownRoot);
         offEvent('touchstart', mask, onPointerDownMask); // Detach extension(s)
         if (isArray(state.with)) {
             for (let i = 0, j = toCount(state.with); i < j; ++i) {
@@ -871,7 +974,7 @@
         $.mask = null;
         return $;
     };
-    $$.enter = function (focus, direction = 'down') {
+    $$.enter = function (focus) {
         let $ = this,
             option, {
                 _options,
@@ -880,12 +983,11 @@
                 state
             } = $,
             {
-                n,
-                root
+                n
             } = state;
         setClass(mask, n += '--open');
-        setClass(mask, n + '-' + (direction || 'down'));
-        root && (root['_' + name] = $);
+        R['_' + name] = $;
+        W['_' + name] = $;
         $.fire('enter');
         if (focus) {
             $.fire('focus');
@@ -896,7 +998,7 @@
         }
         return $;
     };
-    $$.exit = function (focus, directions = ['down', 'up']) {
+    $$.exit = function (focus) {
         let $ = this,
             {
                 mask,
@@ -906,13 +1008,35 @@
                 n
             } = state;
         letClass(mask, n += '--open');
-        if (isString(directions)) {
-            directions = [directions];
-        }
-        directions.forEach(direction => letClass(mask, n + '-' + direction));
         $.fire('exit');
         if (focus) {
             mask.focus(), $.fire('focus').fire('focus.self');
+        }
+        return $;
+    };
+    $$.fit = function () {
+        let $ = this,
+            {
+                _mask,
+                mask
+            } = $,
+            {
+                options
+            } = _mask;
+        let rectMask = getRect(mask),
+            rectWindow = getRect(W);
+        if (rectMask[1] + rectMask[3] / 2 > rectWindow[3] / 2) {
+            setStyles(options, {
+                'bottom': '100%',
+                'max-height': rectMask[1],
+                'top': 'auto'
+            });
+        } else {
+            setStyles(options, {
+                'bottom': 'auto',
+                'max-height': rectWindow[3] - rectMask[1] - rectMask[3],
+                'top': '100%'
+            });
         }
         return $;
     };

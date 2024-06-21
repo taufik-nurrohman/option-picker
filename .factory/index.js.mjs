@@ -1,6 +1,7 @@
-import {delay} from '@taufik-nurrohman/tick';
+import {R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, setStyles} from '@taufik-nurrohman/document';
+import {debounce, delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
-import {D, getAttributes, getChildFirst, getChildLast, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, toggleClass} from '@taufik-nurrohman/document';
+import {getRect} from '@taufik-nurrohman/rect';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
@@ -14,6 +15,7 @@ const KEY_ENTER = 'Enter';
 const KEY_ESCAPE = 'Escape';
 const KEY_TAB = 'Tab';
 
+const bounce = debounce($ => $.fit(), 10);
 const name = 'OptionPicker';
 
 function createOptions(options, values) {
@@ -130,7 +132,6 @@ function OptionPicker(self, state) {
 OptionPicker.state = {
     'n': 'option-picker',
     'options': null,
-    'root': D,
     'with': []
 };
 
@@ -197,10 +198,8 @@ function onKeyDownMask(e) {
         picker = $['_' + name];
     if (KEY_ESCAPE === key) {
         picker.exit(exit = true);
-    } else if (KEY_ARROW_DOWN === key || KEY_ENTER === key || ' ' === key) {
-        picker.enter(exit = true, 'down');
-    } else if (KEY_ARROW_UP === key) {
-        picker.enter(exit = true, 'up');
+    } else if (KEY_ENTER === key || ' ' === key) {
+        picker.enter(exit = true).fit();
     }
     exit && offEventDefault(e);
 }
@@ -248,8 +247,7 @@ function onKeyDownOption(e) {
             setAttribute(nextOption._of, 'selected', "");
             setClass(nextOption, n + '--selected');
             setHTML(input || value, getHTML(nextOption));
-        } else if (hasClass(mask, state.n + '--open-up')) {
-            picker.exit(exit);
+            self.value = getDatum(nextOption, 'value');
         }
     } else if (KEY_ARROW_UP === key) {
         exit = true;
@@ -281,8 +279,7 @@ function onKeyDownOption(e) {
             setAttribute(prevOption._of, 'selected', "");
             setClass(prevOption, n + '--selected');
             setHTML(input || value, getHTML(prevOption));
-        } else if (hasClass(mask, state.n + '--open-down')) {
-            picker.exit(exit);
+            self.value = getDatum(prevOption, 'value');
         }
     }
     exit && (offEventDefault(e), offEventPropagation(e));
@@ -293,7 +290,7 @@ function onPointerDownMask(e) {
         picker = $['_' + name],
         {state} = picker,
         {n} = state;
-    picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true), offEventDefault(e);
+    picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit(), offEventDefault(e);
 }
 
 function onPointerDownOption(e) {
@@ -314,16 +311,20 @@ function onPointerDownOption(e) {
     setAttribute($._of, 'selected', "");
     setClass($, n);
     setHTML(input || value, getHTML($));
+    self.value = getDatum($, 'value');
     offEventDefault(e);
 }
 
 function onPointerDownRoot(e) {
     let $ = this,
-        picker = $['_' + name],
-        {mask, state} = picker,
+        picker = $['_' + name];
+    if (!picker) {
+        return;
+    }
+    let {mask, state} = picker,
         {n} = state,
         target = e.target;
-    if (picker && mask !== target && mask !== getParent(target, '.' + n)) {
+    if (mask !== target && mask !== getParent(target, '.' + n)) {
         picker.exit();
         delete $['_' + name];
     }
@@ -333,6 +334,16 @@ function onResetForm(e) {
     let $ = this,
         picker = $['_' + name];
     picker.let().fire('reset', [e]);
+}
+
+function onResizeWindow() {
+    let $ = this,
+        picker = $['_' + name];
+    picker && bounce(picker);
+}
+
+function onScrollWindow() {
+    onResizeWindow.call(this);
 }
 
 function onSubmitForm(e) {
@@ -351,7 +362,7 @@ $$.attach = function (self, state) {
     $.self = self;
     $.state = state;
     let isInput = 'input' === getName(self),
-        {n, root} = state;
+        {n} = state;
     const arrow = setElement('span', {
         'class': n + '__arrow'
     });
@@ -395,14 +406,14 @@ $$.attach = function (self, state) {
         onEvent('reset', form, onResetForm);
         onEvent('submit', form, onSubmitForm);
     }
-    if (root) {
-        onEvent('mousedown', root, onPointerDownRoot);
-        onEvent('touchstart', root, onPointerDownRoot);
-    }
     onEvent('blur', mask, onBlurMask);
     onEvent('focus', mask, onFocusMask);
     onEvent('keydown', mask, onKeyDownMask);
+    onEvent('mousedown', R, onPointerDownRoot);
     onEvent('mousedown', mask, onPointerDownMask);
+    onEvent('resize', W, onResizeWindow);
+    onEvent('scroll', W, onScrollWindow);
+    onEvent('touchstart', R, onPointerDownRoot);
     onEvent('touchstart', mask, onPointerDownMask);
     self.tabIndex = -1;
     mask['_' + name] = $;
@@ -411,7 +422,7 @@ $$.attach = function (self, state) {
     _mask.input = isInput ? textInput : null;
     _mask.of = self;
     _mask.options = maskOptions;
-    _mask.root = root || null;
+    _mask.root = R;
     _mask.self = mask;
     _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
@@ -445,8 +456,7 @@ $$.blur = function () {};
 
 $$.detach = function () {
     let $ = this,
-        {_mask, mask, self, state} = $,
-        {root} = state;
+        {_mask, mask, self, state} = $;
     const form = getParentForm(self);
     $._active = false;
     $._value = getValue(self) || null; // Update initial value to be the current value
@@ -454,14 +464,14 @@ $$.detach = function () {
         offEvent('reset', form, onResetForm);
         offEvent('submit', form, onSubmitForm);
     }
-    if (root) {
-        offEvent('mousedown', root, onPointerDownRoot);
-        offEvent('touchstart', root, onPointerDownRoot);
-    }
     offEvent('blur', mask, onBlurMask);
     offEvent('focus', mask, onFocusMask);
     offEvent('keydown', mask, onKeyDownMask);
+    offEvent('mousedown', R, onPointerDownRoot);
     offEvent('mousedown', mask, onPointerDownMask);
+    offEvent('resize', W, onResizeWindow);
+    offEvent('scroll', W, onScrollWindow);
+    offEvent('touchstart', R, onPointerDownRoot);
     offEvent('touchstart', mask, onPointerDownMask);
     // Detach extension(s)
     if (isArray(state.with)) {
@@ -486,13 +496,13 @@ $$.detach = function () {
     return $;
 };
 
-$$.enter = function (focus, direction = 'down') {
+$$.enter = function (focus) {
     let $ = this, option,
         {_options, mask, self, state} = $,
-        {n, root} = state;
+        {n} = state;
     setClass(mask, n += '--open');
-    setClass(mask, n + '-' + (direction || 'down'));
-    root && (root['_' + name] = $);
+    R['_' + name] = $;
+    W['_' + name] = $;
     $.fire('enter');
     if (focus) {
         $.fire('focus');
@@ -504,21 +514,39 @@ $$.enter = function (focus, direction = 'down') {
     return $;
 };
 
-$$.exit = function (focus, directions = ['down', 'up']) {
+$$.exit = function (focus) {
     let $ = this,
         {mask, state} = $,
         {n} = state;
     letClass(mask, n += '--open');
-    if (isString(directions)) {
-        directions = [directions];
-    }
-    directions.forEach(direction => letClass(mask, n + '-' + direction));
     $.fire('exit');
     if (focus) {
         mask.focus(), $.fire('focus').fire('focus.self');
     }
     return $;
 }
+
+$$.fit = function () {
+    let $ = this,
+        {_mask, mask} = $,
+        {options} = _mask;
+    let rectMask = getRect(mask),
+        rectWindow = getRect(W);
+    if (rectMask[1] + (rectMask[3] / 2) > (rectWindow[3] / 2)) {
+        setStyles(options, {
+            'bottom': '100%',
+            'max-height': rectMask[1],
+            'top': 'auto'
+        });
+    } else {
+        setStyles(options, {
+            'bottom': 'auto',
+            'max-height': rectWindow[3] - rectMask[1] - rectMask[3],
+            'top': '100%'
+        });
+    }
+    return $;
+};
 
 $$.focus = function () {};
 

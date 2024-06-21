@@ -1,0 +1,127 @@
+extends ../_index.pug
+
+block state
+  - const title = 'Option Picker'
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+
+block script
+  script
+    | document.querySelectorAll('select').forEach(select => new OptionPicker(select));
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(name='year')
+          option 1970
+          option 1971
+          option 1972
+          option 1973
+          option 1974
+          option 1975
+          option 1976
+          option 1977
+          option 1978
+          option 1979
+          option 1980
+          option 1981
+          option 1982
+          option 1983
+          option 1984
+          option 1985
+          option 1986
+          option 1987
+          option 1988
+          option 1989
+          option 1990
+          option 1991
+          option 1992
+          option 1993
+          option 1994
+          option 1995
+          option 1996
+          option 1997
+          option 1998
+          option 1999
+          option 2000
+          option 2001
+          option 2002
+          option 2003
+          option 2004
+          option 2005
+          option 2006
+          option 2007
+          option 2008
+          option 2009
+          option 2010
+          option 2011
+          option 2012
+          option 2013
+          option 2014
+          option 2015
+          option 2016
+          option 2017
+          option 2018
+          option 2019
+          option 2020
+          option 2021
+          option 2022
+          option 2023
+          option 2024
+          option 2025
+        = ' '
+        select(name='month')
+          option January
+          option February
+          option March
+          option April
+          option May
+          option June
+          option July
+          option August
+          option September
+          option October
+          option November
+          option December
+        = ' '
+        select(name='day')
+          option 1
+          option 2
+          option 3
+          option 4
+          option 5
+          option 6
+          option 7
+          option 8
+          option 9
+          option 10
+          option 11
+          option 12
+          option 13
+          option 14
+          option 15
+          option 16
+          option 17
+          option 18
+          option 19
+          option 20
+          option 21
+          option 22
+          option 23
+          option 24
+          option 25
+          option 26
+          option 27
+          option 28
+          option 29
+          option 30
+          option 31
+      p
+        button(type='submit') Submit

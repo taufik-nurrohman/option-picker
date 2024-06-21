@@ -1,6 +1,6 @@
 import {delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
-import {getAttributes, getChildFirst, getChildLast, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, toggleClass} from '@taufik-nurrohman/document';
+import {D, getAttributes, getChildFirst, getChildLast, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, toggleClass} from '@taufik-nurrohman/document';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
@@ -130,6 +130,7 @@ function OptionPicker(self, state) {
 OptionPicker.state = {
     'n': 'option-picker',
     'options': null,
+    'root': D,
     'with': []
 };
 
@@ -316,6 +317,18 @@ function onPointerDownOption(e) {
     offEventDefault(e);
 }
 
+function onPointerDownRoot(e) {
+    let $ = this,
+        picker = $['_' + name],
+        {mask, state} = picker,
+        {n} = state,
+        target = e.target;
+    if (picker && mask !== target && mask !== getParent(target, '.' + n)) {
+        picker.exit();
+        delete $['_' + name];
+    }
+}
+
 function onResetForm(e) {
     let $ = this,
         picker = $['_' + name];
@@ -337,8 +350,8 @@ $$.attach = function (self, state) {
     $._value = getValue(self) || null;
     $.self = self;
     $.state = state;
-    let n = state.n,
-        isInput = 'input' === getName(self);
+    let isInput = 'input' === getName(self),
+        {n, root} = state;
     const arrow = setElement('span', {
         'class': n + '__arrow'
     });
@@ -382,6 +395,10 @@ $$.attach = function (self, state) {
         onEvent('reset', form, onResetForm);
         onEvent('submit', form, onSubmitForm);
     }
+    if (root) {
+        onEvent('mousedown', root, onPointerDownRoot);
+        onEvent('touchstart', root, onPointerDownRoot);
+    }
     onEvent('blur', mask, onBlurMask);
     onEvent('focus', mask, onFocusMask);
     onEvent('keydown', mask, onKeyDownMask);
@@ -394,6 +411,7 @@ $$.attach = function (self, state) {
     _mask.input = isInput ? textInput : null;
     _mask.of = self;
     _mask.options = maskOptions;
+    _mask.root = root || null;
     _mask.self = mask;
     _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
@@ -427,13 +445,18 @@ $$.blur = function () {};
 
 $$.detach = function () {
     let $ = this,
-        {_mask, mask, self, state} = $;
+        {_mask, mask, self, state} = $,
+        {root} = state;
     const form = getParentForm(self);
     $._active = false;
     $._value = getValue(self) || null; // Update initial value to be the current value
     if (form) {
         offEvent('reset', form, onResetForm);
         offEvent('submit', form, onSubmitForm);
+    }
+    if (root) {
+        offEvent('mousedown', root, onPointerDownRoot);
+        offEvent('touchstart', root, onPointerDownRoot);
     }
     offEvent('blur', mask, onBlurMask);
     offEvent('focus', mask, onFocusMask);
@@ -466,9 +489,10 @@ $$.detach = function () {
 $$.enter = function (focus, direction = 'down') {
     let $ = this, option,
         {_options, mask, self, state} = $,
-        {n} = state;
+        {n, root} = state;
     setClass(mask, n += '--open');
     setClass(mask, n + '-' + (direction || 'down'));
+    root && (root['_' + name] = $);
     $.fire('enter');
     if (focus) {
         $.fire('focus');

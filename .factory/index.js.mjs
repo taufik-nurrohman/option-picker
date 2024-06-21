@@ -198,7 +198,7 @@ function onKeyDownMask(e) {
         picker = $['_' + name];
     if (KEY_ESCAPE === key) {
         picker.exit(exit = true);
-    } else if (KEY_ENTER === key || ' ' === key) {
+    } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || ' ' === key) {
         picker.enter(exit = true).fit();
     }
     exit && offEventDefault(e);

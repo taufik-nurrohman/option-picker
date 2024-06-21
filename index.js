@@ -682,6 +682,14 @@
         n += '__option';
         let nextOption, parentOption, prevOption;
         if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
+            if (KEY_ESCAPE !== key && (prevOption = _options[self.value])) {
+                letAttribute(prevOption._of, 'selected');
+                letClass(prevOption, n + '--selected');
+                setAttribute($._of, 'selected', "");
+                setClass($, n + '--selected');
+                setHTML(input || value, getHTML($));
+                self.value = getDatum($, 'value');
+            }
             picker.exit(exit = KEY_TAB !== key);
         } else if (KEY_ARROW_DOWN === key) {
             exit = true;
@@ -704,13 +712,12 @@
                 nextOption = getNext(nextOption);
             }
             if (nextOption) {
-                letAttribute($._of, 'selected');
-                letClass($, n + '--selected');
-                nextOption.focus();
-                setAttribute(nextOption._of, 'selected', "");
-                setClass(nextOption, n + '--selected');
-                setHTML(input || value, getHTML(nextOption));
-                self.value = getDatum(nextOption, 'value');
+                // letAttribute($._of, 'selected');
+                // letClass($, n + '--selected');
+                nextOption.focus(); // setAttribute(nextOption._of, 'selected', "");
+                // setClass(nextOption, n + '--selected');
+                // setHTML(input || value, getHTML(nextOption));
+                // self.value = getDatum(nextOption, 'value');
             }
         } else if (KEY_ARROW_UP === key) {
             exit = true;
@@ -733,13 +740,12 @@
                 prevOption = getPrev(prevOption);
             }
             if (prevOption) {
-                letAttribute($._of, 'selected');
-                letClass($, n + '--selected');
-                prevOption.focus();
-                setAttribute(prevOption._of, 'selected', "");
-                setClass(prevOption, n + '--selected');
-                setHTML(input || value, getHTML(prevOption));
-                self.value = getDatum(prevOption, 'value');
+                // letAttribute($._of, 'selected');
+                // letClass($, n + '--selected');
+                prevOption.focus(); // setAttribute(prevOption._of, 'selected', "");
+                // setClass(prevOption, n + '--selected');
+                // setHTML(input || value, getHTML(prevOption));
+                // self.value = getDatum(prevOption, 'value');
             }
         }
         exit && (offEventDefault(e), offEventPropagation(e));
@@ -986,7 +992,10 @@
                 n
             } = state;
         setClass(mask, n += '--open');
-        R['_' + name] = $;
+        if (R['_' + name] && R['_' + name] !== $) {
+            R['_' + name].exit(); // Exit other(s)
+        }
+        R['_' + name] = $; // Link current picker to the root target
         W['_' + name] = $;
         $.fire('enter');
         if (focus) {

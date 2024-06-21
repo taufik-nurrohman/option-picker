@@ -1,6 +1,6 @@
 import {delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
-import {getAttributes, getName, getNext, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setNext, setText, toggleClass} from '@taufik-nurrohman/document';
+import {getAttributes, getChildFirst, getChildLast, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, toggleClass} from '@taufik-nurrohman/document';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
@@ -16,14 +16,24 @@ const KEY_TAB = 'Tab';
 
 const name = 'OptionPicker';
 
-function createOptions(options) {
-    let $ = this,
+function createOptions(options, values) {
+    let $ = this, optionGroup,
         {self, state} = $,
         {n} = state;
     n += '__option';
-    let values = getOptions(self);
+    values = values || getOptions(self);
     for (let k in values) {
         let v = values[k];
+        if ('data-group' in v[1]) {
+            if (!optionGroup) {
+                setChildLast(options, optionGroup = setElement('span', {
+                    'class': n + '-group',
+                    'data-value': v[1]['data-group']
+                }));
+            }
+        } else {
+            optionGroup = false;
+        }
         let {disabled, selected, value} = v[1];
         let option = setElement('span', v[0], {
             'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
@@ -40,7 +50,7 @@ function createOptions(options) {
         option._of = v[2];
         option['_' + name] = $;
         $._options[k] = option;
-        setChildLast(options, option);
+        setChildLast(optionGroup || options, option);
     }
 }
 
@@ -54,9 +64,9 @@ function getOptions(self) {
     if ('input' === getName(self)) {
         // TODO
     } else {
-        let selected = [];
-        for (let i = 0, j = toCount(self.options), v; i < j; ++i) {
-            let v = self.options[i],
+        let items = self.children, selected = [];
+        for (let i = 0, j = toCount(items); i < j; ++i) {
+            let v = items[i],
                 attributes = getAttributes(v);
             ['disabled', 'selected'].forEach(k => {
                 if (k in attributes) {
@@ -68,6 +78,14 @@ function getOptions(self) {
                     attributes[k] = null;
                 }
             });
+            if ('optgroup' === getName(v)) {
+                let items2 = getOptions(v);
+                for (let k in items2) {
+                    items2[k][1]['data-group'] = v.label;
+                    options[k] = items2[k];
+                }
+                continue;
+            }
             options[v.value] = [getText(v) || v.value, attributes, v];
         }
         // If there is no selected option(s), get it from the current value
@@ -175,22 +193,13 @@ function onFocusTextInput() {}
 function onKeyDownMask(e) {
     let $ = this, exit,
         key = e.key,
-        keyIsCtrl = e.ctrlKey,
-        keyIsShift = e.shiftKey,
-        picker = $['_' + name],
-        {_options, self, state} = picker,
-        {n} = state,
-        option = _options[self.value];
+        picker = $['_' + name];
     if (KEY_ESCAPE === key) {
-        letClass($, n + '--open');
-        $.focus();
-        exit = true;
-    } else if (option) {
-        if (KEY_ARROW_DOWN === key || KEY_ENTER === key || ' ' === key) {
-            setClass($, n + '--open');
-            option.focus();
-            exit = true;
-        }
+        picker.exit(exit = true);
+    } else if (KEY_ARROW_DOWN === key || KEY_ENTER === key || ' ' === key) {
+        picker.enter(exit = true, 'down');
+    } else if (KEY_ARROW_UP === key) {
+        picker.enter(exit = true, 'up');
     }
     exit && offEventDefault(e);
 }
@@ -202,49 +211,78 @@ function onKeyDownOption(e) {
         keyIsShift = e.shiftKey,
         picker = $['_' + name],
         {_mask, _options, mask, self, state} = picker,
-        {input} = _mask,
+        {input, value} = _mask,
         {n} = state;
     n += '__option';
-    let nextOption, prevOption;
+    let nextOption, parentOption, prevOption;
     if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
-        letClass(mask, state.n + '--open');
-        if (KEY_TAB !== key) {
-            mask.focus();
-            exit = true;
-        }
+        picker.exit(exit = KEY_TAB !== key);
     } else if (KEY_ARROW_DOWN === key) {
-        if (nextOption = getNext($)) {
-            while (nextOption && hasClass(nextOption, n + '--disabled')) {
-                nextOption = getNext(nextOption);
-            }
-            if (nextOption) {
-                letAttribute($._of, 'selected');
-                letClass($, n + '--selected');
-                nextOption.focus();
-                setAttribute(nextOption._of, 'selected', "");
-                setClass(nextOption, n + '--selected');
-                setText(input, getText(nextOption));
-            }
-        }
         exit = true;
-    } else if (KEY_ARROW_UP === key) {
-        if (prevOption = getPrev($)) {
-            while (prevOption && hasClass(prevOption, n + '--disabled')) {
-                prevOption = getPrev(prevOption);
+        nextOption = getNext($);
+        // Skip disabled option(s)…
+        while (nextOption && hasClass(nextOption, n + '--disabled')) {
+            nextOption = getNext(nextOption);
+        }
+        if (nextOption) {
+            // Next option is a group?
+            if (hasClass(nextOption, n + '-group')) {
+                nextOption = getChildFirst(nextOption);
             }
-            if (prevOption) {
-                letAttribute($._of, 'selected');
-                letClass($, n + '--selected');
-                prevOption.focus();
-                setAttribute(prevOption._of, 'selected', "");
-                setClass(prevOption, n + '--selected');
-                setText(input, getText(prevOption));
-            }
+        // Is the last option?
         } else {
-            letClass(mask, state.n + '--open');
-            mask.focus();
+            // Is in a group?
+            if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
+                nextOption = getNext(parentOption);
+            }
         }
+        // Skip disabled option(s)…
+        while (nextOption && hasClass(nextOption, n + '--disabled')) {
+            nextOption = getNext(nextOption);
+        }
+        if (nextOption) {
+            letAttribute($._of, 'selected');
+            letClass($, n + '--selected');
+            nextOption.focus();
+            setAttribute(nextOption._of, 'selected', "");
+            setClass(nextOption, n + '--selected');
+            setHTML(input || value, getHTML(nextOption));
+        } else if (hasClass(mask, state.n + '--open-up')) {
+            picker.exit(exit);
+        }
+    } else if (KEY_ARROW_UP === key) {
         exit = true;
+        prevOption = getPrev($);
+        // Skip disabled option(s)…
+        while (prevOption && hasClass(prevOption, n + '--disabled')) {
+            prevOption = getPrev(prevOption);
+        }
+        if (prevOption) {
+            // Previous option is a group?
+            if (hasClass(prevOption, n + '-group')) {
+                prevOption = getChildLast(prevOption);
+            }
+        // Is the first option?
+        } else {
+            // Is in a group?
+            if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
+                prevOption = getPrev(parentOption);
+            }
+        }
+        // Skip disabled option(s)…
+        while (prevOption && hasClass(prevOption, n + '--disabled')) {
+            prevOption = getPrev(prevOption);
+        }
+        if (prevOption) {
+            letAttribute($._of, 'selected');
+            letClass($, n + '--selected');
+            prevOption.focus();
+            setAttribute(prevOption._of, 'selected', "");
+            setClass(prevOption, n + '--selected');
+            setHTML(input || value, getHTML(prevOption));
+        } else if (hasClass(mask, state.n + '--open-down')) {
+            picker.exit(exit);
+        }
     }
     exit && (offEventDefault(e), offEventPropagation(e));
 }
@@ -252,23 +290,16 @@ function onKeyDownOption(e) {
 function onPointerDownMask(e) {
     let $ = this,
         picker = $['_' + name],
-        {_options, self, state} = picker,
+        {state} = picker,
         {n} = state;
-    n += '--open';
-    toggleClass($, n);
-    if (hasClass($, n) && _options[self.value]) {
-        _options[self.value].focus();
-    } else {
-        $.focus();
-    }
-    offEventDefault(e);
+    picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true), offEventDefault(e);
 }
 
 function onPointerDownOption(e) {
     let $ = this,
         picker = $['_' + name],
         {_mask, _options, self, state} = picker,
-        {input} = _mask,
+        {input, value} = _mask,
         {n} = state;
     n += '__option--selected';
     for (let k in _options) {
@@ -281,7 +312,7 @@ function onPointerDownOption(e) {
     }
     setAttribute($._of, 'selected', "");
     setClass($, n);
-    setText(input, getText($));
+    setHTML(input || value, getHTML($));
     offEventDefault(e);
 }
 
@@ -308,6 +339,9 @@ $$.attach = function (self, state) {
     $.state = state;
     let n = state.n,
         isInput = 'input' === getName(self);
+    const arrow = setElement('span', {
+        'class': n + '__arrow'
+    });
     const form = getParentForm(self);
     const mask = setElement('div', {
         'class': n,
@@ -317,7 +351,11 @@ $$.attach = function (self, state) {
     const maskOptions = setElement('div', {
         'class': n + '__options'
     });
-    createOptions.call($, maskOptions);
+    let {options} = state;
+    if (isFunction(options)) {
+        options = options.call($);
+    }
+    createOptions.call($, maskOptions, options);
     const maskValues = setElement('div', {
         'class': n + '__values'
     });
@@ -332,8 +370,9 @@ $$.attach = function (self, state) {
     setChildLast(mask, maskValues);
     setChildLast(mask, maskOptions);
     setChildLast(maskValues, text);
-    setChildLast(text, textInput);
+    setChildLast(maskValues, arrow);
     if (isInput) {
+        setChildLast(text, textInput);
         setChildLast(text, textInputHint);
     }
     setClass(self, n + '__self');
@@ -351,17 +390,17 @@ $$.attach = function (self, state) {
     self.tabIndex = -1;
     mask['_' + name] = $;
     let _mask = {};
-    _mask.hint = textInputHint;
-    _mask.input = textInput;
+    _mask.hint = isInput ? textInputHint : null;
+    _mask.input = isInput ? textInput : null;
     _mask.of = self;
-    _mask.options = null;
+    _mask.options = maskOptions;
     _mask.self = mask;
-    _mask.text = text;
+    _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
     // Attach the current value(s)
     let option = $._options[$._value];
     setAttribute(option._of, 'selected', "");
-    setText(textInput, getText(option));
+    setHTML(isInput ? textInput : text, getHTML(option));
     // Attach extension(s)
     if (isSet(state) && isArray(state.with)) {
         for (let i = 0, j = toCount(state.with); i < j; ++i) {
@@ -423,6 +462,39 @@ $$.detach = function () {
     $.mask = null;
     return $;
 };
+
+$$.enter = function (focus, direction = 'down') {
+    let $ = this, option,
+        {_options, mask, self, state} = $,
+        {n} = state;
+    setClass(mask, n += '--open');
+    setClass(mask, n + '-' + (direction || 'down'));
+    $.fire('enter');
+    if (focus) {
+        $.fire('focus');
+        if (option = _options[self.value]) {
+            option.focus();
+        }
+        $.fire('focus.option');
+    }
+    return $;
+};
+
+$$.exit = function (focus, directions = ['down', 'up']) {
+    let $ = this,
+        {mask, state} = $,
+        {n} = state;
+    letClass(mask, n += '--open');
+    if (isString(directions)) {
+        directions = [directions];
+    }
+    directions.forEach(direction => letClass(mask, n + '-' + direction));
+    $.fire('exit');
+    if (focus) {
+        mask.focus(), $.fire('focus').fire('focus.self');
+    }
+    return $;
+}
 
 $$.focus = function () {};
 

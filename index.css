@@ -1,14 +1,19 @@
+.option-picker__option-group::before,
+.option-picker__option,
+.option-picker__arrow,
 .option-picker__text,
-.option-picker__value,
-.option-picker__option {
+.option-picker__value {
   border: 1px solid;
+  border-color: inherit;
   display: flex;
   gap: 0.25em;
   padding: 0 0.25em;
 }
 
 .option-picker__values,
-.option-picker__options {
+.option-picker__options,
+.option-picker__option-group {
+  border-color: inherit;
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
@@ -38,8 +43,35 @@
 .option-picker--open {
   z-index: 9999;
 }
+.option-picker--open .option-picker__arrow::after {
+  border-bottom: 0.5em solid;
+  border-bottom-color: inherit;
+  border-top-width: 0;
+}
 .option-picker--open .option-picker__options {
   display: flex;
+}
+.option-picker--open-down .option-picker__options {
+  top: 100%;
+}
+.option-picker--open-up .option-picker__options {
+  bottom: 100%;
+}
+.option-picker__arrow,
+.option-picker__text,
+.option-picker__value {
+  overflow: hidden;
+  position: relative;
+}
+.option-picker__arrow::after {
+  align-self: center;
+  border-left: 0.25em solid transparent;
+  border-right: 0.25em solid transparent;
+  border-top: 0.5em solid;
+  border-top-color: inherit;
+  content: "";
+  height: 0;
+  width: 0;
 }
 .option-picker__self {
   left: -9999px;
@@ -67,20 +99,23 @@
   outline: 1px solid;
   outline-offset: -2px;
 }
+.option-picker__option-group {
+  border: inherit;
+  flex-direction: column;
+}
+.option-picker__option-group::before {
+  content: attr(data-value);
+  font-weight: bold;
+}
 .option-picker__options {
   background: #fff;
   border: inherit;
   display: none;
   flex-direction: column;
   left: -1px;
+  min-width: calc(100% + 2px);
   position: absolute;
-  top: 100%;
   white-space: nowrap;
-}
-.option-picker__text,
-.option-picker__value {
-  overflow: hidden;
-  position: relative;
 }
 .option-picker__text {
   cursor: text;

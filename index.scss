@@ -2,12 +2,14 @@ $name: 'option-picker';
 
 %item {
   border: 1px solid;
+  border-color: inherit;
   display: flex;
   gap: 0.25em;
   padding: 0 0.25em;
 }
 
 %items {
+  border-color: inherit;
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
@@ -39,8 +41,48 @@ $name: 'option-picker';
   }
   &--open {
     z-index: 9999;
+    .#{$name}__arrow {
+      &::after {
+        border: {
+          bottom: 0.5em solid;
+          bottom-color: inherit;
+          top-width: 0;
+        }
+      }
+    }
     .#{$name}__options {
       display: flex;
+    }
+    &-down {
+      .#{$name}__options {
+        top: 100%;
+      }
+    }
+    &-up {
+      .#{$name}__options {
+        bottom: 100%;
+      }
+    }
+  }
+  &__arrow,
+  &__text,
+  &__value {
+    @extend %item;
+    overflow: hidden;
+    position: relative;
+  }
+  &__arrow {
+    &::after {
+      align-self: center;
+      border: {
+        left: 0.25em solid transparent;
+        right: 0.25em solid transparent;
+        top: 0.5em solid;
+        top-color: inherit;
+      }
+      content: "";
+      height: 0;
+      width: 0;
     }
   }
   &__self {
@@ -73,6 +115,16 @@ $name: 'option-picker';
       outline: 1px solid;
       outline-offset: -2px;
     }
+    &-group {
+      @extend %items;
+      border: inherit;
+      flex-direction: column;
+      &::before {
+        @extend %item;
+        content: attr(data-value);
+        font-weight: bold;
+      }
+    }
   }
   &__options {
     @extend %items;
@@ -81,15 +133,9 @@ $name: 'option-picker';
     display: none;
     flex-direction: column;
     left: -1px;
+    min-width: calc(100% + 2px);
     position: absolute;
-    top: 100%;
     white-space: nowrap;
-  }
-  &__text,
-  &__value {
-    @extend %item;
-    overflow: hidden;
-    position: relative;
   }
   &__text {
     cursor: text;

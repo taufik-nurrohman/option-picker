@@ -86,6 +86,9 @@
         }
         return base ? parseInt(x, base) : parseFloat(x);
     };
+    var toObjectValues = function toObjectValues(x) {
+        return Object.values(x);
+    };
     var toValue = function toValue(x) {
         if (isArray(x)) {
             return x.map(function (v) {
@@ -358,6 +361,16 @@
         }
         return node;
     };
+    var setText = function setText(node, content, trim) {
+        if (trim === void 0) {
+            trim = true;
+        }
+        if (null === content) {
+            return node;
+        }
+        var state = 'textContent';
+        return hasState(node, state) && (node[state] = trim ? content.trim() : content), node;
+    };
     var debounce = function debounce(then, time) {
         var timer;
         return function () {
@@ -366,6 +379,15 @@
             timer && clearTimeout(timer);
             timer = setTimeout(function () {
                 return then.apply(_this, _arguments);
+            }, time);
+        };
+    };
+    var delay = function delay(then, time) {
+        return function () {
+            var _arguments2 = arguments,
+                _this2 = this;
+            setTimeout(function () {
+                return then.apply(_this2, _arguments2);
             }, time);
         };
     };
@@ -515,36 +537,39 @@
     function getOptions(self) {
         const options = {};
         const value = getValue(self);
-        if ('input' === getName(self));
-        else {
-            let items = self.children,
-                selected = [];
-            for (let i = 0, j = toCount(items); i < j; ++i) {
-                let v = items[i],
-                    attributes = getAttributes(v);
-                ['disabled', 'selected'].forEach(k => {
-                    if (k in attributes) {
-                        attributes[k] = "" === attributes[k] ? true : attributes[k];
-                        if ('selected' === k) {
-                            selected.push(i);
-                        }
-                    } else {
-                        attributes[k] = null;
+        let items,
+            selected = [];
+        if ('input' === getName(self)) {
+            items = self.list;
+            items = items ? items.children : [];
+        } else {
+            items = self.children;
+        }
+        for (let i = 0, j = toCount(items); i < j; ++i) {
+            let v = items[i],
+                attributes = getAttributes(v);
+            ['disabled', 'selected'].forEach(k => {
+                if (k in attributes) {
+                    attributes[k] = "" === attributes[k] ? true : attributes[k];
+                    if ('selected' === k) {
+                        selected.push(i);
                     }
-                });
-                if ('optgroup' === getName(v)) {
-                    let items2 = getOptions(v);
-                    for (let k in items2) {
-                        items2[k][1]['data-group'] = v.label;
-                        options[k] = items2[k];
-                    }
-                    continue;
+                } else {
+                    attributes[k] = null;
                 }
-                options[v.value] = [getText(v) || v.value, attributes, v];
-            } // If there is no selected option(s), get it from the current value
-            if (0 === toCount(selected) && options[value]) {
-                options[value][1].selected = true;
+            });
+            if ('optgroup' === getName(v)) {
+                let items2 = getOptions(v);
+                for (let k in items2) {
+                    items2[k][1]['data-group'] = v.label;
+                    options[k] = items2[k];
+                }
+                continue;
             }
+            options[v.value] = [getText(v) || v.value, attributes, v];
+        } // If there is no selected option(s), get it from the current value
+        if (0 === toCount(selected) && options[value]) {
+            options[value][1].selected = true;
         }
         return options;
     }
@@ -619,6 +644,37 @@
         letClass(mask, n + '--focus-option');
     }
 
+    function onBlurTextInput() {
+        let $ = this,
+            picker = $['_' + name],
+            {
+                _mask,
+                mask,
+                state
+            } = picker,
+            {
+                text
+            } = _mask,
+            {
+                n
+            } = state;
+        letClass(mask, n + '--focus-text');
+        letClass(text, n + '__text--focus');
+    }
+
+    function onCutTextInput() {
+        let $ = this,
+            picker = $['_' + name],
+            {
+                _mask,
+                self
+            } = picker,
+            {
+                hint
+            } = _mask;
+        delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+    }
+
     function onFocusMask() {
         let $ = this,
             picker = $['_' + name],
@@ -643,6 +699,80 @@
                 n
             } = state;
         setClass(mask, n + '--focus-option');
+    }
+
+    function onFocusTextInput() {
+        let $ = this,
+            picker = $['_' + name],
+            {
+                _mask,
+                mask,
+                state
+            } = picker,
+            {
+                text
+            } = _mask,
+            {
+                n
+            } = state;
+        setClass(text, n + '__text--focus');
+        setClass(mask, n += '--focus');
+        setClass(mask, n += '-text');
+    }
+    const search = debounce(($, input, _options) => {
+        let q = toCaseLower(getText(input) || "");
+        for (let k in _options) {
+            let v = _options[k],
+                text = toCaseLower(getText(v) + '\t' + v);
+            if ("" === q || hasValue(q, text)) {
+                letAttribute(v, 'hidden');
+            } else {
+                setAttribute(v, 'hidden', "");
+            }
+        }
+    }, 10);
+
+    function onKeyDownTextInput(e) {
+        let $ = this,
+            exit,
+            key = e.key,
+            picker = $['_' + name],
+            {
+                _mask,
+                _options,
+                self,
+                state
+            } = picker,
+            {
+                hint
+            } = _mask,
+            {
+                n
+            } = state;
+        n += '__option--disabled';
+        delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+        picker.enter();
+        if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
+            let currentOption = _options[self.value];
+            if (currentOption.hidden) {
+                currentOption = toObjectValues(_options).shift();
+                while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
+                    currentOption = getNext(currentOption);
+                }
+            }
+            if (currentOption) {
+                currentOption.focus();
+            }
+            exit = true;
+        } else if (KEY_TAB === key) {
+            picker.exit();
+        } else {
+            search(picker, $, _options);
+        }
+        if (exit) {
+            offEventDefault(e);
+            offEventPropagation(e);
+        }
     }
 
     function onKeyDownMask(e) {
@@ -673,6 +803,7 @@
                 state
             } = picker,
             {
+                hint,
                 input,
                 value
             } = _mask,
@@ -687,14 +818,19 @@
                 letClass(prevOption, n + '--selected');
                 setAttribute($._of, 'selected', "");
                 setClass($, n + '--selected');
-                setHTML(input || value, getHTML($));
+                if ('input' === getName(self)) {
+                    setText(hint, "");
+                    setText(input, getText($));
+                } else {
+                    setHTML(value, getHTML($));
+                }
                 self.value = getDatum($, 'value');
             }
             picker.exit(exit = KEY_TAB !== key);
         } else if (KEY_ARROW_DOWN === key) {
             exit = true;
-            nextOption = getNext($); // Skip disabled option(s)…
-            while (nextOption && hasClass(nextOption, n + '--disabled')) {
+            nextOption = getNext($); // Skip disabled and hidden option(s)…
+            while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
             if (nextOption) {
@@ -707,8 +843,8 @@
                 if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
                     nextOption = getNext(parentOption);
                 }
-            } // Skip disabled option(s)…
-            while (nextOption && hasClass(nextOption, n + '--disabled')) {
+            } // Skip disabled and hidden option(s)…
+            while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
             if (nextOption) {
@@ -721,8 +857,8 @@
             }
         } else if (KEY_ARROW_UP === key) {
             exit = true;
-            prevOption = getPrev($); // Skip disabled option(s)…
-            while (prevOption && hasClass(prevOption, n + '--disabled')) {
+            prevOption = getPrev($); // Skip disabled and hidden option(s)…
+            while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
             if (prevOption) {
@@ -735,8 +871,8 @@
                 if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
                     prevOption = getPrev(parentOption);
                 }
-            } // Skip disabled option(s)…
-            while (prevOption && hasClass(prevOption, n + '--disabled')) {
+            } // Skip disabled and hidden option(s)…
+            while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
             if (prevOption) {
@@ -749,6 +885,20 @@
             }
         }
         exit && (offEventDefault(e), offEventPropagation(e));
+    }
+
+    function onPasteTextInput() {
+        let $ = this,
+            picker = $['_' + name],
+            {
+                _mask,
+                self
+            } = picker,
+            {
+                hint
+            } = _mask;
+        delay(() => setText($, getText($)))(); // Convert to plain text
+        delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
     }
 
     function onPointerDownMask(e) {
@@ -773,6 +923,7 @@
                 state
             } = picker,
             {
+                hint,
                 input,
                 value
             } = _mask,
@@ -790,7 +941,12 @@
         }
         setAttribute($._of, 'selected', "");
         setClass($, n);
-        setHTML(input || value, getHTML($));
+        if ('input' === getName(self)) {
+            setText(hint, "");
+            setText(input, getText($));
+        } else {
+            setHTML(value, getHTML($));
+        }
         self.value = getDatum($, 'value');
         offEventDefault(e);
     }
@@ -854,7 +1010,7 @@
         const form = getParentForm(self);
         const mask = setElement('div', {
             'class': n,
-            'tabindex': isDisabled(self) ? false : 0
+            'tabindex': isDisabled(self) || isInput ? false : 0
         });
         $.mask = mask;
         const maskOptions = setElement('div', {
@@ -885,6 +1041,16 @@
         if (isInput) {
             setChildLast(text, textInput);
             setChildLast(text, textInputHint);
+            onEvent('blur', textInput, onBlurTextInput);
+            onEvent('cut', textInput, onCutTextInput);
+            onEvent('focus', textInput, onFocusTextInput);
+            onEvent('keydown', textInput, onKeyDownTextInput);
+            onEvent('paste', textInput, onPasteTextInput);
+            textInput['_' + name] = $;
+        } else {
+            onEvent('blur', mask, onBlurMask);
+            onEvent('focus', mask, onFocusMask);
+            onEvent('keydown', mask, onKeyDownMask);
         }
         setClass(self, n + '__self');
         setNext(self, mask);
@@ -893,9 +1059,6 @@
             onEvent('reset', form, onResetForm);
             onEvent('submit', form, onSubmitForm);
         }
-        onEvent('blur', mask, onBlurMask);
-        onEvent('focus', mask, onFocusMask);
-        onEvent('keydown', mask, onKeyDownMask);
         onEvent('mousedown', R, onPointerDownRoot);
         onEvent('mousedown', mask, onPointerDownMask);
         onEvent('resize', W, onResizeWindow);
@@ -904,7 +1067,8 @@
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
         mask['_' + name] = $;
-        let _mask = {};
+        let _mask = {},
+            option;
         _mask.hint = isInput ? textInputHint : null;
         _mask.input = isInput ? textInput : null;
         _mask.of = self;
@@ -913,9 +1077,17 @@
         _mask.self = mask;
         _mask[isInput ? 'text' : 'value'] = text;
         $._mask = _mask; // Attach the current value(s)
-        let option = $._options[$._value];
-        setAttribute(option._of, 'selected', "");
-        setHTML(isInput ? textInput : text, getHTML(option)); // Attach extension(s)
+        if (option = $._options[$._value]) {
+            setAttribute(option._of, 'selected', "");
+            if (isInput) {
+                setText(textInput, getText(option));
+                if (getText(textInput, false)) {
+                    setText(textInputHint, "");
+                }
+            } else {
+                setHTML(text, getHTML(option));
+            }
+        } // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
             for (let i = 0, j = toCount(state.with); i < j; ++i) {
                 let value = state.with[i];
@@ -942,7 +1114,10 @@
                 mask,
                 self,
                 state
-            } = $;
+            } = $,
+            {
+                input
+            } = _mask;
         const form = getParentForm(self);
         $._active = false;
         $._value = getValue(self) || null; // Update initial value to be the current value
@@ -950,9 +1125,16 @@
             offEvent('reset', form, onResetForm);
             offEvent('submit', form, onSubmitForm);
         }
-        offEvent('blur', mask, onBlurMask);
-        offEvent('focus', mask, onFocusMask);
-        offEvent('keydown', mask, onKeyDownMask);
+        if (input) {
+            offEvent('blur', input, onBlurTextInput);
+            offEvent('blur', mask, onBlurMask);
+            offEvent('cut', input, onCutTextInput);
+            offEvent('focus', input, onFocusTextInput);
+            offEvent('focus', mask, onFocusMask);
+            offEvent('keydown', input, onKeyDownTextInput);
+            offEvent('keydown', mask, onKeyDownMask);
+            offEvent('paste', input, onPasteTextInput);
+        }
         offEvent('mousedown', R, onPointerDownRoot);
         offEvent('mousedown', mask, onPointerDownMask);
         offEvent('resize', W, onResizeWindow);
@@ -983,11 +1165,15 @@
     $$.enter = function (focus) {
         let $ = this,
             option, {
+                _mask,
                 _options,
                 mask,
                 self,
                 state
             } = $,
+            {
+                input
+            } = _mask,
             {
                 n
             } = state;
@@ -1000,7 +1186,9 @@
         $.fire('enter');
         if (focus) {
             $.fire('focus');
-            if (option = _options[self.value]) {
+            if ('input' === getName(self)) {
+                input.focus();
+            } else if (option = _options[self.value]) {
                 option.focus();
             }
             $.fire('focus.option');
@@ -1010,16 +1198,26 @@
     $$.exit = function (focus) {
         let $ = this,
             {
+                _mask,
                 mask,
+                self,
                 state
             } = $,
+            {
+                input
+            } = _mask,
             {
                 n
             } = state;
         letClass(mask, n += '--open');
         $.fire('exit');
         if (focus) {
-            mask.focus(), $.fire('focus').fire('focus.self');
+            if ('input' === getName(self)) {
+                input.focus();
+            } else {
+                mask.focus();
+            }
+            $.fire('focus').fire('focus.self');
         }
         return $;
     };

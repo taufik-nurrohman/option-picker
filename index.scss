@@ -95,6 +95,9 @@ $name: 'option-picker';
   &__option {
     @extend %item;
     display: block;
+    &[hidden] {
+      display: none;
+    }
     &--disabled {
       color: rgb(128, 128, 128);
       cursor: not-allowed;

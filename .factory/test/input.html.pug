@@ -7,21 +7,29 @@ block state
 
 block script
   script
-    | const sources = document.querySelectorAll('input');
-    | sources.forEach(source => new OP(source));
+    | document.querySelectorAll('input').forEach(input => new OptionPicker(input));
+
+block style
+  style
+    | .option-picker {
+    |   width: 100%;
+    | }
+    | .option-picker__options {
+    |   background: #fff;
+    | }
 
 block content
   main
-    form(method='get' target='_blank')
+    form(method='get')
       p
-        input(list='list-0' name='test-0' placeholder='Select color…' type='text' value='Blue')
-        datalist#list-0
+        input(list='colors' name='color' placeholder='Select a color…' type='text' value='Blue')
+        datalist#colors
+          option Blue
           option Green
           option Red
-          option Blue
       p
-        input(list='list-1' name='test-1' placeholder='Select name…' type='text')
-        datalist#list-1
+        input(list='authors' name='author' placeholder='Select an author…' type='text')
+        datalist#authors
           option Abbie Matthews
           option Akira Horton
           option Aldo Wilcox
@@ -223,8 +231,8 @@ block content
           option Yoselin Richard
           option Zander Curry
       p
-        input(list='list-2' name='test-2' placeholder='Select zone…' type='text')
-        datalist#list-2
+        input(list='zones' name='zone' placeholder='Select a zone…' type='text')
+        datalist#zones
           option Africa/Abidjan
           option Africa/Accra
           option Africa/Addis_Ababa
@@ -818,6 +826,6 @@ block content
           option WET
           option Zulu
       p
-        input(list='list-3' name='test-3' placeholder='Test empty…' type='text')
+        input(list='asdf' name='test' placeholder='Test empty…' type='text')
       p
         button(type='submit') Submit

@@ -83,6 +83,9 @@
 .option-picker__option {
   display: block;
 }
+.option-picker__option[hidden] {
+  display: none;
+}
 .option-picker__option--disabled {
   color: gray;
   cursor: not-allowed;

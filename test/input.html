@@ -6,16 +6,24 @@
     <meta content="Just a generic custom `&lt;select&gt;` element with accessibility in mind." name="description">
     <title>Option Picker</title>
     <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        width: 100%;
+      }
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
   </head>
   <body>
     <main>
-      <form method="get" target="_blank">
-        <p><input list="list-0" name="test-0" placeholder="Select color…" type="text" value="Blue"><datalist id="list-0">
+      <form method="get">
+        <p><input list="colors" name="color" placeholder="Select a color…" type="text" value="Blue"><datalist id="colors">
+            <option>Blue</option>
             <option>Green</option>
             <option>Red</option>
-            <option>Blue</option>
           </datalist></p>
-        <p><input list="list-1" name="test-1" placeholder="Select name…" type="text"><datalist id="list-1">
+        <p><input list="authors" name="author" placeholder="Select an author…" type="text"><datalist id="authors">
             <option>Abbie Matthews</option>
             <option>Akira Horton</option>
             <option>Aldo Wilcox</option>
@@ -217,7 +225,7 @@
             <option>Yoselin Richard</option>
             <option>Zander Curry</option>
           </datalist></p>
-        <p><input list="list-2" name="test-2" placeholder="Select zone…" type="text"><datalist id="list-2">
+        <p><input list="zones" name="zone" placeholder="Select a zone…" type="text"><datalist id="zones">
             <option>Africa/Abidjan</option>
             <option>Africa/Accra</option>
             <option>Africa/Addis_Ababa</option>
@@ -811,14 +819,13 @@
             <option>WET</option>
             <option>Zulu</option>
           </datalist></p>
-        <p><input list="list-3" name="test-3" placeholder="Test empty…" type="text"></p>
+        <p><input list="asdf" name="test" placeholder="Test empty…" type="text"></p>
         <p><button type="submit">Submit</button></p>
       </form>
     </main>
     <script src="../index.js"></script>
     <script>
-      const sources = document.querySelectorAll('input');
-      sources.forEach(source => new OP(source));
+      document.querySelectorAll('input').forEach(input => new OptionPicker(input));
     </script>
   </body>
 </html>

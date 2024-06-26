@@ -1,11 +1,12 @@
-import {R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, setStyles} from '@taufik-nurrohman/document';
+import {R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, setStyles, setText} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getRect} from '@taufik-nurrohman/rect';
+import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
-import {toCount} from '@taufik-nurrohman/to';
+import {toCaseLower, toCount, toObjectValues} from '@taufik-nurrohman/to';
 
 const KEY_ARROW_DOWN = 'ArrowDown';
 const KEY_ARROW_UP = 'ArrowUp';
@@ -63,37 +64,39 @@ function defineProperty(of, key, state) {
 function getOptions(self) {
     const options = {};
     const value = getValue(self);
+    let items, selected = [];
     if ('input' === getName(self)) {
-        // TODO
+        items = self.list;
+        items = items ? items.children : [];
     } else {
-        let items = self.children, selected = [];
-        for (let i = 0, j = toCount(items); i < j; ++i) {
-            let v = items[i],
-                attributes = getAttributes(v);
-            ['disabled', 'selected'].forEach(k => {
-                if (k in attributes) {
-                    attributes[k] = "" === attributes[k] ? true : attributes[k];
-                    if ('selected' === k) {
-                        selected.push(i);
-                    }
-                } else {
-                    attributes[k] = null;
+        items = self.children;
+    }
+    for (let i = 0, j = toCount(items); i < j; ++i) {
+        let v = items[i],
+            attributes = getAttributes(v);
+        ['disabled', 'selected'].forEach(k => {
+            if (k in attributes) {
+                attributes[k] = "" === attributes[k] ? true : attributes[k];
+                if ('selected' === k) {
+                    selected.push(i);
                 }
-            });
-            if ('optgroup' === getName(v)) {
-                let items2 = getOptions(v);
-                for (let k in items2) {
-                    items2[k][1]['data-group'] = v.label;
-                    options[k] = items2[k];
-                }
-                continue;
+            } else {
+                attributes[k] = null;
             }
-            options[v.value] = [getText(v) || v.value, attributes, v];
+        });
+        if ('optgroup' === getName(v)) {
+            let items2 = getOptions(v);
+            for (let k in items2) {
+                items2[k][1]['data-group'] = v.label;
+                options[k] = items2[k];
+            }
+            continue;
         }
-        // If there is no selected option(s), get it from the current value
-        if (0 === toCount(selected) && options[value]) {
-            options[value][1].selected = true;
-        }
+        options[v.value] = [getText(v) || v.value, attributes, v];
+    }
+    // If there is no selected option(s), get it from the current value
+    if (0 === toCount(selected) && options[value]) {
+        options[value][1].selected = true;
     }
     return options;
 }
@@ -171,7 +174,23 @@ function onBlurOption() {
     letClass(mask, n + '--focus-option');
 }
 
-function onBlurTextInput() {}
+function onBlurTextInput() {
+    let $ = this,
+        picker = $['_' + name],
+        {_mask, mask, state} = picker,
+        {text} = _mask,
+        {n} = state;
+    letClass(mask, n + '--focus-text');
+    letClass(text, n + '__text--focus');
+}
+
+function onCutTextInput() {
+    let $ = this,
+        picker = $['_' + name],
+        {_mask, self} = picker,
+        {hint} = _mask;
+    delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+}
 
 function onFocusMask() {
     let $ = this,
@@ -190,7 +209,62 @@ function onFocusOption() {
     setClass(mask, n + '--focus-option');
 }
 
-function onFocusTextInput() {}
+function onFocusTextInput() {
+    let $ = this,
+        picker = $['_' + name],
+        {_mask, mask, state} = picker,
+        {text} = _mask,
+        {n} = state;
+    setClass(text, n + '__text--focus');
+    setClass(mask, n += '--focus');
+    setClass(mask, n += '-text');
+}
+
+const search = debounce(($, input, _options) => {
+    let q = toCaseLower(getText(input) || "");
+    for (let k in _options) {
+        let v = _options[k],
+            text = toCaseLower(getText(v) + '\t' + v);
+        if ("" === q || hasValue(q, text)) {
+            letAttribute(v, 'hidden');
+        } else {
+            setAttribute(v, 'hidden', "");
+        }
+    }
+}, 10);
+
+function onKeyDownTextInput(e) {
+    let $ = this, exit,
+        key = e.key,
+        picker = $['_' + name],
+        {_mask, _options, self, state} = picker,
+        {hint} = _mask,
+        {n} = state;
+    n += '__option--disabled';
+    delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+    picker.enter();
+    if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
+        let currentOption = _options[self.value];
+        if (currentOption.hidden) {
+            currentOption = toObjectValues(_options).shift();
+            while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
+                currentOption = getNext(currentOption);
+            }
+        }
+        if (currentOption) {
+            currentOption.focus();
+        }
+        exit = true;
+    } else if (KEY_TAB === key) {
+        picker.exit();
+    } else {
+        search(picker, $, _options);
+    }
+    if (exit) {
+        offEventDefault(e);
+        offEventPropagation(e);
+    }
+}
 
 function onKeyDownMask(e) {
     let $ = this, exit,
@@ -211,7 +285,7 @@ function onKeyDownOption(e) {
         keyIsShift = e.shiftKey,
         picker = $['_' + name],
         {_mask, _options, mask, self, state} = picker,
-        {input, value} = _mask,
+        {hint, input, value} = _mask,
         {n} = state;
     n += '__option';
     let nextOption, parentOption, prevOption;
@@ -221,15 +295,20 @@ function onKeyDownOption(e) {
             letClass(prevOption, n + '--selected');
             setAttribute($._of, 'selected', "");
             setClass($, n + '--selected');
-            setHTML(input || value, getHTML($));
+            if ('input' === getName(self)) {
+                setText(hint, "");
+                setText(input, getText($));
+            } else {
+                setHTML(value, getHTML($));
+            }
             self.value = getDatum($, 'value');
         }
         picker.exit(exit = KEY_TAB !== key);
     } else if (KEY_ARROW_DOWN === key) {
         exit = true;
         nextOption = getNext($);
-        // Skip disabled option(s)…
-        while (nextOption && hasClass(nextOption, n + '--disabled')) {
+        // Skip disabled and hidden option(s)…
+        while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
         if (nextOption) {
@@ -244,8 +323,8 @@ function onKeyDownOption(e) {
                 nextOption = getNext(parentOption);
             }
         }
-        // Skip disabled option(s)…
-        while (nextOption && hasClass(nextOption, n + '--disabled')) {
+        // Skip disabled and hidden option(s)…
+        while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
         if (nextOption) {
@@ -260,8 +339,8 @@ function onKeyDownOption(e) {
     } else if (KEY_ARROW_UP === key) {
         exit = true;
         prevOption = getPrev($);
-        // Skip disabled option(s)…
-        while (prevOption && hasClass(prevOption, n + '--disabled')) {
+        // Skip disabled and hidden option(s)…
+        while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
             prevOption = getPrev(prevOption);
         }
         if (prevOption) {
@@ -276,8 +355,8 @@ function onKeyDownOption(e) {
                 prevOption = getPrev(parentOption);
             }
         }
-        // Skip disabled option(s)…
-        while (prevOption && hasClass(prevOption, n + '--disabled')) {
+        // Skip disabled and hidden option(s)…
+        while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
             prevOption = getPrev(prevOption);
         }
         if (prevOption) {
@@ -293,6 +372,15 @@ function onKeyDownOption(e) {
     exit && (offEventDefault(e), offEventPropagation(e));
 }
 
+function onPasteTextInput() {
+    let $ = this,
+        picker = $['_' + name],
+        {_mask, self} = picker,
+        {hint} = _mask;
+    delay(() => setText($, getText($)))(); // Convert to plain text
+    delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+}
+
 function onPointerDownMask(e) {
     let $ = this,
         picker = $['_' + name],
@@ -305,7 +393,7 @@ function onPointerDownOption(e) {
     let $ = this,
         picker = $['_' + name],
         {_mask, _options, self, state} = picker,
-        {input, value} = _mask,
+        {hint, input, value} = _mask,
         {n} = state;
     n += '__option--selected';
     for (let k in _options) {
@@ -318,7 +406,12 @@ function onPointerDownOption(e) {
     }
     setAttribute($._of, 'selected', "");
     setClass($, n);
-    setHTML(input || value, getHTML($));
+    if ('input' === getName(self)) {
+        setText(hint, "");
+        setText(input, getText($));
+    } else {
+        setHTML(value, getHTML($));
+    }
     self.value = getDatum($, 'value');
     offEventDefault(e);
 }
@@ -377,7 +470,7 @@ $$.attach = function (self, state) {
     const form = getParentForm(self);
     const mask = setElement('div', {
         'class': n,
-        'tabindex': isDisabled(self) ? false : 0
+        'tabindex': isDisabled(self) || isInput ? false : 0
     });
     $.mask = mask;
     const maskOptions = setElement('div', {
@@ -406,6 +499,16 @@ $$.attach = function (self, state) {
     if (isInput) {
         setChildLast(text, textInput);
         setChildLast(text, textInputHint);
+        onEvent('blur', textInput, onBlurTextInput);
+        onEvent('cut', textInput, onCutTextInput);
+        onEvent('focus', textInput, onFocusTextInput);
+        onEvent('keydown', textInput, onKeyDownTextInput);
+        onEvent('paste', textInput, onPasteTextInput);
+        textInput['_' + name] = $;
+    } else {
+        onEvent('blur', mask, onBlurMask);
+        onEvent('focus', mask, onFocusMask);
+        onEvent('keydown', mask, onKeyDownMask);
     }
     setClass(self, n + '__self');
     setNext(self, mask);
@@ -414,9 +517,6 @@ $$.attach = function (self, state) {
         onEvent('reset', form, onResetForm);
         onEvent('submit', form, onSubmitForm);
     }
-    onEvent('blur', mask, onBlurMask);
-    onEvent('focus', mask, onFocusMask);
-    onEvent('keydown', mask, onKeyDownMask);
     onEvent('mousedown', R, onPointerDownRoot);
     onEvent('mousedown', mask, onPointerDownMask);
     onEvent('resize', W, onResizeWindow);
@@ -425,7 +525,7 @@ $$.attach = function (self, state) {
     onEvent('touchstart', mask, onPointerDownMask);
     self.tabIndex = -1;
     mask['_' + name] = $;
-    let _mask = {};
+    let _mask = {}, option;
     _mask.hint = isInput ? textInputHint : null;
     _mask.input = isInput ? textInput : null;
     _mask.of = self;
@@ -435,9 +535,17 @@ $$.attach = function (self, state) {
     _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
     // Attach the current value(s)
-    let option = $._options[$._value];
-    setAttribute(option._of, 'selected', "");
-    setHTML(isInput ? textInput : text, getHTML(option));
+    if (option = $._options[$._value]) {
+        setAttribute(option._of, 'selected', "");
+        if (isInput) {
+            setText(textInput, getText(option));
+            if (getText(textInput, false)) {
+                setText(textInputHint, "");
+            }
+        } else {
+            setHTML(text, getHTML(option));
+        }
+    }
     // Attach extension(s)
     if (isSet(state) && isArray(state.with)) {
         for (let i = 0, j = toCount(state.with); i < j; ++i) {
@@ -464,7 +572,8 @@ $$.blur = function () {};
 
 $$.detach = function () {
     let $ = this,
-        {_mask, mask, self, state} = $;
+        {_mask, mask, self, state} = $,
+        {input} = _mask;
     const form = getParentForm(self);
     $._active = false;
     $._value = getValue(self) || null; // Update initial value to be the current value
@@ -472,9 +581,16 @@ $$.detach = function () {
         offEvent('reset', form, onResetForm);
         offEvent('submit', form, onSubmitForm);
     }
-    offEvent('blur', mask, onBlurMask);
-    offEvent('focus', mask, onFocusMask);
-    offEvent('keydown', mask, onKeyDownMask);
+    if (input) {
+        offEvent('blur', input, onBlurTextInput);
+        offEvent('blur', mask, onBlurMask);
+        offEvent('cut', input, onCutTextInput);
+        offEvent('focus', input, onFocusTextInput);
+        offEvent('focus', mask, onFocusMask);
+        offEvent('keydown', input, onKeyDownTextInput);
+        offEvent('keydown', mask, onKeyDownMask);
+        offEvent('paste', input, onPasteTextInput);
+    }
     offEvent('mousedown', R, onPointerDownRoot);
     offEvent('mousedown', mask, onPointerDownMask);
     offEvent('resize', W, onResizeWindow);
@@ -506,7 +622,8 @@ $$.detach = function () {
 
 $$.enter = function (focus) {
     let $ = this, option,
-        {_options, mask, self, state} = $,
+        {_mask, _options, mask, self, state} = $,
+        {input} = _mask,
         {n} = state;
     setClass(mask, n += '--open');
     if (R['_' + name] && R['_' + name] !== $) {
@@ -517,7 +634,9 @@ $$.enter = function (focus) {
     $.fire('enter');
     if (focus) {
         $.fire('focus');
-        if (option = _options[self.value]) {
+        if ('input' === getName(self)) {
+            input.focus();
+        } else if (option = _options[self.value]) {
             option.focus();
         }
         $.fire('focus.option');
@@ -527,12 +646,18 @@ $$.enter = function (focus) {
 
 $$.exit = function (focus) {
     let $ = this,
-        {mask, state} = $,
+        {_mask, mask, self, state} = $,
+        {input} = _mask,
         {n} = state;
     letClass(mask, n += '--open');
     $.fire('exit');
     if (focus) {
-        mask.focus(), $.fire('focus').fire('focus.self');
+        if ('input' === getName(self)) {
+            input.focus();
+        } else {
+            mask.focus();
+        }
+        $.fire('focus').fire('focus.self');
     }
     return $;
 }

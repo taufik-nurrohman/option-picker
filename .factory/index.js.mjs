@@ -1,4 +1,4 @@
-import {R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, setStyles, setText} from '@taufik-nurrohman/document';
+import {D, R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, setStyles, setText} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getRect} from '@taufik-nurrohman/rect';
@@ -11,6 +11,8 @@ import {toCaseLower, toCount, toObjectValues} from '@taufik-nurrohman/to';
 const KEY_ARROW_DOWN = 'ArrowDown';
 const KEY_ARROW_UP = 'ArrowUp';
 const KEY_BEGIN = 'Home';
+const KEY_DELETE_LEFT = 'Backspace';
+const KEY_DELETE_RIGHT = 'Delete';
 const KEY_END = 'End';
 const KEY_ENTER = 'Enter';
 const KEY_ESCAPE = 'Escape';
@@ -206,6 +208,7 @@ function onFocusOption() {
         picker = $['_' + name],
         {mask, state} = picker,
         {n} = state;
+    selectNone();
     setClass(mask, n + '--focus-option');
 }
 
@@ -218,6 +221,7 @@ function onFocusTextInput() {
     setClass(text, n + '__text--focus');
     setClass(mask, n += '--focus');
     setClass(mask, n += '-text');
+    selectTo($);
 }
 
 const search = debounce(($, input, _options) => {
@@ -245,7 +249,7 @@ function onKeyDownTextInput(e) {
     picker.enter();
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
         let currentOption = _options[self.value];
-        if (currentOption.hidden) {
+        if (!currentOption || currentOption.hidden) {
             currentOption = toObjectValues(_options).shift();
             while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
                 currentOption = getNext(currentOption);
@@ -289,10 +293,15 @@ function onKeyDownOption(e) {
         {n} = state;
     n += '__option';
     let nextOption, parentOption, prevOption;
-    if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
-        if (KEY_ESCAPE !== key && (prevOption = _options[self.value])) {
-            letAttribute(prevOption._of, 'selected');
-            letClass(prevOption, n + '--selected');
+    if (KEY_DELETE_LEFT === key) {
+        exit = true;
+        selectTo(input);
+    } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
+        if (KEY_ESCAPE !== key) {
+            if (prevOption = _options[self.value]) {
+                letAttribute(prevOption._of, 'selected');
+                letClass(prevOption, n + '--selected');
+            }
             setAttribute($._of, 'selected', "");
             setClass($, n + '--selected');
             if ('input' === getName(self)) {
@@ -328,13 +337,7 @@ function onKeyDownOption(e) {
             nextOption = getNext(nextOption);
         }
         if (nextOption) {
-            // letAttribute($._of, 'selected');
-            // letClass($, n + '--selected');
             nextOption.focus();
-            // setAttribute(nextOption._of, 'selected', "");
-            // setClass(nextOption, n + '--selected');
-            // setHTML(input || value, getHTML(nextOption));
-            // self.value = getDatum(nextOption, 'value');
         }
     } else if (KEY_ARROW_UP === key) {
         exit = true;
@@ -360,14 +363,13 @@ function onKeyDownOption(e) {
             prevOption = getPrev(prevOption);
         }
         if (prevOption) {
-            // letAttribute($._of, 'selected');
-            // letClass($, n + '--selected');
             prevOption.focus();
-            // setAttribute(prevOption._of, 'selected', "");
-            // setClass(prevOption, n + '--selected');
-            // setHTML(input || value, getHTML(prevOption));
-            // self.value = getDatum(prevOption, 'value');
+        } else {
+            selectTo(input);
         }
+    } else {
+        exit = false;
+        selectTo(input);
     }
     exit && (offEventDefault(e), offEventPropagation(e));
 }
@@ -453,6 +455,29 @@ function onSubmitForm(e) {
     return picker.fire('submit', [e]);
 }
 
+function selectNone(node) {
+    const selection = D.getSelection();
+    if (node) {} else {
+        // selection.removeAllRanges();
+        if (selection.rangeCount) {
+            selection.removeRange(selection.getRangeAt(0));
+        }
+    }
+}
+
+function selectTo(node, mode) {
+    const selection = D.getSelection();
+    selectNone();
+    const range = D.createRange();
+    range.selectNodeContents(node);
+    selection.addRange(range);
+    if (1 === mode) {
+        selection.collapseToEnd();
+    } else if (-1 === mode) {
+        selection.collapseToStart();
+    }
+}
+
 $$.attach = function (self, state) {
     let $ = this;
     self = self || $.self;
@@ -477,8 +502,30 @@ $$.attach = function (self, state) {
         'class': n + '__options'
     });
     let {options} = state;
-    if (isFunction(options)) {
+    if (isArray(options)) {
+        let optionsAsObject = {};
+        options.forEach(option => {
+            if (isArray(option)) {
+                option[0] = option[0] ?? "";
+                option[1] = option[1] ?? {};
+                optionsAsObject[option[0]] = option;
+            } else {
+                optionsAsObject[option] = [option, {}];
+            }
+        });
+        options = optionsAsObject;
+    } else if (isFunction(options)) {
         options = options.call($);
+    }
+    if (isObject(options)) {
+        for (let k in options) {
+            if (isArray(options[k])) {
+                options[k][0] = options[k][0] ?? "";
+                options[k][1] = options[k][1] ?? {};
+                continue;
+            }
+            options[k] = [options[k], {}];
+        }
     }
     createOptions.call($, maskOptions, options);
     const maskValues = setElement('div', {
@@ -653,7 +700,7 @@ $$.exit = function (focus) {
     $.fire('exit');
     if (focus) {
         if ('input' === getName(self)) {
-            input.focus();
+            input.focus(), selectTo(input);
         } else {
             mask.focus();
         }

@@ -133,20 +133,20 @@
                 if (!isSet(out[k])) {
                     out[k] = lot[i][k];
                     continue;
-                } // Merge array
+                }
+                // Merge array
                 if (isArray(out[k]) && isArray(lot[i][k])) {
-                    out[k] = [
-                        /* Clone! */
-                    ].concat(out[k]);
+                    out[k] = [ /* Clone! */ ].concat(out[k]);
                     for (var ii = 0, jj = toCount(lot[i][k]); ii < jj; ++ii) {
                         if (!hasValue(lot[i][k][ii], out[k])) {
                             out[k].push(lot[i][k][ii]);
                         }
-                    } // Merge object recursive
+                    }
+                    // Merge object recursive
                 } else if (isObject(out[k]) && isObject(lot[i][k])) {
                     out[k] = fromStates({
-                        /* Clone! */
-                    }, out[k], lot[i][k]); // Replace value
+                        /* Clone! */ }, out[k], lot[i][k]);
+                    // Replace value
                 } else {
                     out[k] = lot[i][k];
                 }
@@ -410,55 +410,57 @@
         return [x, y, w, h, X, Y];
     };
 
-    function hook($) {
-        var hooks = {};
-
-        function fire(name, data) {
-            if (!isSet(hooks[name])) {
+    function hook($, $$) {
+        $$ = $$ || $;
+        $$.fire = function (event, data, that) {
+            var $ = this,
+                hooks = $.hooks;
+            if (!isSet(hooks[event])) {
                 return $;
             }
-            hooks[name].forEach(function (then) {
-                return then.apply($, data);
+            hooks[event].forEach(function (then) {
+                return then.apply(that || $, data);
             });
             return $;
-        }
-
-        function off(name, then) {
-            if (!isSet(name)) {
+        };
+        $$.off = function (event, then) {
+            var $ = this,
+                hooks = $.hooks;
+            if (!isSet(event)) {
                 return hooks = {}, $;
             }
-            if (isSet(hooks[name])) {
+            if (isSet(hooks[event])) {
                 if (isSet(then)) {
-                    for (var i = 0, _j = hooks[name].length; i < _j; ++i) {
-                        if (then === hooks[name][i]) {
-                            hooks[name].splice(i, 1);
-                            break;
-                        }
-                    } // Clean-up empty hook(s)
+                    var j = hooks[event].length;
+                    // Clean-up empty hook(s)
                     if (0 === j) {
-                        delete hooks[name];
+                        delete hooks[event];
+                    } else {
+                        for (var i = 0; i < j; ++i) {
+                            if (then === hooks[event][i]) {
+                                hooks[event].splice(i, 1);
+                                break;
+                            }
+                        }
                     }
                 } else {
-                    delete hooks[name];
+                    delete hooks[event];
                 }
             }
             return $;
-        }
-
-        function on(name, then) {
-            if (!isSet(hooks[name])) {
-                hooks[name] = [];
+        };
+        $$.on = function (event, then) {
+            var $ = this,
+                hooks = $.hooks;
+            if (!isSet(hooks[event])) {
+                hooks[event] = [];
             }
             if (isSet(then)) {
-                hooks[name].push(then);
+                hooks[event].push(then);
             }
             return $;
-        }
-        $.hooks = hooks;
-        $.fire = fire;
-        $.off = off;
-        $.on = on;
-        return $;
+        };
+        return $.hooks = {}, $;
     }
     var offEvent = function offEvent(name, node, then) {
         node.removeEventListener(name, then);
@@ -477,6 +479,7 @@
     };
     const KEY_ARROW_DOWN = 'ArrowDown';
     const KEY_ARROW_UP = 'ArrowUp';
+    const KEY_DELETE_LEFT = 'Backspace';
     const KEY_ENTER = 'Enter';
     const KEY_ESCAPE = 'Escape';
     const KEY_TAB = 'Tab';
@@ -567,7 +570,8 @@
                 continue;
             }
             options[v.value] = [getText(v) || v.value, attributes, v];
-        } // If there is no selected option(s), get it from the current value
+        }
+        // If there is no selected option(s), get it from the current value
         if (0 === toCount(selected) && options[value]) {
             options[value][1].selected = true;
         }
@@ -590,11 +594,12 @@
         const $ = this;
         if (!self) {
             return $;
-        } // Return new instance if `OptionPicker` was called without the `new` operator
+        }
+        // Return new instance if `OptionPicker` was called without the `new` operator
         if (!isInstance($, OptionPicker)) {
             return new OptionPicker(self, state);
         }
-        self['_' + name] = hook($);
+        self['_' + name] = hook($, OptionPicker.prototype);
         return $.attach(self, fromStates({}, OptionPicker.state, state || {}));
     }
     OptionPicker.state = {
@@ -698,6 +703,7 @@
             {
                 n
             } = state;
+        selectNone();
         setClass(mask, n + '--focus-option');
     }
 
@@ -718,6 +724,7 @@
         setClass(text, n + '__text--focus');
         setClass(mask, n += '--focus');
         setClass(mask, n += '-text');
+        selectTo($);
     }
     const search = debounce(($, input, _options) => {
         let q = toCaseLower(getText(input) || "");
@@ -754,7 +761,7 @@
         picker.enter();
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
             let currentOption = _options[self.value];
-            if (currentOption.hidden) {
+            if (!currentOption || currentOption.hidden) {
                 currentOption = toObjectValues(_options).shift();
                 while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
                     currentOption = getNext(currentOption);
@@ -812,10 +819,15 @@
             } = state;
         n += '__option';
         let nextOption, parentOption, prevOption;
-        if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
-            if (KEY_ESCAPE !== key && (prevOption = _options[self.value])) {
-                letAttribute(prevOption._of, 'selected');
-                letClass(prevOption, n + '--selected');
+        if (KEY_DELETE_LEFT === key) {
+            exit = true;
+            selectTo(input);
+        } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
+            if (KEY_ESCAPE !== key) {
+                if (prevOption = _options[self.value]) {
+                    letAttribute(prevOption._of, 'selected');
+                    letClass(prevOption, n + '--selected');
+                }
                 setAttribute($._of, 'selected', "");
                 setClass($, n + '--selected');
                 if ('input' === getName(self)) {
@@ -829,7 +841,8 @@
             picker.exit(exit = KEY_TAB !== key);
         } else if (KEY_ARROW_DOWN === key) {
             exit = true;
-            nextOption = getNext($); // Skip disabled and hidden option(s)…
+            nextOption = getNext($);
+            // Skip disabled and hidden option(s)…
             while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
@@ -837,27 +850,25 @@
                 // Next option is a group?
                 if (hasClass(nextOption, n + '-group')) {
                     nextOption = getChildFirst(nextOption);
-                } // Is the last option?
+                }
+                // Is the last option?
             } else {
                 // Is in a group?
                 if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
                     nextOption = getNext(parentOption);
                 }
-            } // Skip disabled and hidden option(s)…
+            }
+            // Skip disabled and hidden option(s)…
             while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
             if (nextOption) {
-                // letAttribute($._of, 'selected');
-                // letClass($, n + '--selected');
-                nextOption.focus(); // setAttribute(nextOption._of, 'selected', "");
-                // setClass(nextOption, n + '--selected');
-                // setHTML(input || value, getHTML(nextOption));
-                // self.value = getDatum(nextOption, 'value');
+                nextOption.focus();
             }
         } else if (KEY_ARROW_UP === key) {
             exit = true;
-            prevOption = getPrev($); // Skip disabled and hidden option(s)…
+            prevOption = getPrev($);
+            // Skip disabled and hidden option(s)…
             while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
@@ -865,24 +876,26 @@
                 // Previous option is a group?
                 if (hasClass(prevOption, n + '-group')) {
                     prevOption = getChildLast(prevOption);
-                } // Is the first option?
+                }
+                // Is the first option?
             } else {
                 // Is in a group?
                 if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
                     prevOption = getPrev(parentOption);
                 }
-            } // Skip disabled and hidden option(s)…
+            }
+            // Skip disabled and hidden option(s)…
             while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
             if (prevOption) {
-                // letAttribute($._of, 'selected');
-                // letClass($, n + '--selected');
-                prevOption.focus(); // setAttribute(prevOption._of, 'selected', "");
-                // setClass(prevOption, n + '--selected');
-                // setHTML(input || value, getHTML(prevOption));
-                // self.value = getDatum(prevOption, 'value');
+                prevOption.focus();
+            } else {
+                selectTo(input);
             }
+        } else {
+            exit = false;
+            selectTo(input);
         }
         exit && (offEventDefault(e), offEventPropagation(e));
     }
@@ -991,6 +1004,30 @@
             picker = $['_' + name];
         return picker.fire('submit', [e]);
     }
+
+    function selectNone(node) {
+        const selection = D.getSelection();
+        if (node);
+        else {
+            // selection.removeAllRanges();
+            if (selection.rangeCount) {
+                selection.removeRange(selection.getRangeAt(0));
+            }
+        }
+    }
+
+    function selectTo(node, mode) {
+        const selection = D.getSelection();
+        selectNone();
+        const range = D.createRange();
+        range.selectNodeContents(node);
+        selection.addRange(range);
+        if (1 === mode) {
+            selection.collapseToEnd();
+        } else if (-1 === mode) {
+            selection.collapseToStart();
+        }
+    }
     $$.attach = function (self, state) {
         let $ = this;
         self = self || $.self;
@@ -1019,8 +1056,30 @@
         let {
             options
         } = state;
-        if (isFunction(options)) {
+        if (isArray(options)) {
+            let optionsAsObject = {};
+            options.forEach(option => {
+                if (isArray(option)) {
+                    option[0] = option[0] ?? "";
+                    option[1] = option[1] ?? {};
+                    optionsAsObject[option[0]] = option;
+                } else {
+                    optionsAsObject[option] = [option, {}];
+                }
+            });
+            options = optionsAsObject;
+        } else if (isFunction(options)) {
             options = options.call($);
+        }
+        if (isObject(options)) {
+            for (let k in options) {
+                if (isArray(options[k])) {
+                    options[k][0] = options[k][0] ?? "";
+                    options[k][1] = options[k][1] ?? {};
+                    continue;
+                }
+                options[k] = [options[k], {}];
+            }
         }
         createOptions.call($, maskOptions, options);
         const maskValues = setElement('div', {
@@ -1076,7 +1135,8 @@
         _mask.root = R;
         _mask.self = mask;
         _mask[isInput ? 'text' : 'value'] = text;
-        $._mask = _mask; // Attach the current value(s)
+        $._mask = _mask;
+        // Attach the current value(s)
         if (option = $._options[$._value]) {
             setAttribute(option._of, 'selected', "");
             if (isInput) {
@@ -1087,17 +1147,20 @@
             } else {
                 setHTML(text, getHTML(option));
             }
-        } // Attach extension(s)
+        }
+        // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
             for (let i = 0, j = toCount(state.with); i < j; ++i) {
                 let value = state.with[i];
                 if (isString(value)) {
                     value = OptionPicker[value];
-                } // `const Extension = function (self, state = {}) {}`
+                }
+                // `const Extension = function (self, state = {}) {}`
                 if (isFunction(value)) {
                     value.call($, self, state);
                     continue;
-                } // `const Extension = {attach: function (self, state = {}) {}, detach: function (self, state = {}) {}}`
+                }
+                // `const Extension = {attach: function (self, state = {}) {}, detach: function (self, state = {}) {}}`
                 if (isObject(value) && isFunction(value.attach)) {
                     value.attach.call($, self, state);
                     continue;
@@ -1140,7 +1203,8 @@
         offEvent('resize', W, onResizeWindow);
         offEvent('scroll', W, onScrollWindow);
         offEvent('touchstart', R, onPointerDownRoot);
-        offEvent('touchstart', mask, onPointerDownMask); // Detach extension(s)
+        offEvent('touchstart', mask, onPointerDownMask);
+        // Detach extension(s)
         if (isArray(state.with)) {
             for (let i = 0, j = toCount(state.with); i < j; ++i) {
                 let value = state.with[i];
@@ -1213,7 +1277,7 @@
         $.fire('exit');
         if (focus) {
             if ('input' === getName(self)) {
-                input.focus();
+                input.focus(), selectTo(input);
             } else {
                 mask.focus();
             }

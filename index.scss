@@ -105,7 +105,7 @@ $name: 'option-picker';
     &--selected {
       background: rgba(0, 0, 255, 0.5);
     }
-    &:hover,
+    &:where(:not(.#{$name}__option--disabled)):hover,
     &:focus {
       outline: 1px solid;
       outline-offset: -2px;

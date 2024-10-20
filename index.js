@@ -496,9 +496,8 @@
                 n
             } = state;
         n += '__option';
-        values = values || getOptions(self);
-        for (let k in values) {
-            let v = values[k];
+        values = isInstance(values, Map) && values.size > 0 ? values : getOptions(self);
+        values.forEach((v, k) => {
             if ('data-group' in v[1]) {
                 if (!optionGroup) {
                     setChildLast(options, optionGroup = setElement('span', {
@@ -530,7 +529,8 @@
             option['_' + name] = $;
             $._options[k] = option;
             setChildLast(optionGroup || options, option);
-        }
+        });
+        $.state.options = values;
     }
 
     function defineProperty( of , key, state) {
@@ -538,9 +538,10 @@
     }
 
     function getOptions(self) {
-        const options = {};
+        const map = new Map();
         const value = getValue(self);
-        let items,
+        let item,
+            items,
             selected = [];
         if ('input' === getName(self)) {
             items = self.list;
@@ -562,20 +563,20 @@
                 }
             });
             if ('optgroup' === getName(v)) {
-                let items2 = getOptions(v);
-                for (let k in items2) {
-                    items2[k][1]['data-group'] = v.label;
-                    options[k] = items2[k];
-                }
+                getOptions(v).forEach((vv, kk) => {
+                    vv[1]['data-group'] = v.label;
+                    map.set(kk, vv);
+                });
                 continue;
             }
-            options[v.value] = [getText(v) || v.value, attributes, v];
+            map.set(v.value, [getText(v) || v.value, attributes, v]);
         }
         // If there is no selected option(s), get it from the current value
-        if (0 === toCount(selected) && options[value]) {
-            options[value][1].selected = true;
+        if (0 === toCount(selected) && (item = map.get(value))) {
+            item[1].selected = true;
+            map.set(value, item);
         }
-        return options;
+        return map;
     }
 
     function getValue(self) {
@@ -614,7 +615,7 @@
     const $$ = OptionPicker.prototype;
     defineProperty($$, 'value', {
         get: function () {
-            let value = this.self.value;
+            let value = getValue(this.self);
             return "" === value ? null : value;
         },
         set: function (value) {
@@ -713,6 +714,7 @@
             {
                 _mask,
                 mask,
+                self,
                 state
             } = picker,
             {
@@ -724,7 +726,7 @@
         setClass(text, n + '__text--focus');
         setClass(mask, n += '--focus');
         setClass(mask, n += '-text');
-        selectTo($);
+        getValue(self) ? selectTo($) : picker.enter(true);
     }
     const search = debounce(($, input, _options) => {
         let q = toCaseLower(getText(input) || "");
@@ -760,7 +762,7 @@
         delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
         picker.enter();
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
-            let currentOption = _options[self.value];
+            let currentOption = _options[getValue(self)];
             if (!currentOption || currentOption.hidden) {
                 currentOption = toObjectValues(_options).shift();
                 while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
@@ -818,19 +820,22 @@
                 n
             } = state;
         n += '__option';
-        let nextOption, parentOption, prevOption;
+        let isInput = 'input' === getName(self),
+            nextOption,
+            parentOption,
+            prevOption;
         if (KEY_DELETE_LEFT === key) {
             exit = true;
             selectTo(input);
         } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
             if (KEY_ESCAPE !== key) {
-                if (prevOption = _options[self.value]) {
+                if (prevOption = _options[getValue(self)]) {
                     letAttribute(prevOption._of, 'selected');
                     letClass(prevOption, n + '--selected');
                 }
                 setAttribute($._of, 'selected', "");
                 setClass($, n + '--selected');
-                if ('input' === getName(self)) {
+                if (isInput) {
                     setText(hint, "");
                     setText(input, getText($));
                 } else {
@@ -890,7 +895,7 @@
             }
             if (prevOption) {
                 prevOption.focus();
-            } else {
+            } else if (isInput) {
                 selectTo(input);
             }
         } else {
@@ -1056,32 +1061,31 @@
         let {
             options
         } = state;
+        if (isFunction(options)) {
+            options = options.call($);
+        }
+        const map = new Map();
         if (isArray(options)) {
-            let optionsAsObject = {};
             options.forEach(option => {
                 if (isArray(option)) {
                     option[0] = option[0] ?? "";
                     option[1] = option[1] ?? {};
-                    optionsAsObject[option[0]] = option;
+                    map.set(option[0], option);
                 } else {
-                    optionsAsObject[option] = [option, {}];
+                    map.set(option, [option, {}]);
                 }
             });
-            options = optionsAsObject;
-        } else if (isFunction(options)) {
-            options = options.call($);
-        }
-        if (isObject(options)) {
+        } else if (isObject(options)) {
             for (let k in options) {
                 if (isArray(options[k])) {
                     options[k][0] = options[k][0] ?? "";
                     options[k][1] = options[k][1] ?? {};
                     continue;
                 }
-                options[k] = [options[k], {}];
+                map.set(k, [options[k], {}]);
             }
         }
-        createOptions.call($, maskOptions, options);
+        createOptions.call($, maskOptions, options = map);
         const maskValues = setElement('div', {
             'class': n + '__values'
         });
@@ -1251,8 +1255,8 @@
         if (focus) {
             $.fire('focus');
             if ('input' === getName(self)) {
-                input.focus();
-            } else if (option = _options[self.value]) {
+                input.focus(), selectTo(input);
+            } else if (option = _options[getValue(self)]) {
                 option.focus();
             }
             $.fire('focus.option');

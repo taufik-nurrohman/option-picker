@@ -6,7 +6,7 @@ import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
-import {toCaseLower, toCount, toObjectValues} from '@taufik-nurrohman/to';
+import {toCaseLower, toCount, toObjectValues, toValue} from '@taufik-nurrohman/to';
 
 const KEY_ARROW_DOWN = 'ArrowDown';
 const KEY_ARROW_UP = 'ArrowUp';
@@ -159,7 +159,7 @@ defineProperty($$, 'value', {
     },
     set: function (value) {
         let $ = this;
-        $.fire('change');
+        $.fire('change', [toValue(value)]);
     }
 });
 
@@ -230,7 +230,8 @@ function onFocusTextInput() {
 }
 
 const search = debounce(($, input, _options) => {
-    let q = toCaseLower(getText(input) || "");
+    let query = getText(input) || "",
+        q = toCaseLower(query);
     for (let k in _options) {
         let v = _options[k],
             text = toCaseLower(getText(v) + '\t' + v);
@@ -240,6 +241,7 @@ const search = debounce(($, input, _options) => {
             setAttribute(v, 'hidden', "");
         }
     }
+    $.fire('found', [query]);
 }, 10);
 
 function onKeyDownTextInput(e) {
@@ -265,6 +267,7 @@ function onKeyDownTextInput(e) {
     } else if (KEY_TAB === key) {
         picker.exit();
     } else {
+        picker.fire('find', [getText($)]);
         search(picker, $, _options);
     }
     if (exit) {
@@ -301,6 +304,7 @@ function onKeyDownOption(e) {
         picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
         if (KEY_ESCAPE !== key) {
+            let a = getValue(self), b;
             if (prevOption = _options[getValue(self)]) {
                 letAttribute(prevOption._of, 'selected');
                 letClass(prevOption, n + '--selected');
@@ -313,7 +317,10 @@ function onKeyDownOption(e) {
             } else {
                 setHTML(value, getHTML($));
             }
-            self.value = getDatum($, 'value');
+            self.value = (b = getDatum($, 'value', false));
+            if (b !== a) {
+                picker.fire('change', [toValue(b)]);
+            }
         }
         picker.exit(exit = KEY_TAB !== key);
     } else if (KEY_ARROW_DOWN === key) {
@@ -371,7 +378,7 @@ function onKeyDownOption(e) {
             picker.exit(exit);
         }
     } else {
-        1 === toCount(key) && setText(hint, "");
+        isInput && 1 === toCount(key) && setText(hint, "");
         picker.exit(!(exit = false));
     }
     exit && (offEventDefault(e), offEventPropagation(e));
@@ -401,6 +408,7 @@ function onPointerDownOption(e) {
         {hint, input, value} = _mask,
         {n} = state;
     n += '__option--selected';
+    let a = getValue(self), b;
     for (let k in _options) {
         let option = _options[k];
         if ($ === option) {
@@ -417,7 +425,10 @@ function onPointerDownOption(e) {
     } else {
         setHTML(value, getHTML($));
     }
-    self.value = getDatum($, 'value');
+    self.value = (b = getDatum($, 'value', false));
+    if (b !== a) {
+        picker.fire('change', [toValue(b)]);
+    }
     offEventDefault(e);
 }
 

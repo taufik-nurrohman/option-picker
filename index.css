@@ -74,7 +74,7 @@
   top: -9999px;
 }
 .option-picker__self:disabled + .option-picker {
-  color: gray;
+  color: rgb(128, 128, 128);
 }
 .option-picker__self:disabled + .option-picker,
 .option-picker__self:disabled + .option-picker * {
@@ -87,7 +87,7 @@
   display: none;
 }
 .option-picker__option--disabled {
-  color: gray;
+  color: rgb(128, 128, 128);
   cursor: not-allowed;
 }
 .option-picker__option--selected {

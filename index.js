@@ -23,9 +23,9 @@
  * SOFTWARE.
  *
  */
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define(factory) : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.OptionPicker = factory());
-})(this, function () {
+(function (g, f) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = f() : typeof define === 'function' && define.amd ? define(f) : (g = typeof globalThis !== 'undefined' ? globalThis : g || self, g.OptionPicker = f());
+})(this, (function () {
     'use strict';
     var hasValue = function hasValue(x, data) {
         return -1 !== data.indexOf(x);
@@ -39,8 +39,8 @@
     var isFunction = function isFunction(x) {
         return 'function' === typeof x;
     };
-    var isInstance = function isInstance(x, of ) {
-        return x && isSet( of ) && x instanceof of ;
+    var isInstance = function isInstance(x, of) {
+        return x && isSet(of) && x instanceof of ;
     };
     var isNull = function isNull(x) {
         return null === x;
@@ -89,10 +89,10 @@
     var toObjectValues = function toObjectValues(x) {
         return Object.values(x);
     };
-    var toValue = function toValue(x) {
+    var _toValue = function toValue(x) {
         if (isArray(x)) {
             return x.map(function (v) {
-                return toValue(v);
+                return _toValue(v);
             });
         }
         if (isNumeric(x)) {
@@ -100,7 +100,7 @@
         }
         if (isObject(x)) {
             for (var k in x) {
-                x[k] = toValue(x[k]);
+                x[k] = _toValue(x[k]);
             }
             return x;
         }
@@ -115,14 +115,7 @@
         }
         return x;
     };
-    var fromJSON = function fromJSON(x) {
-        var value = null;
-        try {
-            value = JSON.parse(x);
-        } catch (e) {}
-        return value;
-    };
-    var fromStates = function fromStates() {
+    var _fromStates = function fromStates() {
         for (var _len = arguments.length, lot = new Array(_len), _key = 0; _key < _len; _key++) {
             lot[_key] = arguments[_key];
         }
@@ -144,7 +137,7 @@
                     }
                     // Merge object recursive
                 } else if (isObject(out[k]) && isObject(lot[i][k])) {
-                    out[k] = fromStates({
+                    out[k] = _fromStates({
                         /* Clone! */ }, out[k], lot[i][k]);
                     // Replace value
                 } else {
@@ -154,15 +147,15 @@
         }
         return out;
     };
-    var fromValue = function fromValue(x) {
+    var _fromValue = function fromValue(x) {
         if (isArray(x)) {
             return x.map(function (v) {
-                return fromValue(x);
+                return _fromValue(x);
             });
         }
         if (isObject(x)) {
             for (var k in x) {
-                x[k] = fromValue(x[k]);
+                x[k] = _fromValue(x[k]);
             }
             return x;
         }
@@ -189,7 +182,7 @@
             return null;
         }
         var value = node.getAttribute(attribute);
-        return parseValue ? toValue(value) : value;
+        return parseValue ? _toValue(value) : value;
     };
     var getAttributes = function getAttributes(node, parseValue) {
         if (parseValue === void 0) {
@@ -200,7 +193,7 @@
             values = {};
         for (var i = 0, j = attributes.length; i < j; ++i) {
             value = attributes[i].value;
-            values[attributes[i].name] = parseValue ? toValue(value) : value;
+            values[attributes[i].name] = parseValue ? _toValue(value) : value;
         }
         return values;
     };
@@ -211,14 +204,8 @@
         return parent.lastElementChild || null;
     };
     var getDatum = function getDatum(node, datum, parseValue) {
-        if (parseValue === void 0) {
-            parseValue = true;
-        }
-        var value = getAttribute(node, 'data-' + datum, parseValue),
-            v = (value + "").trim();
-        if (parseValue && v && ('[' === v[0] && ']' === v.slice(-1) || '{' === v[0] && '}' === v.slice(-1)) && null !== (v = fromJSON(value))) {
-            return v;
-        }
+        var value = getAttribute(node, 'data-' + datum, parseValue);
+        (value + "").trim();
         return value;
     };
     var getHTML = function getHTML(node, trim) {
@@ -296,7 +283,7 @@
         if (true === value) {
             value = attribute;
         }
-        return node.setAttribute(attribute, fromValue(value)), node;
+        return node.setAttribute(attribute, _fromValue(value)), node;
     };
     var setAttributes = function setAttributes(node, attributes) {
         var value;
@@ -347,7 +334,7 @@
         if (isNumber(value)) {
             value += 'px';
         }
-        return node.style[toCaseCamel(style)] = fromValue(value), node;
+        return node.style[toCaseCamel(style)] = _fromValue(value), node;
     };
     var setStyles = function setStyles(node, styles) {
         var value;
@@ -477,27 +464,26 @@
         }
         node.addEventListener(name, then, options);
     };
-    const KEY_ARROW_DOWN = 'ArrowDown';
-    const KEY_ARROW_UP = 'ArrowUp';
-    const KEY_DELETE_LEFT = 'Backspace';
-    const KEY_ENTER = 'Enter';
-    const KEY_ESCAPE = 'Escape';
-    const KEY_TAB = 'Tab';
-    const bounce = debounce($ => $.fit(), 10);
-    const name = 'OptionPicker';
+    var KEY_ARROW_DOWN = 'ArrowDown';
+    var KEY_ARROW_UP = 'ArrowUp';
+    var KEY_DELETE_LEFT = 'Backspace';
+    var KEY_ENTER = 'Enter';
+    var KEY_ESCAPE = 'Escape';
+    var KEY_TAB = 'Tab';
+    var bounce = debounce(function ($) {
+        return $.fit();
+    }, 10);
+    var name = 'OptionPicker';
 
     function createOptions(options, values) {
-        let $ = this,
-            optionGroup, {
-                self,
-                state
-            } = $,
-            {
-                n
-            } = state;
+        var $ = this,
+            optionGroup,
+            self = $.self,
+            state = $.state,
+            n = state.n;
         n += '__option';
         values = isInstance(values, Map) && values.size > 0 ? values : getOptions(self);
-        values.forEach((v, k) => {
+        values.forEach(function (v, k) {
             if ('data-group' in v[1]) {
                 if (!optionGroup) {
                     setChildLast(options, optionGroup = setElement('span', {
@@ -508,14 +494,13 @@
             } else {
                 optionGroup = false;
             }
-            let {
-                disabled,
-                selected,
-                value
-            } = v[1];
-            let option = setElement('span', v[0], {
+            var _v$ = v[1],
+                disabled = _v$.disabled,
+                selected = _v$.selected,
+                value = _v$.value;
+            var option = setElement('span', v[0], {
                 'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
-                'data-value': fromValue(value || k),
+                'data-value': _fromValue(value || k),
                 'tabindex': disabled ? false : -1
             });
             if (!disabled) {
@@ -533,8 +518,8 @@
         $.state.options = values;
     }
 
-    function defineProperty( of , key, state) {
-        Object.defineProperty( of , key, state);
+    function defineProperty(of, key, state) {
+        Object.defineProperty(of, key, state);
     }
 
     function focusTo(node) {
@@ -542,9 +527,9 @@
     }
 
     function getOptions(self) {
-        const map = new Map();
-        const value = getValue(self);
-        let item,
+        var map = new Map();
+        var value = getValue(self);
+        var item,
             items,
             selected = [];
         if ('input' === getName(self)) {
@@ -553,10 +538,10 @@
         } else {
             items = self.children;
         }
-        for (let i = 0, j = toCount(items); i < j; ++i) {
-            let v = items[i],
+        var _loop = function _loop(i) {
+            var v = items[i],
                 attributes = getAttributes(v);
-            ['disabled', 'selected'].forEach(k => {
+            ['disabled', 'selected'].forEach(function (k) {
                 if (k in attributes) {
                     attributes[k] = "" === attributes[k] ? true : attributes[k];
                     if ('selected' === k) {
@@ -567,13 +552,16 @@
                 }
             });
             if ('optgroup' === getName(v)) {
-                getOptions(v).forEach((vv, kk) => {
+                getOptions(v).forEach(function (vv, kk) {
                     vv[1]['data-group'] = v.label;
                     map.set(kk, vv);
                 });
-                continue;
+                return 1; // continue
             }
             map.set(v.value, [getText(v) || v.value, attributes, v]);
+        };
+        for (var i = 0, j = toCount(items); i < j; ++i) {
+            if (_loop(i)) continue;
         }
         // If there is no selected option(s), get it from the current value
         if (0 === toCount(selected) && (item = map.get(value))) {
@@ -596,7 +584,7 @@
     }
 
     function OptionPicker(self, state) {
-        const $ = this;
+        var $ = this;
         if (!self) {
             return $;
         }
@@ -605,7 +593,7 @@
             return new OptionPicker(self, state);
         }
         self['_' + name] = hook($, OptionPicker.prototype);
-        return $.attach(self, fromStates({}, OptionPicker.state, state || {}));
+        return $.attach(self, _fromStates({}, OptionPicker.state, state || {}));
     }
     OptionPicker.state = {
         'n': 'option-picker',
@@ -616,127 +604,98 @@
     defineProperty(OptionPicker, 'name', {
         value: name
     });
-    const $$ = OptionPicker.prototype;
+    var $$ = OptionPicker.prototype;
     defineProperty($$, 'value', {
-        get: function () {
-            let value = getValue(this.self);
+        get: function get() {
+            var value = getValue(this.self);
             return "" === value ? null : value;
         },
-        set: function (value) {
-            let $ = this;
-            $.fire('change');
+        set: function set(value) {
+            var $ = this;
+            $.fire('change', [_toValue(value)]);
         }
     });
 
     function onBlurMask() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                state
-            } = picker,
-            {
-                n
-            } = state;
+            state = picker.state,
+            n = state.n;
         letClass($, n += '--focus');
         letClass($, n += '-self');
     }
 
     function onBlurOption() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                mask,
-                state
-            } = picker,
-            {
-                n
-            } = state;
+            mask = picker.mask,
+            state = picker.state,
+            n = state.n;
         letClass(mask, n + '--focus-option');
     }
 
     function onBlurTextInput() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                _mask,
-                mask,
-                state
-            } = picker,
-            {
-                text
-            } = _mask,
-            {
-                n
-            } = state;
+            _mask = picker._mask,
+            mask = picker.mask,
+            state = picker.state,
+            text = _mask.text,
+            n = state.n;
         letClass(mask, n + '--focus-text');
         letClass(text, n + '__text--focus');
     }
 
     function onCutTextInput() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                _mask,
-                self
-            } = picker,
-            {
-                hint
-            } = _mask;
-        delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+            _mask = picker._mask,
+            self = picker.self,
+            hint = _mask.hint;
+        delay(function () {
+            return setText(hint, getText($, false) ? "" : self.placeholder);
+        }, 1)();
     }
 
     function onFocusMask() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                state
-            } = picker,
-            {
-                n
-            } = state;
+            state = picker.state,
+            n = state.n;
         setClass($, n += '--focus');
         setClass($, n += '-self');
     }
 
     function onFocusOption() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                mask,
-                state
-            } = picker,
-            {
-                n
-            } = state;
+            mask = picker.mask,
+            state = picker.state,
+            n = state.n;
         selectNone();
         setClass(mask, n += '--focus');
         setClass(mask, n += '-option');
     }
 
     function onFocusTextInput() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                _mask,
-                mask,
-                self,
-                state
-            } = picker,
-            {
-                text
-            } = _mask,
-            {
-                n
-            } = state;
+            _mask = picker._mask,
+            mask = picker.mask,
+            self = picker.self,
+            state = picker.state,
+            text = _mask.text,
+            n = state.n;
         setClass(text, n + '__text--focus');
         setClass(mask, n += '--focus');
         setClass(mask, n += '-text');
         getValue(self) ? selectTo($) : picker.enter(true);
     }
-    const search = debounce(($, input, _options) => {
-        let q = toCaseLower(getText(input) || "");
-        for (let k in _options) {
-            let v = _options[k],
+    var search = debounce(function ($, input, _options) {
+        var query = getText(input) || "",
+            q = toCaseLower(query);
+        for (var k in _options) {
+            var v = _options[k],
                 text = toCaseLower(getText(v) + '\t' + v);
             if ("" === q || hasValue(q, text)) {
                 letAttribute(v, 'hidden');
@@ -744,30 +703,27 @@
                 setAttribute(v, 'hidden', "");
             }
         }
+        $.fire('found', [query]);
     }, 10);
 
     function onKeyDownTextInput(e) {
-        let $ = this,
+        var $ = this,
             exit,
             key = e.key,
             picker = $['_' + name],
-            {
-                _mask,
-                _options,
-                self,
-                state
-            } = picker,
-            {
-                hint
-            } = _mask,
-            {
-                n
-            } = state;
+            _mask = picker._mask,
+            _options = picker._options,
+            self = picker.self,
+            state = picker.state,
+            hint = _mask.hint,
+            n = state.n;
         n += '__option--disabled';
-        delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+        delay(function () {
+            return setText(hint, getText($, false) ? "" : self.placeholder);
+        }, 1)();
         picker.enter();
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
-            let currentOption = _options[getValue(self)];
+            var currentOption = _options[getValue(self)];
             if (!currentOption || currentOption.hidden) {
                 currentOption = toObjectValues(_options).shift();
                 while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
@@ -779,6 +735,7 @@
         } else if (KEY_TAB === key) {
             picker.exit();
         } else {
+            picker.fire('find', [getText($)]);
             search(picker, $, _options);
         }
         if (exit) {
@@ -788,7 +745,7 @@
     }
 
     function onKeyDownMask(e) {
-        let $ = this,
+        var $ = this,
             exit,
             key = e.key,
             picker = $['_' + name];
@@ -801,29 +758,23 @@
     }
 
     function onKeyDownOption(e) {
-        let $ = this,
+        var $ = this,
             exit,
             key = e.key;
         e.ctrlKey;
         e.shiftKey;
-        let picker = $['_' + name],
-            {
-                _mask,
-                _options,
-                mask,
-                self,
-                state
-            } = picker,
-            {
-                hint,
-                input,
-                value
-            } = _mask,
-            {
-                n
-            } = state;
+        var picker = $['_' + name],
+            _mask = picker._mask,
+            _options = picker._options;
+        picker.mask;
+        var self = picker.self,
+            state = picker.state,
+            hint = _mask.hint,
+            input = _mask.input,
+            value = _mask.value,
+            n = state.n;
         n += '__option';
-        let isInput = 'input' === getName(self),
+        var isInput = 'input' === getName(self),
             nextOption,
             parentOption,
             prevOption;
@@ -831,6 +782,8 @@
             picker.exit(exit = true);
         } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
             if (KEY_ESCAPE !== key) {
+                var a = getValue(self),
+                    b;
                 if (prevOption = _options[getValue(self)]) {
                     letAttribute(prevOption._of, 'selected');
                     letClass(prevOption, n + '--selected');
@@ -843,7 +796,10 @@
                 } else {
                     setHTML(value, getHTML($));
                 }
-                self.value = getDatum($, 'value');
+                self.value = b = getDatum($, 'value', false);
+                if (b !== a) {
+                    picker.fire('change', [_toValue(b)]);
+                }
             }
             picker.exit(exit = KEY_TAB !== key);
         } else if (KEY_ARROW_DOWN === key) {
@@ -901,58 +857,50 @@
                 picker.exit(exit);
             }
         } else {
-            1 === toCount(key) && setText(hint, "");
+            isInput && 1 === toCount(key) && setText(hint, "");
             picker.exit(!(exit = false));
         }
         exit && (offEventDefault(e), offEventPropagation(e));
     }
 
     function onPasteTextInput() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                _mask,
-                self
-            } = picker,
-            {
-                hint
-            } = _mask;
-        delay(() => setText($, getText($)))(); // Convert to plain text
-        delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
+            _mask = picker._mask,
+            self = picker.self,
+            hint = _mask.hint;
+        delay(function () {
+            return setText($, getText($));
+        })(); // Convert to plain text
+        delay(function () {
+            return setText(hint, getText($, false) ? "" : self.placeholder);
+        }, 1)();
     }
 
     function onPointerDownMask(e) {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                state
-            } = picker,
-            {
-                n
-            } = state;
+            state = picker.state,
+            n = state.n;
         picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit(), offEventDefault(e);
     }
 
     function onPointerDownOption(e) {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name],
-            {
-                _mask,
-                _options,
-                self,
-                state
-            } = picker,
-            {
-                hint,
-                input,
-                value
-            } = _mask,
-            {
-                n
-            } = state;
+            _mask = picker._mask,
+            _options = picker._options,
+            self = picker.self,
+            state = picker.state,
+            hint = _mask.hint,
+            input = _mask.input,
+            value = _mask.value,
+            n = state.n;
         n += '__option--selected';
-        for (let k in _options) {
-            let option = _options[k];
+        var a = getValue(self),
+            b;
+        for (var k in _options) {
+            var option = _options[k];
             if ($ === option) {
                 continue;
             }
@@ -967,23 +915,23 @@
         } else {
             setHTML(value, getHTML($));
         }
-        self.value = getDatum($, 'value');
+        self.value = b = getDatum($, 'value', false);
+        if (b !== a) {
+            picker.fire('change', [_toValue(b)]);
+        }
         offEventDefault(e);
     }
 
     function onPointerDownRoot(e) {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name];
         if (!picker) {
             return;
         }
-        let {
-            mask,
-            state
-        } = picker, {
-            n
-        } = state,
-        target = e.target;
+        var mask = picker.mask,
+            state = picker.state,
+            n = state.n,
+            target = e.target;
         if (mask !== target && mask !== getParent(target, '.' + n)) {
             picker.exit();
             delete $['_' + name];
@@ -991,13 +939,13 @@
     }
 
     function onResetForm(e) {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name];
         picker.let().fire('reset', [e]);
     }
 
     function onResizeWindow() {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name];
         picker && bounce(picker);
     }
@@ -1007,15 +955,14 @@
     }
 
     function onSubmitForm(e) {
-        let $ = this,
+        var $ = this,
             picker = $['_' + name];
         return picker.fire('submit', [e]);
     }
 
     function selectNone(node) {
-        const selection = D.getSelection();
-        if (node);
-        else {
+        var selection = D.getSelection();
+        {
             // selection.removeAllRanges();
             if (selection.rangeCount) {
                 selection.removeRange(selection.getRangeAt(0));
@@ -1024,19 +971,14 @@
     }
 
     function selectTo(node, mode) {
-        const selection = D.getSelection();
+        var selection = D.getSelection();
         selectNone();
-        const range = D.createRange();
+        var range = D.createRange();
         range.selectNodeContents(node);
         selection.addRange(range);
-        if (1 === mode) {
-            selection.collapseToEnd();
-        } else if (-1 === mode) {
-            selection.collapseToStart();
-        }
     }
     $$.attach = function (self, state) {
-        let $ = this;
+        var $ = this;
         self = self || $.self;
         state = state || $.state;
         $._active = !isDisabled(self) && !isReadOnly(self);
@@ -1044,61 +986,61 @@
         $._value = getValue(self) || null;
         $.self = self;
         $.state = state;
-        let isInput = 'input' === getName(self),
-            {
-                n
-            } = state;
-        const arrow = setElement('span', {
+        var isInput = 'input' === getName(self),
+            _state = state,
+            n = _state.n;
+        var arrow = setElement('span', {
             'class': n + '__arrow'
         });
-        const form = getParentForm(self);
-        const mask = setElement('div', {
+        var form = getParentForm(self);
+        var mask = setElement('div', {
             'class': n,
             'tabindex': isDisabled(self) || isInput ? false : 0
         });
         $.mask = mask;
-        const maskOptions = setElement('div', {
+        var maskOptions = setElement('div', {
             'class': n + '__options'
         });
-        let {
-            options
-        } = state;
+        var _state2 = state,
+            options = _state2.options;
         if (isFunction(options)) {
             options = options.call($);
         }
-        const map = new Map();
+        var map = new Map();
         if (isArray(options)) {
-            options.forEach(option => {
+            options.forEach(function (option) {
                 if (isArray(option)) {
-                    option[0] = option[0] ?? "";
-                    option[1] = option[1] ?? {};
+                    var _option$, _option$2;
+                    option[0] = (_option$ = option[0]) != null ? _option$ : "";
+                    option[1] = (_option$2 = option[1]) != null ? _option$2 : {};
                     map.set(option[0], option);
                 } else {
                     map.set(option, [option, {}]);
                 }
             });
         } else if (isObject(options)) {
-            for (let k in options) {
+            for (var k in options) {
                 if (isArray(options[k])) {
-                    options[k][0] = options[k][0] ?? "";
-                    options[k][1] = options[k][1] ?? {};
+                    var _options$k$, _options$k$2;
+                    options[k][0] = (_options$k$ = options[k][0]) != null ? _options$k$ : "";
+                    options[k][1] = (_options$k$2 = options[k][1]) != null ? _options$k$2 : {};
                     continue;
                 }
                 map.set(k, [options[k], {}]);
             }
         }
         createOptions.call($, maskOptions, options = map);
-        const maskValues = setElement('div', {
+        var maskValues = setElement('div', {
             'class': n + '__values'
         });
-        const text = setElement('span', {
+        var text = setElement('span', {
             'class': n + '__' + (isInput ? 'text' : 'value')
         });
-        const textInput = setElement('span', {
+        var textInput = setElement('span', {
             'contenteditable': isDisabled(self) || isReadOnly(self) || !isInput ? false : "",
             'spellcheck': !isInput ? false : 'false'
         });
-        const textInputHint = setElement('span', isInput ? self.placeholder + "" : "");
+        var textInputHint = setElement('span', isInput ? self.placeholder + "" : "");
         setChildLast(mask, maskValues);
         setChildLast(mask, maskOptions);
         setChildLast(maskValues, text);
@@ -1132,7 +1074,7 @@
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
         mask['_' + name] = $;
-        let _mask = {},
+        var _mask = {},
             option;
         _mask.hint = isInput ? textInputHint : null;
         _mask.input = isInput ? textInput : null;
@@ -1156,8 +1098,8 @@
         }
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
-            for (let i = 0, j = toCount(state.with); i < j; ++i) {
-                let value = state.with[i];
+            for (var i = 0, j = toCount(state.with); i < j; ++i) {
+                var value = state.with[i];
                 if (isString(value)) {
                     value = OptionPicker[value];
                 }
@@ -1177,17 +1119,13 @@
     };
     $$.blur = function () {};
     $$.detach = function () {
-        let $ = this,
-            {
-                _mask,
-                mask,
-                self,
-                state
-            } = $,
-            {
-                input
-            } = _mask;
-        const form = getParentForm(self);
+        var $ = this,
+            _mask = $._mask,
+            mask = $.mask,
+            self = $.self,
+            state = $.state,
+            input = _mask.input;
+        var form = getParentForm(self);
         $._active = false;
         $._value = getValue(self) || null; // Update initial value to be the current value
         if (form) {
@@ -1212,8 +1150,8 @@
         offEvent('touchstart', mask, onPointerDownMask);
         // Detach extension(s)
         if (isArray(state.with)) {
-            for (let i = 0, j = toCount(state.with); i < j; ++i) {
-                let value = state.with[i];
+            for (var i = 0, j = toCount(state.with); i < j; ++i) {
+                var value = state.with[i];
                 if (isString(value)) {
                     value = OptionPicker[value];
                 }
@@ -1227,26 +1165,21 @@
         letClass(self, state.n + '__self');
         letElement(mask);
         $._mask = {
-            of : self
+            of: self
         };
         $.mask = null;
         return $;
     };
     $$.enter = function (focus) {
-        let $ = this,
-            option, {
-                _mask,
-                _options,
-                mask,
-                self,
-                state
-            } = $,
-            {
-                input
-            } = _mask,
-            {
-                n
-            } = state;
+        var $ = this,
+            option,
+            _mask = $._mask,
+            _options = $._options,
+            mask = $.mask,
+            self = $.self,
+            state = $.state,
+            input = _mask.input,
+            n = state.n;
         setClass(mask, n += '--open');
         if (R['_' + name] && R['_' + name] !== $) {
             R['_' + name].exit(); // Exit other(s)
@@ -1266,19 +1199,13 @@
         return $;
     };
     $$.exit = function (focus) {
-        let $ = this,
-            {
-                _mask,
-                mask,
-                self,
-                state
-            } = $,
-            {
-                input
-            } = _mask,
-            {
-                n
-            } = state;
+        var $ = this,
+            _mask = $._mask,
+            mask = $.mask,
+            self = $.self,
+            state = $.state,
+            input = _mask.input,
+            n = state.n;
         letClass(mask, n += '--open');
         $.fire('exit');
         if (focus) {
@@ -1292,15 +1219,11 @@
         return $;
     };
     $$.fit = function () {
-        let $ = this,
-            {
-                _mask,
-                mask
-            } = $,
-            {
-                options
-            } = _mask;
-        let rectMask = getRect(mask),
+        var $ = this,
+            _mask = $._mask,
+            mask = $.mask,
+            options = _mask.options;
+        var rectMask = getRect(mask),
             rectWindow = getRect(W);
         if (rectMask[1] + rectMask[3] / 2 > rectWindow[3] / 2) {
             setStyles(options, {
@@ -1319,4 +1242,4 @@
     };
     $$.focus = function () {};
     return OptionPicker;
-});
+}));

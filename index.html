@@ -14,8 +14,62 @@
         margin-right: auto;
         max-width: 60rem;
       }
+      .option-picker {
+        border-width: 2px;
+        flex: 1;
+      }
+      .option-picker__arrow,
+      .option-picker__text,
+      .option-picker__value {
+        border-width: 0;
+        padding: 0 0.5em;
+      }
+      .option-picker--focus {
+        border-color: #00f;
+      }
+      .option-picker--focus .option-picker__options {
+        border-color: #00f;
+      }
+      .option-picker--focus .option-picker__value {
+        background: 0 0;
+        outline: 0;
+      }
+      .option-picker__option {
+        border: 0;
+        padding: 0 0.5em;
+      }
+      .option-picker__option:focus,
+      .option-picker__option:hover {
+        background: #00f;
+        color: #fff;
+        outline: 0;
+      }
+      .option-picker__option-group {
+        border: 0;
+        gap: 0;
+        padding: 0;
+      }
+      .option-picker__option-group::before {
+        border: 0;
+        padding: 0 0.5em;
+      }
+      .option-picker__option-group .option-picker__option {
+        padding-left: 1em;
+      }
+      .option-picker__option--selected {
+        background: #000;
+        color: #fff;
+        outline: 0;
+      }
       .option-picker__options {
         background: #fff;
+        gap: 0;
+        left: -2px;
+        min-width: calc(100% + 4px);
+        padding: 0;
+      }
+      .option-picker__values {
+        padding: 0;
       }
     </style>
   </head>

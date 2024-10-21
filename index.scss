@@ -1,6 +1,7 @@
 $name: 'option-picker';
 
 %item {
+  align-items: center;
   border: 1px solid;
   border-color: inherit;
   display: flex;
@@ -64,7 +65,6 @@ $name: 'option-picker';
   }
   &__arrow {
     &::after {
-      align-self: center;
       border: {
         left: 0.25em solid transparent;
         right: 0.25em solid transparent;

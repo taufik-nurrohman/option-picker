@@ -63,6 +63,10 @@ function defineProperty(of, key, state) {
     Object.defineProperty(of, key, state);
 }
 
+function focusTo(node) {
+    node.focus();
+}
+
 function getOptions(self) {
     const map = new Map;
     const value = getValue(self);
@@ -209,7 +213,8 @@ function onFocusOption() {
         {mask, state} = picker,
         {n} = state;
     selectNone();
-    setClass(mask, n + '--focus-option');
+    setClass(mask, n += '--focus');
+    setClass(mask, n += '-option');
 }
 
 function onFocusTextInput() {
@@ -255,9 +260,7 @@ function onKeyDownTextInput(e) {
                 currentOption = getNext(currentOption);
             }
         }
-        if (currentOption) {
-            currentOption.focus();
-        }
+        currentOption && focusTo(currentOption);
         exit = true;
     } else if (KEY_TAB === key) {
         picker.exit();
@@ -295,8 +298,7 @@ function onKeyDownOption(e) {
     let isInput = 'input' === getName(self),
         nextOption, parentOption, prevOption;
     if (KEY_DELETE_LEFT === key) {
-        exit = true;
-        selectTo(input);
+        picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
         if (KEY_ESCAPE !== key) {
             if (prevOption = _options[getValue(self)]) {
@@ -337,9 +339,7 @@ function onKeyDownOption(e) {
         while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
-        if (nextOption) {
-            nextOption.focus();
-        }
+        nextOption && focusTo(nextOption);
     } else if (KEY_ARROW_UP === key) {
         exit = true;
         prevOption = getPrev($);
@@ -364,13 +364,15 @@ function onKeyDownOption(e) {
             prevOption = getPrev(prevOption);
         }
         if (prevOption) {
-            prevOption.focus();
+            focusTo(prevOption);
         } else if (isInput) {
-            selectTo(input);
+            focusTo(input), selectTo(input);
+        } else {
+            picker.exit(exit);
         }
     } else {
-        exit = false;
-        selectTo(input);
+        1 === toCount(key) && setText(hint, "");
+        picker.exit(!(exit = false));
     }
     exit && (offEventDefault(e), offEventPropagation(e));
 }
@@ -682,9 +684,9 @@ $$.enter = function (focus) {
     if (focus) {
         $.fire('focus');
         if ('input' === getName(self)) {
-            input.focus(), selectTo(input);
+            focusTo(input), selectTo(input);
         } else if (option = _options[getValue(self)]) {
-            option.focus();
+            focusTo(option);
         }
         $.fire('focus.option');
     }
@@ -700,9 +702,9 @@ $$.exit = function (focus) {
     $.fire('exit');
     if (focus) {
         if ('input' === getName(self)) {
-            input.focus(), selectTo(input);
+            focusTo(input), selectTo(input);
         } else {
-            mask.focus();
+            focusTo(mask);
         }
         $.fire('focus').fire('focus.self');
     }

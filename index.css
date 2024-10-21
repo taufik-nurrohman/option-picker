@@ -3,6 +3,7 @@
 .option-picker__arrow,
 .option-picker__text,
 .option-picker__value {
+  align-items: center;
   border: 1px solid;
   border-color: inherit;
   display: flex;
@@ -59,7 +60,6 @@
   position: relative;
 }
 .option-picker__arrow::after {
-  align-self: center;
   border-left: 0.25em solid transparent;
   border-right: 0.25em solid transparent;
   border-top: 0.5em solid;

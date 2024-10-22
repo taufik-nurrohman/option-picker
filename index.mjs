@@ -163,6 +163,48 @@ defineProperty($$, 'value', {
     }
 });
 
+const filter = debounce(($, input, _options, selectOnly) => {
+    let query = isString(input) ? input : getText(input) || "",
+        q = toCaseLower(query),
+        {_mask, self, state} = $,
+        {value} = _mask,
+        {n} = state;
+    n += '__option';
+    if (selectOnly) {
+        let a = getValue(self), b;
+        for (let k in _options) {
+            let v = _options[k];
+            letAttribute(v._of, 'selected');
+            letClass(v, n + '--selected');
+        }
+        for (let k in _options) {
+            let v = _options[k],
+                text = toCaseLower(getText(v) + '\t' + (b = getDatum(v, 'value', false)));
+            if ("" !== q && hasValue(q, text)) {
+                self.value = b;
+                setAttribute(v._of, 'selected', "");
+                setClass(v, n + '--selected');
+                setHTML(value, getHTML(v));
+                if (b !== a) {
+                    $.fire('change', [toValue(b)]);
+                }
+                break;
+            }
+        }
+    } else {
+        for (let k in _options) {
+            let v = _options[k],
+                text = toCaseLower(getText(v) + '\t' + getDatum(v, 'value', false));
+            if ("" === q || hasValue(q, text)) {
+                letAttribute(v, 'hidden');
+            } else {
+                setAttribute(v, 'hidden', "");
+            }
+        }
+    }
+    $.fire(selectOnly ? 'search' : 'filter', [query]);
+}, 10);
+
 function onBlurMask() {
     let $ = this,
         picker = $['_' + name],
@@ -226,23 +268,8 @@ function onFocusTextInput() {
     setClass(text, n + '__text--focus');
     setClass(mask, n += '--focus');
     setClass(mask, n += '-text');
-    getValue(self) ? selectTo($) : picker.enter(true);
+    getValue(self) ? selectTo($) : picker.enter(true).fit();
 }
-
-const search = debounce(($, input, _options) => {
-    let query = getText(input) || "",
-        q = toCaseLower(query);
-    for (let k in _options) {
-        let v = _options[k],
-            text = toCaseLower(getText(v) + '\t' + v);
-        if ("" === q || hasValue(q, text)) {
-            letAttribute(v, 'hidden');
-        } else {
-            setAttribute(v, 'hidden', "");
-        }
-    }
-    $.fire('found', [query]);
-}, 10);
 
 function onKeyDownTextInput(e) {
     let $ = this, exit,
@@ -253,7 +280,7 @@ function onKeyDownTextInput(e) {
         {n} = state;
     n += '__option--disabled';
     delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
-    picker.enter();
+    picker.enter().fit();
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
         let currentOption = _options[getValue(self)];
         if (!currentOption || currentOption.hidden) {
@@ -267,8 +294,7 @@ function onKeyDownTextInput(e) {
     } else if (KEY_TAB === key) {
         picker.exit();
     } else {
-        picker.fire('find', [getText($)]);
-        search(picker, $, _options);
+        filter(picker, $, _options);
     }
     if (exit) {
         offEventDefault(e);
@@ -276,14 +302,29 @@ function onKeyDownTextInput(e) {
     }
 }
 
+let searchTerm = "",
+    searchTermClear = debounce(() => (searchTerm = ""), 500);
+
 function onKeyDownMask(e) {
     let $ = this, exit,
         key = e.key,
-        picker = $['_' + name];
-    if (KEY_ESCAPE === key) {
+        keyIsAlt = e.altKey,
+        keyIsCtrl = e.ctrlKey,
+        picker = $['_' + name],
+        {_options} = picker;
+    searchTermClear();
+    if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
+        searchTerm = "";
+    } else if (KEY_ESCAPE === key) {
+        searchTerm = "";
         picker.exit(exit = true);
-    } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || ' ' === key) {
+    } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || ("" === searchTerm && ' ' === key)) {
         picker.enter(exit = true).fit();
+    } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
+        searchTerm += key;
+    }
+    if ("" !== searchTerm) {
+        filter(picker, searchTerm, _options, exit = true);
     }
     exit && offEventDefault(e);
 }

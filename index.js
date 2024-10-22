@@ -467,6 +467,7 @@
     var KEY_ARROW_DOWN = 'ArrowDown';
     var KEY_ARROW_UP = 'ArrowUp';
     var KEY_DELETE_LEFT = 'Backspace';
+    var KEY_DELETE_RIGHT = 'Delete';
     var KEY_ENTER = 'Enter';
     var KEY_ESCAPE = 'Escape';
     var KEY_TAB = 'Tab';
@@ -615,6 +616,50 @@
             $.fire('change', [_toValue(value)]);
         }
     });
+    var filter = debounce(function ($, input, _options, selectOnly) {
+        var query = isString(input) ? input : getText(input) || "",
+            q = toCaseLower(query),
+            _mask = $._mask,
+            self = $.self,
+            state = $.state,
+            value = _mask.value,
+            n = state.n;
+        n += '__option';
+        if (selectOnly) {
+            var a = getValue(self),
+                b;
+            for (var k in _options) {
+                var v = _options[k];
+                letAttribute(v._of, 'selected');
+                letClass(v, n + '--selected');
+            }
+            for (var _k in _options) {
+                var _v = _options[_k],
+                    text = toCaseLower(getText(_v) + '\t' + (b = getDatum(_v, 'value', false)));
+                if ("" !== q && hasValue(q, text)) {
+                    self.value = b;
+                    setAttribute(_v._of, 'selected', "");
+                    setClass(_v, n + '--selected');
+                    setHTML(value, getHTML(_v));
+                    if (b !== a) {
+                        $.fire('change', [_toValue(b)]);
+                    }
+                    break;
+                }
+            }
+        } else {
+            for (var _k2 in _options) {
+                var _v2 = _options[_k2],
+                    _text = toCaseLower(getText(_v2) + '\t' + getDatum(_v2, 'value', false));
+                if ("" === q || hasValue(q, _text)) {
+                    letAttribute(_v2, 'hidden');
+                } else {
+                    setAttribute(_v2, 'hidden', "");
+                }
+            }
+        }
+        $.fire(selectOnly ? 'search' : 'filter', [query]);
+    }, 10);
 
     function onBlurMask() {
         var $ = this,
@@ -689,22 +734,8 @@
         setClass(text, n + '__text--focus');
         setClass(mask, n += '--focus');
         setClass(mask, n += '-text');
-        getValue(self) ? selectTo($) : picker.enter(true);
+        getValue(self) ? selectTo($) : picker.enter(true).fit();
     }
-    var search = debounce(function ($, input, _options) {
-        var query = getText(input) || "",
-            q = toCaseLower(query);
-        for (var k in _options) {
-            var v = _options[k],
-                text = toCaseLower(getText(v) + '\t' + v);
-            if ("" === q || hasValue(q, text)) {
-                letAttribute(v, 'hidden');
-            } else {
-                setAttribute(v, 'hidden', "");
-            }
-        }
-        $.fire('found', [query]);
-    }, 10);
 
     function onKeyDownTextInput(e) {
         var $ = this,
@@ -721,7 +752,7 @@
         delay(function () {
             return setText(hint, getText($, false) ? "" : self.placeholder);
         }, 1)();
-        picker.enter();
+        picker.enter().fit();
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
             var currentOption = _options[getValue(self)];
             if (!currentOption || currentOption.hidden) {
@@ -735,24 +766,39 @@
         } else if (KEY_TAB === key) {
             picker.exit();
         } else {
-            picker.fire('find', [getText($)]);
-            search(picker, $, _options);
+            filter(picker, $, _options);
         }
         if (exit) {
             offEventDefault(e);
             offEventPropagation(e);
         }
     }
+    var searchTerm = "",
+        searchTermClear = debounce(function () {
+            return searchTerm = "";
+        }, 500);
 
     function onKeyDownMask(e) {
         var $ = this,
             exit,
             key = e.key,
-            picker = $['_' + name];
-        if (KEY_ESCAPE === key) {
+            keyIsAlt = e.altKey,
+            keyIsCtrl = e.ctrlKey,
+            picker = $['_' + name],
+            _options = picker._options;
+        searchTermClear();
+        if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
+            searchTerm = "";
+        } else if (KEY_ESCAPE === key) {
+            searchTerm = "";
             picker.exit(exit = true);
-        } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || ' ' === key) {
+        } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || "" === searchTerm && ' ' === key) {
             picker.enter(exit = true).fit();
+        } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
+            searchTerm += key;
+        }
+        if ("" !== searchTerm) {
+            filter(picker, searchTerm, _options, exit = true);
         }
         exit && offEventDefault(e);
     }

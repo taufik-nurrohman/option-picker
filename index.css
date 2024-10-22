@@ -93,8 +93,8 @@
 .option-picker__option--selected {
   background: rgba(0, 0, 255, 0.5);
 }
-.option-picker__option:where(:not(.option-picker__option--disabled)):hover,
-.option-picker__option:focus {
+.option-picker__option:focus,
+.option-picker__option:where(:not(.option-picker__option--disabled)):hover {
   outline: 1px solid;
   outline-offset: -2px;
 }
@@ -118,6 +118,9 @@
   top: 100%;
   visibility: hidden;
   white-space: nowrap;
+}
+.option-picker__options:empty {
+  display: none;
 }
 .option-picker__text {
   cursor: text;

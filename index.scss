@@ -105,8 +105,8 @@ $name: 'option-picker';
     &--selected {
       background: rgba(0, 0, 255, 0.5);
     }
-    &:where(:not(.#{$name}__option--disabled)):hover,
-    &:focus {
+    &:focus,
+    &:where(:not(.#{$name}__option--disabled)):hover {
       outline: 1px solid;
       outline-offset: -2px;
     }
@@ -136,6 +136,9 @@ $name: 'option-picker';
     top: 100%;
     visibility: hidden;
     white-space: nowrap;
+    &:empty {
+      display: none;
+    }
   }
   &__text {
     cursor: text;

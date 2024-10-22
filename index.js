@@ -473,6 +473,8 @@
         }
         node.addEventListener(name, then, options);
     };
+    var FILTER_COMMIT_TIME = 10;
+    var SEARCH_CLEAR_TIME = 500;
     var KEY_ARROW_DOWN = 'ArrowDown';
     var KEY_ARROW_UP = 'ArrowUp';
     var KEY_DELETE_LEFT = 'Backspace';
@@ -484,6 +486,7 @@
         return $.fit();
     }, 10);
     var name = 'OptionPicker';
+    var references = new WeakMap();
 
     function createOptions(options, values) {
         var $ = this,
@@ -521,9 +524,9 @@
                 onEvent('touchstart', option, onPointerDownOption);
             }
             option._of = v[2];
-            option['_' + name] = $;
             $._options[k] = option;
             setChildLast(optionGroup || options, option);
+            setReference(option, $);
         });
         $.state.options = values;
     }
@@ -581,6 +584,10 @@
         return map;
     }
 
+    function getReference(key) {
+        return references.get(key);
+    }
+
     function getValue(self) {
         return (self.value || "").replace(/\r/g, "");
     }
@@ -593,6 +600,10 @@
         return self.readOnly;
     }
 
+    function setReference(key, value) {
+        return references.set(key, value);
+    }
+
     function OptionPicker(self, state) {
         var $ = this;
         if (!self) {
@@ -602,9 +613,13 @@
         if (!isInstance($, OptionPicker)) {
             return new OptionPicker(self, state);
         }
-        self['_' + name] = hook($, OptionPicker.prototype);
+        setReference(self, hook($, OptionPicker.prototype));
         return $.attach(self, _fromStates({}, OptionPicker.state, state || {}));
     }
+    OptionPicker.from = function (self, state) {
+        return new OptionPicker(self, state);
+    };
+    OptionPicker.of = getReference;
     OptionPicker.state = {
         'n': 'option-picker',
         'options': null,
@@ -669,11 +684,11 @@
             }
         }
         $.fire(selectOnly ? 'search' : 'filter', [query]);
-    }, 10);
+    }, FILTER_COMMIT_TIME);
 
     function onBlurMask() {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             state = picker.state,
             n = state.n;
         letClass($, n += '--focus');
@@ -682,16 +697,17 @@
 
     function onBlurOption() {
         var $ = this,
-            picker = $['_' + name],
-            mask = picker.mask,
-            state = picker.state,
+            picker = getReference($);
+        picker.mask;
+        var state = picker.state,
             n = state.n;
-        letClass(mask, n + '--focus-option');
+        letClass($, n += '--focus');
+        letClass($, n += '-option');
     }
 
     function onBlurTextInput() {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             _mask = picker._mask,
             mask = picker.mask,
             state = picker.state,
@@ -703,7 +719,7 @@
 
     function onCutTextInput() {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             _mask = picker._mask,
             self = picker.self,
             hint = _mask.hint;
@@ -714,7 +730,7 @@
 
     function onFocusMask() {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             state = picker.state,
             n = state.n;
         setClass($, n += '--focus');
@@ -723,7 +739,7 @@
 
     function onFocusOption() {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             mask = picker.mask,
             state = picker.state,
             n = state.n;
@@ -734,7 +750,7 @@
 
     function onFocusTextInput() {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             _mask = picker._mask,
             mask = picker.mask;
         picker.self;
@@ -752,7 +768,7 @@
         var $ = this,
             exit,
             key = e.key,
-            picker = $['_' + name],
+            picker = getReference($),
             _mask = picker._mask,
             _options = picker._options,
             self = picker.self,
@@ -766,7 +782,7 @@
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
             delay(function () {
                 return picker.enter().fit();
-            }, 11)();
+            }, FILTER_COMMIT_TIME + 1)();
         }
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
             var currentOption = _options[getValue(self)];
@@ -791,7 +807,7 @@
     var searchTerm = "",
         searchTermClear = debounce(function () {
             return searchTerm = "";
-        }, 500);
+        }, SEARCH_CLEAR_TIME);
 
     function onKeyDownMask(e) {
         var $ = this,
@@ -799,7 +815,7 @@
             key = e.key,
             keyIsAlt = e.altKey,
             keyIsCtrl = e.ctrlKey,
-            picker = $['_' + name],
+            picker = getReference($),
             _options = picker._options;
         searchTermClear();
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
@@ -827,7 +843,7 @@
             key = e.key,
             keyIsAlt = e.altKey,
             keyIsCtrl = e.ctrlKey,
-            picker = $['_' + name],
+            picker = getReference($),
             _mask = picker._mask,
             _options = picker._options;
         picker.mask;
@@ -938,7 +954,7 @@
 
     function onPasteTextInput() {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             _mask = picker._mask,
             self = picker.self,
             hint = _mask.hint;
@@ -952,7 +968,7 @@
 
     function onPointerDownMask(e) {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             state = picker.state,
             n = state.n;
         picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit(), offEventDefault(e);
@@ -960,7 +976,7 @@
 
     function onPointerDownOption(e) {
         var $ = this,
-            picker = $['_' + name],
+            picker = getReference($),
             _mask = picker._mask,
             _options = picker._options,
             self = picker.self,
@@ -998,7 +1014,7 @@
 
     function onPointerDownRoot(e) {
         var $ = this,
-            picker = $['_' + name];
+            picker = getReference($);
         if (!picker) {
             return;
         }
@@ -1008,19 +1024,19 @@
             target = e.target;
         if (mask !== target && mask !== getParent(target, '.' + n)) {
             picker.exit();
-            delete $['_' + name];
+            references.delete($);
         }
     }
 
     function onResetForm(e) {
         var $ = this,
-            picker = $['_' + name];
+            picker = getReference($);
         picker.let().fire('reset', [e]);
     }
 
     function onResizeWindow() {
         var $ = this,
-            picker = $['_' + name];
+            picker = getReference($);
         picker && bounce(picker);
     }
 
@@ -1030,7 +1046,7 @@
 
     function onSubmitForm(e) {
         var $ = this,
-            picker = $['_' + name];
+            picker = getReference($);
         return picker.fire('submit', [e]);
     }
 
@@ -1050,6 +1066,11 @@
         var range = D.createRange();
         range.selectNodeContents(node);
         selection.addRange(range);
+        if (1 === mode) {
+            selection.collapseToEnd();
+        } else if (-1 === mode) {
+            selection.collapseToStart();
+        }
     }
     $$.attach = function (self, state) {
         var $ = this;
@@ -1120,14 +1141,14 @@
         setChildLast(maskValues, text);
         setChildLast(maskValues, arrow);
         if (isInput) {
-            setChildLast(text, textInput);
-            setChildLast(text, textInputHint);
             onEvent('blur', textInput, onBlurTextInput);
             onEvent('cut', textInput, onCutTextInput);
             onEvent('focus', textInput, onFocusTextInput);
             onEvent('keydown', textInput, onKeyDownTextInput);
             onEvent('paste', textInput, onPasteTextInput);
-            textInput['_' + name] = $;
+            setChildLast(text, textInput);
+            setChildLast(text, textInputHint);
+            setReference(textInput, $);
         } else {
             onEvent('blur', mask, onBlurMask);
             onEvent('focus', mask, onFocusMask);
@@ -1136,9 +1157,9 @@
         setClass(self, n + '__self');
         setNext(self, mask);
         if (form) {
-            form['_' + name] = $;
             onEvent('reset', form, onResetForm);
             onEvent('submit', form, onSubmitForm);
+            setReference(form, $);
         }
         onEvent('mousedown', R, onPointerDownRoot);
         onEvent('mousedown', mask, onPointerDownMask);
@@ -1147,7 +1168,7 @@
         onEvent('touchstart', R, onPointerDownRoot);
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
-        mask['_' + name] = $;
+        setReference(mask, $);
         var _mask = {},
             option;
         _mask.hint = isInput ? textInputHint : null;
@@ -1192,7 +1213,14 @@
         }
         return $;
     };
-    $$.blur = function () {};
+    $$.blur = function () {
+        selectNone();
+        var $ = this,
+            _mask = $._mask,
+            mask = $.mask,
+            input = _mask.input;
+        return (input || mask).blur(), $.exit();
+    };
     $$.detach = function () {
         var $ = this,
             _mask = $._mask,
@@ -1255,12 +1283,15 @@
             state = $.state,
             input = _mask.input,
             n = state.n;
+        setClass(mask, n + '--focus');
+        setClass(mask, n + '--focus-option');
         setClass(mask, n += '--open');
-        if (R['_' + name] && R['_' + name] !== $) {
-            R['_' + name].exit(); // Exit other(s)
+        var theRootReference = getReference(R);
+        if (theRootReference && $ !== theRootReference) {
+            theRootReference.exit(); // Exit other(s)
         }
-        R['_' + name] = $; // Link current picker to the root target
-        W['_' + name] = $;
+        setReference(R, $); // Link current picker to the root target
+        setReference(W, $);
         $.fire('enter');
         if (focus) {
             $.fire('focus');
@@ -1281,6 +1312,8 @@
             state = $.state,
             input = _mask.input,
             n = state.n;
+        letClass(mask, n + '--focus');
+        letClass(mask, n + '--focus-option');
         letClass(mask, n += '--open');
         $.fire('exit');
         if (focus) {
@@ -1315,6 +1348,15 @@
         }
         return $;
     };
-    $$.focus = function () {};
+    $$.focus = function (mode) {
+        var $ = this,
+            _mask = $._mask,
+            mask = $.mask,
+            input = _mask.input;
+        if (input) {
+            return focusTo(input), selectTo(input, mode), $;
+        }
+        return mask && focusTo(mask), $;
+    };
     return OptionPicker;
 }));

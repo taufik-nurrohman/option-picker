@@ -828,8 +828,7 @@
       document.querySelectorAll('input').forEach(input => {
           let picker = new OptionPicker(input);
           picker.on('change', v => console.log(['change', v]));
-          picker.on('find', v => console.log(['find', v]));
-          picker.on('found', v => console.log(['found', v]));
+          picker.on('filter', v => console.log(['filter', v]));
       });
     </script>
   </body>

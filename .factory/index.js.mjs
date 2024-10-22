@@ -8,6 +8,9 @@ import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufi
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
 import {toCaseLower, toCount, toObjectValues, toValue} from '@taufik-nurrohman/to';
 
+const FILTER_COMMIT_TIME = 10;
+const SEARCH_CLEAR_TIME = 500;
+
 const KEY_ARROW_DOWN = 'ArrowDown';
 const KEY_ARROW_UP = 'ArrowUp';
 const KEY_BEGIN = 'Home';
@@ -20,6 +23,7 @@ const KEY_TAB = 'Tab';
 
 const bounce = debounce($ => $.fit(), 10);
 const name = 'OptionPicker';
+const references = new WeakMap;
 
 function createOptions(options, values) {
     let $ = this, optionGroup,
@@ -52,9 +56,9 @@ function createOptions(options, values) {
             onEvent('touchstart', option, onPointerDownOption);
         }
         option._of = v[2];
-        option['_' + name] = $;
         $._options[k] = option;
         setChildLast(optionGroup || options, option);
+        setReference(option, $);
     });
     $.state.options = values;
 }
@@ -107,6 +111,10 @@ function getOptions(self) {
     return map;
 }
 
+function getReference(key) {
+    return references.get(key);
+}
+
 function getValue(self) {
     return (self.value || "").replace(/\r/g, "");
 }
@@ -117,6 +125,10 @@ function isDisabled(self) {
 
 function isReadOnly(self) {
     return self.readOnly;
+}
+
+function setReference(key, value) {
+    return references.set(key, value);
 }
 
 function OptionPicker(self, state) {
@@ -132,11 +144,17 @@ function OptionPicker(self, state) {
         return new OptionPicker(self, state);
     }
 
-    self['_' + name] = hook($, OptionPicker.prototype);
+    setReference(self, hook($, OptionPicker.prototype));
 
     return $.attach(self, fromStates({}, OptionPicker.state, (state || {})));
 
 }
+
+OptionPicker.from = function (self, state) {
+    return new OptionPicker(self, state);
+};
+
+OptionPicker.of = getReference;
 
 OptionPicker.state = {
     'n': 'option-picker',
@@ -204,11 +222,11 @@ const filter = debounce(($, input, _options, selectOnly) => {
         }
     }
     $.fire(selectOnly ? 'search' : 'filter', [query]);
-}, 10);
+}, FILTER_COMMIT_TIME);
 
 function onBlurMask() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {state} = picker,
         {n} = state;
     letClass($, n += '--focus');
@@ -217,15 +235,16 @@ function onBlurMask() {
 
 function onBlurOption() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {mask, state} = picker,
         {n} = state;
-    letClass(mask, n + '--focus-option');
+    letClass($, n += '--focus');
+    letClass($, n += '-option');
 }
 
 function onBlurTextInput() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {_mask, mask, state} = picker,
         {text} = _mask,
         {n} = state;
@@ -235,7 +254,7 @@ function onBlurTextInput() {
 
 function onCutTextInput() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {_mask, self} = picker,
         {hint} = _mask;
     delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
@@ -243,7 +262,7 @@ function onCutTextInput() {
 
 function onFocusMask() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {state} = picker,
         {n} = state;
     setClass($, n += '--focus');
@@ -252,7 +271,7 @@ function onFocusMask() {
 
 function onFocusOption() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {mask, state} = picker,
         {n} = state;
     selectNone();
@@ -262,7 +281,7 @@ function onFocusOption() {
 
 function onFocusTextInput() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {_mask, mask, self, state} = picker,
         {input, text} = _mask,
         {n} = state;
@@ -275,14 +294,14 @@ function onFocusTextInput() {
 function onKeyDownTextInput(e) {
     let $ = this, exit,
         key = e.key,
-        picker = $['_' + name],
+        picker = getReference($),
         {_mask, _options, self, state} = picker,
         {hint} = _mask,
         {n} = state;
     n += '__option--disabled';
     delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
-        delay(() => picker.enter().fit(), 11)();
+        delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
     }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
         let currentOption = _options[getValue(self)];
@@ -306,14 +325,14 @@ function onKeyDownTextInput(e) {
 }
 
 let searchTerm = "",
-    searchTermClear = debounce(() => (searchTerm = ""), 500);
+    searchTermClear = debounce(() => (searchTerm = ""), SEARCH_CLEAR_TIME);
 
 function onKeyDownMask(e) {
     let $ = this, exit,
         key = e.key,
         keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
-        picker = $['_' + name],
+        picker = getReference($),
         {_options} = picker;
     searchTermClear();
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
@@ -340,7 +359,7 @@ function onKeyDownOption(e) {
         key = e.key,
         keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
-        picker = $['_' + name],
+        picker = getReference($),
         {_mask, _options, mask, self, state} = picker,
         {hint, input, value} = _mask,
         {n} = state;
@@ -438,7 +457,7 @@ function onKeyDownOption(e) {
 
 function onPasteTextInput() {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {_mask, self} = picker,
         {hint} = _mask;
     delay(() => setText($, getText($)))(); // Convert to plain text
@@ -447,7 +466,7 @@ function onPasteTextInput() {
 
 function onPointerDownMask(e) {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {state} = picker,
         {n} = state;
     picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit(), offEventDefault(e);
@@ -455,7 +474,7 @@ function onPointerDownMask(e) {
 
 function onPointerDownOption(e) {
     let $ = this,
-        picker = $['_' + name],
+        picker = getReference($),
         {_mask, _options, self, state} = picker,
         {hint, input, value} = _mask,
         {n} = state;
@@ -487,7 +506,7 @@ function onPointerDownOption(e) {
 
 function onPointerDownRoot(e) {
     let $ = this,
-        picker = $['_' + name];
+        picker = getReference($);
     if (!picker) {
         return;
     }
@@ -496,19 +515,19 @@ function onPointerDownRoot(e) {
         target = e.target;
     if (mask !== target && mask !== getParent(target, '.' + n)) {
         picker.exit();
-        delete $['_' + name];
+        references.delete($);
     }
 }
 
 function onResetForm(e) {
     let $ = this,
-        picker = $['_' + name];
+        picker = getReference($);
     picker.let().fire('reset', [e]);
 }
 
 function onResizeWindow() {
     let $ = this,
-        picker = $['_' + name];
+        picker = getReference($);
     picker && bounce(picker);
 }
 
@@ -518,7 +537,7 @@ function onScrollWindow() {
 
 function onSubmitForm(e) {
     let $ = this,
-        picker = $['_' + name];
+        picker = getReference($);
     return picker.fire('submit', [e]);
 }
 
@@ -610,14 +629,14 @@ $$.attach = function (self, state) {
     setChildLast(maskValues, text);
     setChildLast(maskValues, arrow);
     if (isInput) {
-        setChildLast(text, textInput);
-        setChildLast(text, textInputHint);
         onEvent('blur', textInput, onBlurTextInput);
         onEvent('cut', textInput, onCutTextInput);
         onEvent('focus', textInput, onFocusTextInput);
         onEvent('keydown', textInput, onKeyDownTextInput);
         onEvent('paste', textInput, onPasteTextInput);
-        textInput['_' + name] = $;
+        setChildLast(text, textInput);
+        setChildLast(text, textInputHint);
+        setReference(textInput, $);
     } else {
         onEvent('blur', mask, onBlurMask);
         onEvent('focus', mask, onFocusMask);
@@ -626,9 +645,9 @@ $$.attach = function (self, state) {
     setClass(self, n + '__self');
     setNext(self, mask);
     if (form) {
-        form['_' + name] = $;
         onEvent('reset', form, onResetForm);
         onEvent('submit', form, onSubmitForm);
+        setReference(form, $);
     }
     onEvent('mousedown', R, onPointerDownRoot);
     onEvent('mousedown', mask, onPointerDownMask);
@@ -637,7 +656,7 @@ $$.attach = function (self, state) {
     onEvent('touchstart', R, onPointerDownRoot);
     onEvent('touchstart', mask, onPointerDownMask);
     self.tabIndex = -1;
-    mask['_' + name] = $;
+    setReference(mask, $);
     let _mask = {}, option;
     _mask.hint = isInput ? textInputHint : null;
     _mask.input = isInput ? textInput : null;
@@ -682,7 +701,13 @@ $$.attach = function (self, state) {
     return $;
 };
 
-$$.blur = function () {};
+$$.blur = function () {
+    selectNone();
+    let $ = this,
+        {_mask, mask} = $,
+        {input} = _mask;
+    return (input || mask).blur(), $.exit();
+};
 
 $$.detach = function () {
     let $ = this,
@@ -739,12 +764,15 @@ $$.enter = function (focus) {
         {_mask, _options, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
+    setClass(mask, n + '--focus');
+    setClass(mask, n + '--focus-option');
     setClass(mask, n += '--open');
-    if (R['_' + name] && R['_' + name] !== $) {
-        R['_' + name].exit(); // Exit other(s)
+    let theRootReference = getReference(R);
+    if (theRootReference && $ !== theRootReference) {
+        theRootReference.exit(); // Exit other(s)
     }
-    R['_' + name] = $; // Link current picker to the root target
-    W['_' + name] = $;
+    setReference(R, $); // Link current picker to the root target
+    setReference(W, $);
     $.fire('enter');
     if (focus) {
         $.fire('focus');
@@ -763,6 +791,8 @@ $$.exit = function (focus) {
         {_mask, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
+    letClass(mask, n + '--focus');
+    letClass(mask, n + '--focus-option');
     letClass(mask, n += '--open');
     $.fire('exit');
     if (focus) {
@@ -798,6 +828,14 @@ $$.fit = function () {
     return $;
 };
 
-$$.focus = function () {};
+$$.focus = function (mode) {
+    let $ = this,
+        {_mask, mask} = $,
+        {input} = _mask;
+    if (input) {
+        return focusTo(input), selectTo(input, mode), $;
+    }
+    return (mask && focusTo(mask)), $;
+};
 
 export default OptionPicker;

@@ -180,7 +180,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         for (let k in _options) {
             let v = _options[k],
                 text = toCaseLower(getText(v) + '\t' + (b = getDatum(v, 'value', false)));
-            if ("" !== q && hasValue(q, text)) {
+            if ("" !== q && q === text.slice(0, toCount(q))) {
                 self.value = b;
                 setAttribute(v._of, 'selected', "");
                 setClass(v, n + '--selected');
@@ -318,6 +318,9 @@ function onKeyDownMask(e) {
     } else if (KEY_ESCAPE === key) {
         searchTerm = "";
         picker.exit(exit = true);
+    } else if (KEY_TAB === key) {
+        searchTerm = "";
+        picker.exit(!(exit = false));
     } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || ("" === searchTerm && ' ' === key)) {
         picker.enter(exit = true).fit();
     } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
@@ -332,8 +335,8 @@ function onKeyDownMask(e) {
 function onKeyDownOption(e) {
     let $ = this, exit,
         key = e.key,
+        keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
-        keyIsShift = e.shiftKey,
         picker = $['_' + name],
         {_mask, _options, mask, self, state} = picker,
         {hint, input, value} = _mask,
@@ -419,7 +422,7 @@ function onKeyDownOption(e) {
             picker.exit(exit);
         }
     } else {
-        isInput && 1 === toCount(key) && setText(hint, "");
+        isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
         picker.exit(!(exit = false));
     }
     exit && (offEventDefault(e), offEventPropagation(e));

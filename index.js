@@ -636,7 +636,7 @@
             for (var _k in _options) {
                 var _v = _options[_k],
                     text = toCaseLower(getText(_v) + '\t' + (b = getDatum(_v, 'value', false)));
-                if ("" !== q && hasValue(q, text)) {
+                if ("" !== q && q === text.slice(0, toCount(q))) {
                     self.value = b;
                     setAttribute(_v._of, 'selected', "");
                     setClass(_v, n + '--selected');
@@ -792,6 +792,9 @@
         } else if (KEY_ESCAPE === key) {
             searchTerm = "";
             picker.exit(exit = true);
+        } else if (KEY_TAB === key) {
+            searchTerm = "";
+            picker.exit(!(exit = false));
         } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || "" === searchTerm && ' ' === key) {
             picker.enter(exit = true).fit();
         } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
@@ -806,10 +809,10 @@
     function onKeyDownOption(e) {
         var $ = this,
             exit,
-            key = e.key;
-        e.ctrlKey;
-        e.shiftKey;
-        var picker = $['_' + name],
+            key = e.key,
+            keyIsAlt = e.altKey,
+            keyIsCtrl = e.ctrlKey,
+            picker = $['_' + name],
             _mask = picker._mask,
             _options = picker._options;
         picker.mask;
@@ -903,7 +906,7 @@
                 picker.exit(exit);
             }
         } else {
-            isInput && 1 === toCount(key) && setText(hint, "");
+            isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
             picker.exit(!(exit = false));
         }
         exit && (offEventDefault(e), offEventPropagation(e));

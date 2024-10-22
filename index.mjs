@@ -1,4 +1,4 @@
-import {D, R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setElement, setHTML, setNext, setStyles, setText} from '@taufik-nurrohman/document';
+import {D, R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setDatum, setElement, setHTML, setNext, setStyles, setText} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getRect} from '@taufik-nurrohman/rect';
@@ -180,10 +180,11 @@ const filter = debounce(($, input, _options, selectOnly) => {
         for (let k in _options) {
             let v = _options[k],
                 text = toCaseLower(getText(v) + '\t' + (b = getDatum(v, 'value', false)));
-            if ("" !== q && q === text.slice(0, toCount(q))) {
+            if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v, n + '--disabled')) {
                 self.value = b;
                 setAttribute(v._of, 'selected', "");
                 setClass(v, n + '--selected');
+                setDatum(value, 'value', b);
                 setHTML(value, getHTML(v));
                 if (b !== a) {
                     $.fire('change', [toValue(b)]);
@@ -195,7 +196,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         for (let k in _options) {
             let v = _options[k],
                 text = toCaseLower(getText(v) + '\t' + getDatum(v, 'value', false));
-            if ("" === q || hasValue(q, text)) {
+            if (("" === q || hasValue(q, text)) && !hasClass(v, n + '--disabled')) {
                 letAttribute(v, 'hidden');
             } else {
                 setAttribute(v, 'hidden', "");
@@ -263,12 +264,12 @@ function onFocusTextInput() {
     let $ = this,
         picker = $['_' + name],
         {_mask, mask, self, state} = picker,
-        {text} = _mask,
+        {input, text} = _mask,
         {n} = state;
     setClass(text, n + '__text--focus');
     setClass(mask, n += '--focus');
     setClass(mask, n += '-text');
-    getValue(self) ? selectTo($) : picker.enter(true).fit();
+    getText(input, false) ? selectTo($) : picker.enter().fit();
 }
 
 function onKeyDownTextInput(e) {
@@ -280,7 +281,9 @@ function onKeyDownTextInput(e) {
         {n} = state;
     n += '__option--disabled';
     delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
-    picker.enter().fit();
+    if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
+        delay(() => picker.enter().fit(), 11)();
+    }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
         let currentOption = _options[getValue(self)];
         if (!currentOption || currentOption.hidden) {
@@ -355,13 +358,14 @@ function onKeyDownOption(e) {
             }
             setAttribute($._of, 'selected', "");
             setClass($, n + '--selected');
+            self.value = (b = getDatum($, 'value', false));
             if (isInput) {
                 setText(hint, "");
                 setText(input, getText($));
             } else {
+                setDatum(value, 'value', b);
                 setHTML(value, getHTML($));
             }
-            self.value = (b = getDatum($, 'value', false));
             if (b !== a) {
                 picker.fire('change', [toValue(b)]);
             }
@@ -390,7 +394,12 @@ function onKeyDownOption(e) {
         while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
-        nextOption && focusTo(nextOption);
+        if (nextOption) {
+            focusTo(nextOption);
+        } else {
+            let firstOption = toObjectValues(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
+            firstOption && focusTo(firstOption);
+        }
     } else if (KEY_ARROW_UP === key) {
         exit = true;
         prevOption = getPrev($);
@@ -416,10 +425,9 @@ function onKeyDownOption(e) {
         }
         if (prevOption) {
             focusTo(prevOption);
-        } else if (isInput) {
-            focusTo(input), selectTo(input);
         } else {
-            picker.exit(exit);
+            let lastOption = toObjectValues(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
+            lastOption && focusTo(lastOption);
         }
     } else {
         isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
@@ -463,13 +471,14 @@ function onPointerDownOption(e) {
     }
     setAttribute($._of, 'selected', "");
     setClass($, n);
+    self.value = (b = getDatum($, 'value', false));
     if ('input' === getName(self)) {
         setText(hint, "");
         setText(input, getText($));
     } else {
+        setDatum(value, 'value', b);
         setHTML(value, getHTML($));
     }
-    self.value = (b = getDatum($, 'value', false));
     if (b !== a) {
         picker.fire('change', [toValue(b)]);
     }
@@ -647,6 +656,7 @@ $$.attach = function (self, state) {
                 setText(textInputHint, "");
             }
         } else {
+            setDatum(text, 'value', getDatum(option, 'value', false));
             setHTML(text, getHTML(option));
         }
     }

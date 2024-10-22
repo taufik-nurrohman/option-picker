@@ -80,6 +80,9 @@
     var toCount = function toCount(x) {
         return x.length;
     };
+    var toJSON = function toJSON(x) {
+        return JSON.stringify(x);
+    };
     var toNumber = function toNumber(x, base) {
         if (base === void 0) {
             base = 10;
@@ -302,6 +305,12 @@
     };
     var setClass = function setClass(node, value) {
         return node.classList.add(value), node;
+    };
+    var setDatum = function setDatum(node, datum, value) {
+        if (isArray(value) || isObject(value)) {
+            value = toJSON(value);
+        }
+        return setAttribute(node, 'data-' + datum, value);
     };
     var setElement = function setElement(node, content, attributes) {
         node = isString(node) ? D.createElement(node) : node;
@@ -636,10 +645,11 @@
             for (var _k in _options) {
                 var _v = _options[_k],
                     text = toCaseLower(getText(_v) + '\t' + (b = getDatum(_v, 'value', false)));
-                if ("" !== q && q === text.slice(0, toCount(q))) {
+                if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(_v, n + '--disabled')) {
                     self.value = b;
                     setAttribute(_v._of, 'selected', "");
                     setClass(_v, n + '--selected');
+                    setDatum(value, 'value', b);
                     setHTML(value, getHTML(_v));
                     if (b !== a) {
                         $.fire('change', [_toValue(b)]);
@@ -651,7 +661,7 @@
             for (var _k2 in _options) {
                 var _v2 = _options[_k2],
                     _text = toCaseLower(getText(_v2) + '\t' + getDatum(_v2, 'value', false));
-                if ("" === q || hasValue(q, _text)) {
+                if (("" === q || hasValue(q, _text)) && !hasClass(_v2, n + '--disabled')) {
                     letAttribute(_v2, 'hidden');
                 } else {
                     setAttribute(_v2, 'hidden', "");
@@ -726,15 +736,16 @@
         var $ = this,
             picker = $['_' + name],
             _mask = picker._mask,
-            mask = picker.mask,
-            self = picker.self,
-            state = picker.state,
+            mask = picker.mask;
+        picker.self;
+        var state = picker.state,
+            input = _mask.input,
             text = _mask.text,
             n = state.n;
         setClass(text, n + '__text--focus');
         setClass(mask, n += '--focus');
         setClass(mask, n += '-text');
-        getValue(self) ? selectTo($) : picker.enter(true).fit();
+        getText(input, false) ? selectTo($) : picker.enter().fit();
     }
 
     function onKeyDownTextInput(e) {
@@ -752,7 +763,11 @@
         delay(function () {
             return setText(hint, getText($, false) ? "" : self.placeholder);
         }, 1)();
-        picker.enter().fit();
+        if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
+            delay(function () {
+                return picker.enter().fit();
+            }, 11)();
+        }
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
             var currentOption = _options[getValue(self)];
             if (!currentOption || currentOption.hidden) {
@@ -839,13 +854,14 @@
                 }
                 setAttribute($._of, 'selected', "");
                 setClass($, n + '--selected');
+                self.value = b = getDatum($, 'value', false);
                 if (isInput) {
                     setText(hint, "");
                     setText(input, getText($));
                 } else {
+                    setDatum(value, 'value', b);
                     setHTML(value, getHTML($));
                 }
-                self.value = b = getDatum($, 'value', false);
                 if (b !== a) {
                     picker.fire('change', [_toValue(b)]);
                 }
@@ -874,7 +890,14 @@
             while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
-            nextOption && focusTo(nextOption);
+            if (nextOption) {
+                focusTo(nextOption);
+            } else {
+                var firstOption = toObjectValues(_options).find(function (v) {
+                    return !v.hidden && !hasClass(v, n + '--disabled');
+                });
+                firstOption && focusTo(firstOption);
+            }
         } else if (KEY_ARROW_UP === key) {
             exit = true;
             prevOption = getPrev($);
@@ -900,10 +923,11 @@
             }
             if (prevOption) {
                 focusTo(prevOption);
-            } else if (isInput) {
-                focusTo(input), selectTo(input);
             } else {
-                picker.exit(exit);
+                var lastOption = toObjectValues(_options).findLast(function (v) {
+                    return !v.hidden && !hasClass(v, n + '--disabled');
+                });
+                lastOption && focusTo(lastOption);
             }
         } else {
             isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
@@ -958,13 +982,14 @@
         }
         setAttribute($._of, 'selected', "");
         setClass($, n);
+        self.value = b = getDatum($, 'value', false);
         if ('input' === getName(self)) {
             setText(hint, "");
             setText(input, getText($));
         } else {
+            setDatum(value, 'value', b);
             setHTML(value, getHTML($));
         }
-        self.value = b = getDatum($, 'value', false);
         if (b !== a) {
             picker.fire('change', [_toValue(b)]);
         }
@@ -1142,6 +1167,7 @@
                     setText(textInputHint, "");
                 }
             } else {
+                setDatum(text, 'value', getDatum(option, 'value', false));
                 setHTML(text, getHTML(option));
             }
         }

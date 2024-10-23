@@ -3,7 +3,7 @@ Option Picker
 
 ![Code Size](https://img.shields.io/github/languages/code-size/taufik-nurrohman/option-picker?color=%23444&style=for-the-badge) ![License](https://img.shields.io/github/license/taufik-nurrohman/option-picker?color=%23444&style=for-the-badge)
 
-> Just a generic custom `<select>` element with accessibility in mind.
+> Accessible custom `<select>` (and `<input list>`) element.
 
 ![Option Picker](https://user-images.githubusercontent.com/1669261/126900722-52aa3eab-aa38-424f-8134-f5f7cd902859.png)
 

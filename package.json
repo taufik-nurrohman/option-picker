@@ -14,7 +14,7 @@
     "@taufik-nurrohman/tick": "*",
     "@taufik-nurrohman/to": "*"
   },
-  "description": "Just a generic custom `<select>` element with accessibility in mind.",
+  "description": "Accessible custom `<select>` (and `<input list>`) element.",
   "devDependencies": {
     "@taufik-nurrohman/factory": "*"
   },

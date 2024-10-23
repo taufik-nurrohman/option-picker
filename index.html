@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta content="#000" name="theme-color">
     <meta content="width=device-width" name="viewport">
-    <meta content="Just a generic custom `&lt;select&gt;` element with accessibility in mind." name="description">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
     <title>Option Picker 2.0.0</title>
     <link href="../layout/index.min.css" rel="stylesheet">
     <link href="index.min.css" rel="stylesheet">
@@ -1449,21 +1449,21 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <p>List of callable functions or objects containing an <code>attach()</code> method to be invoked each time the application is initialized. A very simple “plugin” system.</p>
       <h2 id="methods"><a href="#methods">#</a> Methods</h2>
       <h3>Instance Methods</h3>
-      <p>Instance methods are methods that are available through the results of a <code>OptionPicker</code> construct.</p>
+      <p>Instance methods are methods available through the results of an <code>OptionPicker</code> construct.</p>
       <h4><code>picker.attach(self, state)</code></h4>
       <p>Re-initializes the application and its extensions after it has been detached.</p>
       <pre><code>picker.attach();</code></pre>
       <h4><code>picker.blur()</code></h4>
-      <p>Blurs from the tag picker’s input.</p>
+      <p>Blurs from the option picker’s input or self.</p>
       <pre><code>picker.blur();</code></pre>
       <h4><code>picker.detach()</code></h4>
       <p>Disables the application methods (except for the <code>attach()</code> method) and executes the <code>detach()</code> method of the extensions, if they are present.</p>
       <pre><code>picker.detach();</code></pre>
-      <h4><code>picker.fire(name, data)</code></h4>
+      <h4><code>picker.fire(event, data, then)</code></h4>
       <p>Fires an event.</p>
       <pre><code>picker.fire('change', []);</code></pre>
       <h4><code>picker.focus(mode = true)</code></h4>
-      <p>Focuses to the tag picker’s input. If it has a text, it will select the text as well.</p>
+      <p>Focuses to the option picker’s input or self. If it has a text, it will select the text as well.</p>
       <pre><code>picker.focus(); // Focus and select the text
 picker.focus(-1); // Focus and put the caret to the start of the text
 picker.focus(+1); // Focus and put the caret to the end of the text</code></pre>
@@ -1474,11 +1474,11 @@ picker.focus(+1); // Focus and put the caret to the end of the text</code></pre>
       <p>Removes a tag by its name.</p>
       <pre><code>picker.let('foo'); // Remove “foo” tag
 picker.let(); // Reset to the initial value</code></pre>
-      <h4><code>picker.off(name, event)</code></h4>
+      <h4><code>picker.off(event, then)</code></h4>
       <p>Removes an event.</p>
       <pre><code>picker.off('change'); // Remove all events from the `change` event container
 picker.off('change', onChange); // Remove `onChange` event from the `change` event container</code></pre>
-      <h4><code>picker.on(name, event)</code></h4>
+      <h4><code>picker.on(event, then)</code></h4>
       <p>Adds a new event.</p>
       <pre><code>picker.on('change', function () {
     console.log(this.value.split(this.state.join));
@@ -1494,9 +1494,9 @@ picker.on('change', onChange);</code></pre>
 picker.set('bar', 0); // Prepend “bar” tag
 picker.set('baz', 2); // Insert “baz” tag at index 2 in the list</code></pre>
       <h3>Static Methods</h3>
-      <p>Static methods are methods that are directly available on the <code>OptionPicker</code> object.</p>
+      <p>Static methods are methods available directly on the <code>OptionPicker</code> object.</p>
       <h4><code>OptionPicker.from(self, state)</code></h4>
-      <p>Creates a <code>OptionPicker</code> instance.</p>
+      <p>Creates a new <code>OptionPicker</code> instance.</p>
       <pre><code>const picker = OptionPicker.from(document.querySelector('select'));</code></pre>
       <h4><code>OptionPicker.of(self)</code></h4>
       <p>Gets <code>OptionPicker</code> instance of an element.</p>
@@ -1505,23 +1505,23 @@ picker.set('baz', 2); // Insert “baz” tag at index 2 in the list</code></pre
 });</code></pre>
       <h2 id="properties"><a href="#properties">#</a> Properties</h2>
       <h3>Instance Properties</h3>
-      <p>Instance properties are properties that are available through the results of a <code>OptionPicker</code> construct.</p>
+      <p>Instance properties are properties available through the results of an <code>OptionPicker</code> construct.</p>
       <h4><code>picker.hooks</code></h4>
       <p>Returns the events data.</p>
       <pre><code>console.log(picker.hooks);</code></pre>
       <h4><code>picker.mask</code></h4>
-      <p>Returns the tag picker’s mask.</p>
+      <p>Returns the option picker’s mask.</p>
       <pre><code>picker.mask.classList.add(picker.state.n + '--dark');</code></pre>
       <h4><code>picker.self</code></h4>
-      <p>Returns the input element.</p>
+      <p>Returns the <code>&lt;input&gt;</code> or <code>&lt;select&gt;</code> element.</p>
       <pre><code>console.log(picker.self.getAttribute('name'));</code></pre>
       <h4><code>picker.state</code></h4>
       <p>Returns the application states if any.</p>
       <pre><code>console.log(picker.state);</code></pre>
       <h4><code>picker.text</code></h4>
-      <p>Gets or sets the current text in the tag picker’s input.</p>
+      <p>Gets or sets the current text in the option picker’s input.</p>
       <pre><code>console.log(picker.text);</code></pre>
-      <pre><code>picker.text = 'foo, bar, baz';</code></pre>
+      <pre><code>picker.text = 'foo bar baz';</code></pre>
       <h4><code>picker.value</code></h4>
       <p>Proxy that passes to the <code>picker.self.value</code> property, with additional actions that are executed while the value is being set.</p>
       <pre><code>console.log(picker.value);</code></pre>
@@ -1529,9 +1529,9 @@ picker.set('baz', 2); // Insert “baz” tag at index 2 in the list</code></pre
     console.log(this.value);
 });
 
-picker.value = 'foo, bar, baz';</code></pre>
+picker.value = 'foo bar baz';</code></pre>
       <h3>Static Properties</h3>
-      <p>Static properties are properties that are directly available on the <code>OptionPicker</code> object.</p>
+      <p>Static properties are properties available directly on the <code>OptionPicker</code> object.</p>
       <h4><code>OptionPicker.state</code></h4>
       <p>Returns the default values of <code>picker.state</code>.</p>
       <pre><code>const picker = new OptionPicker(document.querySelector('select'), {
@@ -1569,9 +1569,6 @@ Object.defineProperty(Extension, 'name', {
       <h3>List of Extensions</h3>
       <ul>
         <li><a aria-disabled="true">Clear Feature</a></li>
-        <li><a aria-disabled="true">History Feature</a></li>
-        <li><a aria-disabled="true">Options Feature</a></li>
-        <li><a aria-disabled="true">Sortable Feature</a></li>
       </ul>
       <h2 id="license"><a href="#license">#</a> License</h2>
       <p>Use it for free, pay if you get paid. So, you’ve just benefited financially after using this project? It’s a good idea to <a href="https://paypal.me/tatautaufik" target="_blank">share a little financial support</a> with this open source project too. Your support will motivate me to do any further development, as well as to provide voluntary support to overcome problems related to this project.</p>

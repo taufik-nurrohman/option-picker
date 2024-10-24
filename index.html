@@ -49,7 +49,12 @@
         gap: 0;
         padding: 0;
       }
+      .option-picker__option-group:not(:first-child) {
+        border-top: 1px solid;
+        border-top-color: inherit;
+      }
       .option-picker__option-group::before {
+        background: #eef;
         border: 0;
         padding: 0 0.5em;
       }
@@ -1569,7 +1574,8 @@ Object.defineProperty(Extension, 'name', {
       <h3>List of Extensions</h3>
       <ul>
         <li><a aria-disabled="true">Clear Feature</a></li>
-        <li><a aria-disabled="true">Highlight Feature</a></li>
+        <li><a aria-disabled="true">Custom Scroll Bar</a></li>
+        <li><a aria-disabled="true">Highlight Search Term</a></li>
       </ul>
       <h2 id="license"><a href="#license">#</a> License</h2>
       <p>Use it for free, pay if you get paid. So, you’ve just benefited financially after using this project? It’s a good idea to <a href="https://paypal.me/tatautaufik" target="_blank">share a little financial support</a> with this open source project too. Your support will motivate me to do any further development, as well as to provide voluntary support to overcome problems related to this project.</p>

@@ -16,7 +16,7 @@
   },
   "description": "Accessible custom `<select>` (and `<input list>`) element.",
   "devDependencies": {
-    "@taufik-nurrohman/factory": "*"
+    "@taufik-nurrohman/factory": "^2.2.2"
   },
   "exports": {
     "import": "./index.mjs",

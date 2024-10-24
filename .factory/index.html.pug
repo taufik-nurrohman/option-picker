@@ -55,7 +55,12 @@ block style
     |   gap: 0;
     |   padding: 0;
     | }
+    | .option-picker__option-group:not(:first-child) {
+    |   border-top: 1px solid;
+    |   border-top-color: inherit;
+    | }
     | .option-picker__option-group::before {
+    |   background: #eef;
     |   border: 0;
     |   padding: 0 0.5em;
     | }
@@ -1593,7 +1598,8 @@ block content
     h3 List of Extensions
     ul
       li: a(aria-disabled='true') Clear Feature
-      li: a(aria-disabled='true') Highlight Feature
+      li: a(aria-disabled='true') Custom Scroll Bar
+      li: a(aria-disabled='true') Highlight Search Term
     h2#license
       a(href='#license') #
       = ' License'

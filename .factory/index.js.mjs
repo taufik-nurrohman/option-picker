@@ -33,7 +33,7 @@ function createOptions(options, values) {
     values = isInstance(values, Map) && values.size > 0 ? values : getOptions(self);
     values.forEach((v, k) => {
         if ('data-group' in v[1]) {
-            if (!optionGroup) {
+            if (!optionGroup || getDatum(optionGroup, 'value', false) !== v[1]['data-group']) {
                 setChildLast(options, optionGroup = setElement('span', {
                     'class': n + '-group',
                     'data-value': v[1]['data-group']
@@ -408,6 +408,10 @@ function onKeyDownOption(e) {
             if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
                 nextOption = getNext(parentOption);
             }
+            // Next option is a group?
+            if (nextOption && hasClass(nextOption, n + '-group')) {
+                nextOption = getChildFirst(nextOption);
+            }
         }
         // Skip disabled and hidden option(s)…
         while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
@@ -436,6 +440,10 @@ function onKeyDownOption(e) {
             // Is in a group?
             if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
                 prevOption = getPrev(parentOption);
+            }
+            // Previous option is a group?
+            if (prevOption && hasClass(prevOption, n + '-group')) {
+                prevOption = getChildLast(prevOption);
             }
         }
         // Skip disabled and hidden option(s)…

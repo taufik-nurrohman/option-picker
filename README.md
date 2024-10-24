@@ -1,9 +1,10 @@
 Option Picker
 =============
 
-![Code Size](https://img.shields.io/github/languages/code-size/taufik-nurrohman/option-picker?color=%23444&style=for-the-badge) ![License](https://img.shields.io/github/license/taufik-nurrohman/option-picker?color=%23444&style=for-the-badge)
-
 Accessible custom `<select>` (and `<input list>`) element.
+
+![index.js](https://img.shields.io/github/size/taufik-nurrohman/option-picker/index.js?branch=main&color=%23f1e05a&label=index.js&labelColor=%231f2328&style=flat-square)
+![index.min.js](https://img.shields.io/github/size/taufik-nurrohman/option-picker/index.min.js?branch=main&color=%23f1e05a&label=index.min.js&labelColor=%231f2328&style=flat-square)
 
 ![Option Picker](https://user-images.githubusercontent.com/1669261/126900722-52aa3eab-aa38-424f-8134-f5f7cd902859.png)
 

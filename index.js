@@ -27,15 +27,6 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = f() : typeof define === 'function' && define.amd ? define(f) : (g = typeof globalThis !== 'undefined' ? globalThis : g || self, g.OptionPicker = f());
 })(this, (function () {
     'use strict';
-
-    function _typeof(o) {
-        "@babel/helpers - typeof";
-        return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
-            return typeof o;
-        } : function (o) {
-            return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
-        }, _typeof(o);
-    }
     var hasValue = function hasValue(x, data) {
         return -1 !== data.indexOf(x);
     };
@@ -60,9 +51,11 @@
     var isNumeric = function isNumeric(x) {
         return /^-?(?:\d*.)?\d+$/.test(x + "");
     };
-    var isObject = function isObject(x) {
-        var isPlain = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-        if ('object' !== _typeof(x)) {
+    var isObject = function isObject(x, isPlain) {
+        if (isPlain === void 0) {
+            isPlain = true;
+        }
+        if ('object' !== typeof x) {
             return false;
         }
         return isPlain ? isInstance(x, Object) : true;
@@ -90,8 +83,10 @@
     var toJSON = function toJSON(x) {
         return JSON.stringify(x);
     };
-    var toNumber = function toNumber(x) {
-        var base = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
+    var toNumber = function toNumber(x, base) {
+        if (base === void 0) {
+            base = 10;
+        }
         return base ? parseInt(x, base) : parseFloat(x);
     };
     var toObjectValues = function toObjectValues(x) {
@@ -122,13 +117,6 @@
             return true;
         }
         return x;
-    };
-    var fromJSON = function fromJSON(x) {
-        var value = null;
-        try {
-            value = JSON.parse(x);
-        } catch (e) {}
-        return value;
     };
     var _fromStates = function fromStates() {
         for (var _len = arguments.length, lot = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -189,16 +177,20 @@
     var W = window;
     var B = D.body;
     var R = D.documentElement;
-    var getAttribute = function getAttribute(node, attribute) {
-        var parseValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+    var getAttribute = function getAttribute(node, attribute, parseValue) {
+        if (parseValue === void 0) {
+            parseValue = true;
+        }
         if (!hasAttribute(node, attribute)) {
             return null;
         }
         var value = node.getAttribute(attribute);
         return parseValue ? _toValue(value) : value;
     };
-    var getAttributes = function getAttributes(node) {
-        var parseValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+    var getAttributes = function getAttributes(node, parseValue) {
+        if (parseValue === void 0) {
+            parseValue = true;
+        }
         var attributes = node.attributes,
             value,
             values = {};
@@ -214,17 +206,15 @@
     var getChildLast = function getChildLast(parent) {
         return parent.lastElementChild || null;
     };
-    var getDatum = function getDatum(node, datum) {
-        var parseValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-        var value = getAttribute(node, 'data-' + datum, parseValue),
-            v = (value + "").trim();
-        if (parseValue && v && ('[' === v[0] && ']' === v.slice(-1) || '{' === v[0] && '}' === v.slice(-1)) && null !== (v = fromJSON(value))) {
-            return v;
-        }
+    var getDatum = function getDatum(node, datum, parseValue) {
+        var value = getAttribute(node, 'data-' + datum, parseValue);
+        (value + "").trim();
         return value;
     };
-    var getHTML = function getHTML(node) {
-        var trim = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+    var getHTML = function getHTML(node, trim) {
+        if (trim === void 0) {
+            trim = true;
+        }
         var state = 'innerHTML';
         if (!hasState(node, state)) {
             return false;
@@ -255,8 +245,10 @@
     var getPrev = function getPrev(node, anyNode) {
         return node['previous' + (anyNode ? "" : 'Element') + 'Sibling'] || null;
     };
-    var getText = function getText(node) {
-        var trim = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+    var getText = function getText(node, trim) {
+        if (trim === void 0) {
+            trim = true;
+        }
         var state = 'textContent';
         if (!hasState(node, state)) {
             return false;
@@ -334,8 +326,10 @@
         }
         return node;
     };
-    var setHTML = function setHTML(node, content) {
-        var trim = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+    var setHTML = function setHTML(node, content, trim) {
+        if (trim === void 0) {
+            trim = true;
+        }
         if (null === content) {
             return node;
         }
@@ -363,8 +357,10 @@
         }
         return node;
     };
-    var setText = function setText(node, content) {
-        var trim = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+    var setText = function setText(node, content, trim) {
+        if (trim === void 0) {
+            trim = true;
+        }
         if (null === content) {
             return node;
         }
@@ -471,8 +467,10 @@
     var offEventPropagation = function offEventPropagation(e) {
         return e && e.stopPropagation();
     };
-    var onEvent = function onEvent(name, node, then) {
-        var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+    var onEvent = function onEvent(name, node, then, options) {
+        if (options === void 0) {
+            options = false;
+        }
         node.addEventListener(name, then, options);
     };
     var FILTER_COMMIT_TIME = 10;
@@ -1116,8 +1114,8 @@
             options.forEach(function (option) {
                 if (isArray(option)) {
                     var _option$, _option$2;
-                    option[0] = (_option$ = option[0]) !== null && _option$ !== void 0 ? _option$ : "";
-                    option[1] = (_option$2 = option[1]) !== null && _option$2 !== void 0 ? _option$2 : {};
+                    option[0] = (_option$ = option[0]) != null ? _option$ : "";
+                    option[1] = (_option$2 = option[1]) != null ? _option$2 : {};
                     map.set(option[0], option);
                 } else {
                     map.set(option, [option, {}]);
@@ -1127,8 +1125,8 @@
             for (var k in options) {
                 if (isArray(options[k])) {
                     var _options$k$, _options$k$2;
-                    options[k][0] = (_options$k$ = options[k][0]) !== null && _options$k$ !== void 0 ? _options$k$ : "";
-                    options[k][1] = (_options$k$2 = options[k][1]) !== null && _options$k$2 !== void 0 ? _options$k$2 : {};
+                    options[k][0] = (_options$k$ = options[k][0]) != null ? _options$k$ : "";
+                    options[k][1] = (_options$k$2 = options[k][1]) != null ? _options$k$2 : {};
                     continue;
                 }
                 map.set(k, [options[k], {}]);

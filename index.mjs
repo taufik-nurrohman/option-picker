@@ -497,7 +497,12 @@ function onPointerDownMask(e) {
         picker = getReference($),
         {state} = picker,
         {n} = state;
-    picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit(), offEventDefault(e);
+    offEventDefault(e);
+    if (hasClass(e.target, n + '__options')) {
+        // User may currently browse the options by dragging the scroll bar
+        return;
+    }
+    picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
 }
 
 function onPointerDownOption(e) {

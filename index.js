@@ -496,7 +496,7 @@
             n = state.n;
         n += '__option';
         values = isInstance(values, Map) && values.size > 0 ? values : getOptions(self);
-        values.forEach(function (v, k) {
+        forEachMap(values, function (v, k) {
             if ('data-group' in v[1]) {
                 if (!optionGroup || getDatum(optionGroup, 'value', false) !== v[1]['data-group']) {
                     setChildLast(options, optionGroup = setElement('span', {
@@ -539,6 +539,14 @@
         node.focus();
     }
 
+    function forEachArray(array, then) {
+        array.forEach(then);
+    }
+
+    function forEachMap(map, then) {
+        forEachArray(map, then);
+    }
+
     function getOptions(self) {
         var map = new Map();
         var value = getValue(self);
@@ -554,7 +562,7 @@
         var _loop = function _loop(i) {
             var v = items[i],
                 attributes = getAttributes(v);
-            ['disabled', 'selected'].forEach(function (k) {
+            forEachArray(['disabled', 'selected'], function (k) {
                 if (k in attributes) {
                     attributes[k] = "" === attributes[k] ? true : attributes[k];
                     if ('selected' === k) {
@@ -565,31 +573,35 @@
                 }
             });
             if ('optgroup' === getName(v)) {
-                getOptions(v).forEach(function (vv, kk) {
+                forEachMap(getOptions(v), function (vv, kk) {
                     vv[1]['data-group'] = v.label;
-                    map.set(kk, vv);
+                    setValueInMap(kk, vv, map);
                 });
                 return 1; // continue
             }
-            map.set(v.value, [getText(v) || v.value, attributes, v]);
+            setValueInMap(v.value, [getText(v) || v.value, attributes, v], map);
         };
         for (var i = 0, j = toCount(items); i < j; ++i) {
             if (_loop(i)) continue;
         }
         // If there is no selected option(s), get it from the current value
-        if (0 === toCount(selected) && (item = map.get(value))) {
+        if (0 === toCount(selected) && (item = getValueInMap(value, map))) {
             item[1].selected = true;
-            map.set(value, item);
+            setValueInMap(value, item, map);
         }
         return map;
     }
 
     function getReference(key) {
-        return references.get(key);
+        return getValueInMap(key, references);
     }
 
     function getValue(self) {
         return (self.value || "").replace(/\r/g, "");
+    }
+
+    function getValueInMap(k, map) {
+        return map.get(k);
     }
 
     function isDisabled(self) {
@@ -600,8 +612,16 @@
         return self.readOnly;
     }
 
+    function letValueInMap(k, map) {
+        return map.delete(k);
+    }
+
     function setReference(key, value) {
-        return references.set(key, value);
+        return setValueInMap(key, value, references);
+    }
+
+    function setValueInMap(k, v, map) {
+        return map.set(k, v);
     }
 
     function OptionPicker(self, state) {
@@ -1031,8 +1051,8 @@
             n = state.n,
             target = e.target;
         if (mask !== target && mask !== getParent(target, '.' + n)) {
+            letValueInMap($, references);
             picker.exit();
-            references.delete($);
         }
     }
 
@@ -1111,14 +1131,14 @@
         }
         var map = new Map();
         if (isArray(options)) {
-            options.forEach(function (option) {
+            forEachArray(options, function (option) {
                 if (isArray(option)) {
                     var _option$, _option$2;
                     option[0] = (_option$ = option[0]) != null ? _option$ : "";
                     option[1] = (_option$2 = option[1]) != null ? _option$2 : {};
-                    map.set(option[0], option);
+                    setValueInMap(option[0], option, map);
                 } else {
-                    map.set(option, [option, {}]);
+                    setValueInMap(option, [option, {}], map);
                 }
             });
         } else if (isObject(options)) {
@@ -1129,7 +1149,7 @@
                     options[k][1] = (_options$k$2 = options[k][1]) != null ? _options$k$2 : {};
                     continue;
                 }
-                map.set(k, [options[k], {}]);
+                setValueInMap(k, [options[k], {}], map);
             }
         }
         createOptions.call($, maskOptions, options = map);

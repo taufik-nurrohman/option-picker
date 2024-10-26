@@ -1052,8 +1052,10 @@
         picker.exit(true);
         offEventDefault(e);
     }
+    var touchOffset = false;
 
     function onPointerDownRoot(e) {
+        touchOffset = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
         var $ = this,
             picker = getReference($);
         if (!picker) {
@@ -1067,6 +1069,28 @@
             letValueInMap($, references);
             picker.exit();
         }
+    }
+
+    function onPointerMoveRoot(e) {
+        if (false === touchOffset) {
+            return;
+        }
+        var touchOffsetNew = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        if (touchOffsetNew > touchOffset) {
+            console.log('swipe down');
+            if ('touchmove' === e.type) {
+                alert('swipe down');
+            }
+        } else if (touchOffsetNew < touchOffset) {
+            console.log('swipe up');
+            if ('touchmove' === e.type) {
+                alert('swipe up');
+            }
+        }
+    }
+
+    function onPointerUpRoot() {
+        touchOffset = false;
     }
 
     function onResetForm(e) {
@@ -1204,8 +1228,12 @@
         }
         onEvent('mousedown', R, onPointerDownRoot);
         onEvent('mousedown', mask, onPointerDownMask);
+        onEvent('mousemove', R, onPointerMoveRoot);
+        onEvent('mouseup', R, onPointerUpRoot);
         onEvent('resize', W, onResizeWindow);
         onEvent('scroll', W, onScrollWindow);
+        onEvent('touchend', R, onPointerUpRoot);
+        onEvent('touchmove', R, onPointerMoveRoot);
         onEvent('touchstart', R, onPointerDownRoot);
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
@@ -1288,8 +1316,12 @@
         }
         offEvent('mousedown', R, onPointerDownRoot);
         offEvent('mousedown', mask, onPointerDownMask);
+        offEvent('mousemove', R, onPointerMoveRoot);
+        offEvent('mouseup', R, onPointerUpRoot);
         offEvent('resize', W, onResizeWindow);
         offEvent('scroll', W, onScrollWindow);
+        offEvent('touchend', R, onPointerUpRoot);
+        offEvent('touchmove', R, onPointerMoveRoot);
         offEvent('touchstart', R, onPointerDownRoot);
         offEvent('touchstart', mask, onPointerDownMask);
         // Detach extension(s)

@@ -496,9 +496,10 @@ function onPointerDownMask(e) {
     let $ = this,
         picker = getReference($),
         {state} = picker,
-        {n} = state;
+        {n} = state,
+        {target} = e;
     offEventDefault(e);
-    if (hasClass(e.target, n + '__options')) {
+    if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
         // User may currently browse the options by dragging the scroll bar
         return;
     }
@@ -534,6 +535,7 @@ function onPointerDownOption(e) {
     if (b !== a) {
         picker.fire('change', [toValue(b)]);
     }
+    picker.exit(true);
     offEventDefault(e);
 }
 

@@ -39,8 +39,14 @@
     var isFunction = function isFunction(x) {
         return 'function' === typeof x;
     };
-    var isInstance = function isInstance(x, of) {
-        return x && isSet(of) && x instanceof of ;
+    var isInstance = function isInstance(x, of, exact) {
+        if (!x || 'object' !== typeof x) {
+            return false;
+        }
+        if (exact) {
+            return isSet(of) && isSet(x.constructor) && of === x.constructor;
+        }
+        return isSet(of) && x instanceof of ;
     };
     var isNull = function isNull(x) {
         return null === x;
@@ -55,10 +61,10 @@
         if (isPlain === void 0) {
             isPlain = true;
         }
-        if ('object' !== typeof x) {
+        if (!x || 'object' !== typeof x) {
             return false;
         }
-        return isPlain ? isInstance(x, Object) : true;
+        return isPlain ? isInstance(x, Object, 1) : true;
     };
     var isSet = function isSet(x) {
         return isDefined(x) && !isNull(x);
@@ -998,9 +1004,10 @@
         var $ = this,
             picker = getReference($),
             state = picker.state,
-            n = state.n;
+            n = state.n,
+            target = e.target;
         offEventDefault(e);
-        if (hasClass(e.target, n + '__options')) {
+        if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
             // User may currently browse the options by dragging the scroll bar
             return;
         }
@@ -1042,6 +1049,7 @@
         if (b !== a) {
             picker.fire('change', [_toValue(b)]);
         }
+        picker.exit(true);
         offEventDefault(e);
     }
 

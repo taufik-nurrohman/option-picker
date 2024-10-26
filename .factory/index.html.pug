@@ -44,8 +44,8 @@ block style
     |   border: 0;
     |   padding: 0 0.5em;
     | }
-    | .option-picker__option:focus,
-    | .option-picker__option:hover {
+    | .option-picker__option:where(:not(.option-picker__option--disabled)):focus,
+    | .option-picker__option:where(:not(.option-picker__option--disabled)):hover {
     |   background: #00f;
     |   color: #fff;
     |   outline: 0;

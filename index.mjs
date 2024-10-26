@@ -547,7 +547,7 @@ function onPointerDownRoot(e) {
     }
     let {mask, state} = picker,
         {n} = state,
-        target = e.target;
+        {target} = e;
     if (mask !== target && mask !== getParent(target, '.' + n)) {
         letValueInMap($, references);
         picker.exit();

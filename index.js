@@ -527,6 +527,7 @@
                 onEvent('focus', option, onFocusOption);
                 onEvent('keydown', option, onKeyDownOption);
                 onEvent('mousedown', option, onPointerDownOption);
+                onEvent('touchend', option, onPointerUpOption);
                 onEvent('touchstart', option, onPointerDownOption);
             }
             option._of = v[2];
@@ -1013,6 +1014,7 @@
         }
         picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
     }
+    var swipeOffset = 0;
 
     function onPointerDownOption(e) {
         var $ = this,
@@ -1023,8 +1025,10 @@
             state = picker.state,
             hint = _mask.hint,
             input = _mask.input,
+            options = _mask.options,
             value = _mask.value,
             n = state.n;
+        swipeOffset = options.scrollTop;
         n += '__option--selected';
         var a = getValue(self),
             b;
@@ -1049,13 +1053,18 @@
         if (b !== a) {
             picker.fire('change', [_toValue(b)]);
         }
-        picker.exit(true);
+        // Immediately close the option(s) when selecting with mouse
+        if ('mouseup' === e.type) {
+            picker.exit(true);
+        }
         offEventDefault(e);
     }
     var touchOffset = false;
 
     function onPointerDownRoot(e) {
-        touchOffset = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        if ('touchstart' === e.type) {
+            touchOffset = e.touches[0].clientY;
+        }
         var $ = this,
             picker = getReference($);
         if (!picker) {
@@ -1075,21 +1084,28 @@
         if (false === touchOffset) {
             return;
         }
-        var touchOffsetNew = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-        if (touchOffsetNew > touchOffset) {
-            console.log('swipe down');
-            if ('touchmove' === e.type) {
-                alert('swipe down');
-            }
-        } else if (touchOffsetNew < touchOffset) {
-            console.log('swipe up');
-            if ('touchmove' === e.type) {
-                alert('swipe up');
-            }
+        if ('touchmove' === e.type) {
+            var $ = this,
+                picker = getReference($),
+                _mask = picker._mask,
+                options = _mask.options,
+                touchOffsetNew = e.touches[0].clientY;
+            options && (options.scrollTop -= touchOffsetNew - touchOffset);
+            touchOffset = touchOffsetNew;
         }
     }
 
-    function onPointerUpRoot() {
+    function onPointerUpOption(e) {
+        var $ = this,
+            picker = getReference($),
+            _mask = picker._mask,
+            options = _mask.options;
+        if (options.scrollTop === swipeOffset) {
+            picker.exit(true); // Close the option(s) pane if it was not scrolling
+        }
+    }
+
+    function onPointerUpRoot(e) {
         touchOffset = false;
     }
 
@@ -1240,6 +1256,7 @@
         setReference(mask, $);
         var _mask = {},
             option;
+        _mask.arrow = arrow;
         _mask.hint = isInput ? textInputHint : null;
         _mask.input = isInput ? textInput : null;
         _mask.of = self;

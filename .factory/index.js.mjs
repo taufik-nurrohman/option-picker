@@ -53,6 +53,7 @@ function createOptions(options, values) {
             onEvent('focus', option, onFocusOption);
             onEvent('keydown', option, onKeyDownOption);
             onEvent('mousedown', option, onPointerDownOption);
+            onEvent('touchend', option, onPointerUpOption);
             onEvent('touchstart', option, onPointerDownOption);
         }
         option._of = v[2];
@@ -506,12 +507,15 @@ function onPointerDownMask(e) {
     picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
 }
 
+let swipeOffset = 0;
+
 function onPointerDownOption(e) {
     let $ = this,
         picker = getReference($),
         {_mask, _options, self, state} = picker,
-        {hint, input, value} = _mask,
+        {hint, input, options, value} = _mask,
         {n} = state;
+    swipeOffset = options.scrollTop;
     n += '__option--selected';
     let a = getValue(self), b;
     for (let k in _options) {
@@ -535,14 +539,19 @@ function onPointerDownOption(e) {
     if (b !== a) {
         picker.fire('change', [toValue(b)]);
     }
-    picker.exit(true);
+    // Immediately close the option(s) when selecting with mouse
+    if ('mouseup' === e.type) {
+        picker.exit(true);
+    }
     offEventDefault(e);
 }
 
 let touchOffset = false;
 
 function onPointerDownRoot(e) {
-    touchOffset = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+    if ('touchstart' === e.type) {
+        touchOffset = e.touches[0].clientY;
+    }
     let $ = this,
         picker = getReference($);
     if (!picker) {
@@ -561,21 +570,28 @@ function onPointerMoveRoot(e) {
     if (false === touchOffset) {
         return;
     }
-    let touchOffsetNew = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-    if (touchOffsetNew > touchOffset) {
-        console.log('swipe down');
-        if ('touchmove' === e.type) {
-            alert('swipe down');
-        }
-    } else if (touchOffsetNew < touchOffset) {
-        console.log('swipe up');
-        if ('touchmove' === e.type) {
-            alert('swipe up');
-        }
+    if ('touchmove' === e.type) {
+        let $ = this,
+            picker = getReference($),
+            {_mask} = picker,
+            {options} = _mask,
+            touchOffsetNew = e.touches[0].clientY;
+        options && (options.scrollTop -= touchOffsetNew - touchOffset);
+        touchOffset = touchOffsetNew;
     }
 }
 
-function onPointerUpRoot() {
+function onPointerUpOption(e) {
+    let $ = this,
+        picker = getReference($),
+        {_mask} = picker,
+        {options} = _mask;
+    if (options.scrollTop === swipeOffset) {
+        picker.exit(true); // Close the option(s) pane if it was not scrolling
+    }
+}
+
+function onPointerUpRoot(e) {
     touchOffset = false;
 }
 
@@ -722,6 +738,7 @@ $$.attach = function (self, state) {
     self.tabIndex = -1;
     setReference(mask, $);
     let _mask = {}, option;
+    _mask.arrow = arrow;
     _mask.hint = isInput ? textInputHint : null;
     _mask.input = isInput ? textInput : null;
     _mask.of = self;

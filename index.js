@@ -1014,56 +1014,28 @@
         }
         picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
     }
-    var swipeOffset = 0;
+    var optionsScrollTop = 0;
 
     function onPointerDownOption(e) {
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
-            _options = picker._options,
-            self = picker.self,
-            state = picker.state,
-            hint = _mask.hint,
-            input = _mask.input,
-            options = _mask.options,
-            value = _mask.value,
-            n = state.n;
-        swipeOffset = options.scrollTop;
-        n += '__option--selected';
-        var a = getValue(self),
-            b;
-        for (var k in _options) {
-            var option = _options[k];
-            if ($ === option) {
-                continue;
-            }
-            letAttribute(option._of, 'selected');
-            letClass(option, n);
-        }
-        setAttribute($._of, 'selected', "");
-        setClass($, n);
-        self.value = b = getDatum($, 'value', false);
-        if ('input' === getName(self)) {
-            setText(hint, "");
-            setText(input, getText($));
+            options = _mask.options;
+        optionsScrollTop = options.scrollTop;
+        // Immediately select and close the option(s) when touching with mouse
+        if ('mousedown' === e.type) {
+            selectToOption($, picker.exit(true));
+            // Focus to the option on mobile
         } else {
-            setDatum(value, 'value', b);
-            setHTML(value, getHTML($));
-        }
-        if (b !== a) {
-            picker.fire('change', [_toValue(b)]);
-        }
-        // Immediately close the option(s) when selecting with mouse
-        if ('mouseup' === e.type) {
-            picker.exit(true);
+            focusTo($);
         }
         offEventDefault(e);
     }
-    var touchOffset = false;
+    var touchTop = false;
 
     function onPointerDownRoot(e) {
         if ('touchstart' === e.type) {
-            touchOffset = e.touches[0].clientY;
+            touchTop = e.touches[0].clientY;
         }
         var $ = this,
             picker = getReference($);
@@ -1081,7 +1053,7 @@
     }
 
     function onPointerMoveRoot(e) {
-        if (false === touchOffset) {
+        if (false === touchTop) {
             return;
         }
         if ('touchmove' === e.type) {
@@ -1089,9 +1061,9 @@
                 picker = getReference($),
                 _mask = picker._mask,
                 options = _mask.options,
-                touchOffsetNew = e.touches[0].clientY;
-            options && (options.scrollTop -= touchOffsetNew - touchOffset);
-            touchOffset = touchOffsetNew;
+                touchTopCurrent = e.touches[0].clientY;
+            options && (options.scrollTop -= touchTopCurrent - touchTop);
+            touchTop = touchTopCurrent;
         }
     }
 
@@ -1100,13 +1072,14 @@
             picker = getReference($),
             _mask = picker._mask,
             options = _mask.options;
-        if (options.scrollTop === swipeOffset) {
-            picker.exit(true); // Close the option(s) pane if it was not scrolling
+        // Select the option then close the option(s) if it was not scrolling
+        if (options.scrollTop === optionsScrollTop) {
+            selectToOption($, picker.exit(true));
         }
     }
 
     function onPointerUpRoot(e) {
-        touchOffset = false;
+        touchTop = false;
     }
 
     function onResetForm(e) {
@@ -1151,6 +1124,43 @@
             selection.collapseToEnd();
         } else if (-1 === mode) {
             selection.collapseToStart();
+        }
+    }
+
+    function selectToOption($, picker) {
+        var _mask = picker._mask,
+            _options = picker._options,
+            self = picker.self,
+            state = picker.state,
+            hint = _mask.hint,
+            input = _mask.input;
+        _mask.options;
+        var value = _mask.value,
+            n = state.n;
+        n += '__option--selected';
+        var a = getValue(self),
+            b;
+        for (var k in _options) {
+            var option = _options[k];
+            if ($ === option) {
+                continue;
+            }
+            letAttribute(option._of, 'selected');
+            letClass(option, n);
+        }
+        setAttribute($._of, 'selected', "");
+        setClass($, n);
+        self.value = b = getDatum($, 'value', false);
+        if ('input' === getName(self)) {
+            setText(hint, "");
+            setText(input, getText($));
+            selectTo(input);
+        } else {
+            setDatum(value, 'value', b);
+            setHTML(value, getHTML($));
+        }
+        if (b !== a) {
+            picker.fire('change', [_toValue(b)]);
         }
     }
     $$.attach = function (self, state) {

@@ -507,50 +507,29 @@ function onPointerDownMask(e) {
     picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
 }
 
-let swipeOffset = 0;
+let optionsScrollTop = 0;
 
 function onPointerDownOption(e) {
     let $ = this,
         picker = getReference($),
-        {_mask, _options, self, state} = picker,
-        {hint, input, options, value} = _mask,
-        {n} = state;
-    swipeOffset = options.scrollTop;
-    n += '__option--selected';
-    let a = getValue(self), b;
-    for (let k in _options) {
-        let option = _options[k];
-        if ($ === option) {
-            continue;
-        }
-        letAttribute(option._of, 'selected');
-        letClass(option, n);
-    }
-    setAttribute($._of, 'selected', "");
-    setClass($, n);
-    self.value = (b = getDatum($, 'value', false));
-    if ('input' === getName(self)) {
-        setText(hint, "");
-        setText(input, getText($));
+        {_mask} = picker,
+        {options} = _mask;
+    optionsScrollTop = options.scrollTop;
+    // Immediately select and close the option(s) when touching with mouse
+    if ('mousedown' === e.type) {
+        selectToOption($, picker.exit(true));
+    // Focus to the option on mobile
     } else {
-        setDatum(value, 'value', b);
-        setHTML(value, getHTML($));
-    }
-    if (b !== a) {
-        picker.fire('change', [toValue(b)]);
-    }
-    // Immediately close the option(s) when selecting with mouse
-    if ('mouseup' === e.type) {
-        picker.exit(true);
+        focusTo($);
     }
     offEventDefault(e);
 }
 
-let touchOffset = false;
+let touchTop = false;
 
 function onPointerDownRoot(e) {
     if ('touchstart' === e.type) {
-        touchOffset = e.touches[0].clientY;
+        touchTop = e.touches[0].clientY;
     }
     let $ = this,
         picker = getReference($);
@@ -567,7 +546,7 @@ function onPointerDownRoot(e) {
 }
 
 function onPointerMoveRoot(e) {
-    if (false === touchOffset) {
+    if (false === touchTop) {
         return;
     }
     if ('touchmove' === e.type) {
@@ -575,9 +554,9 @@ function onPointerMoveRoot(e) {
             picker = getReference($),
             {_mask} = picker,
             {options} = _mask,
-            touchOffsetNew = e.touches[0].clientY;
-        options && (options.scrollTop -= touchOffsetNew - touchOffset);
-        touchOffset = touchOffsetNew;
+            touchTopCurrent = e.touches[0].clientY;
+        options && (options.scrollTop -= touchTopCurrent - touchTop);
+        touchTop = touchTopCurrent;
     }
 }
 
@@ -586,13 +565,14 @@ function onPointerUpOption(e) {
         picker = getReference($),
         {_mask} = picker,
         {options} = _mask;
-    if (options.scrollTop === swipeOffset) {
-        picker.exit(true); // Close the option(s) pane if it was not scrolling
+    // Select the option then close the option(s) if it was not scrolling
+    if (options.scrollTop === optionsScrollTop) {
+        selectToOption($, picker.exit(true));
     }
 }
 
 function onPointerUpRoot(e) {
-    touchOffset = false;
+    touchTop = false;
 }
 
 function onResetForm(e) {
@@ -637,6 +617,36 @@ function selectTo(node, mode) {
         selection.collapseToEnd();
     } else if (-1 === mode) {
         selection.collapseToStart();
+    }
+}
+
+function selectToOption($, picker) {
+    let {_mask, _options, self, state} = picker,
+        {hint, input, options, value} = _mask,
+        {n} = state;
+    n += '__option--selected';
+    let a = getValue(self), b;
+    for (let k in _options) {
+        let option = _options[k];
+        if ($ === option) {
+            continue;
+        }
+        letAttribute(option._of, 'selected');
+        letClass(option, n);
+    }
+    setAttribute($._of, 'selected', "");
+    setClass($, n);
+    self.value = (b = getDatum($, 'value', false));
+    if ('input' === getName(self)) {
+        setText(hint, "");
+        setText(input, getText($));
+        selectTo(input);
+    } else {
+        setDatum(value, 'value', b);
+        setHTML(value, getHTML($));
+    }
+    if (b !== a) {
+        picker.fire('change', [toValue(b)]);
     }
 }
 

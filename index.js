@@ -1024,7 +1024,7 @@
         optionsScrollTop = options.scrollTop;
         // Immediately select and close the option(s) when touching with mouse
         if ('mousedown' === e.type) {
-            selectToOption($, picker.exit(true));
+            selectToOption($, picker), picker.exit(true);
             // Focus to the option on mobile
         } else {
             focusTo($);
@@ -1074,7 +1074,7 @@
             options = _mask.options;
         // Select the option then close the option(s) if it was not scrolling
         if (options.scrollTop === optionsScrollTop) {
-            selectToOption($, picker.exit(true));
+            selectToOption($, picker), picker.exit(true);
         }
     }
 
@@ -1154,7 +1154,6 @@
         if ('input' === getName(self)) {
             setText(hint, "");
             setText(input, getText($));
-            selectTo(input);
         } else {
             setDatum(value, 'value', b);
             setHTML(value, getHTML($));

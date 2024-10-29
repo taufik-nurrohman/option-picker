@@ -38,11 +38,13 @@
         border: 0;
         padding: 0 0.5em;
       }
-      .option-picker__option:where(:not(.option-picker__option--disabled)):focus,
+      .option-picker__option:focus,
+      .option-picker__option:hover {
+        outline: 0;
+      }
       .option-picker__option:where(:not(.option-picker__option--disabled)):hover {
         background: #00f;
         color: #fff;
-        outline: 0;
       }
       .option-picker__option-group {
         border: 0;
@@ -72,6 +74,10 @@
         left: -2px;
         min-width: calc(100% + 4px);
         padding: 0;
+      }
+      .option-picker__options:not(:hover) .option-picker__option:where(:not(.option-picker__option--disabled)):focus {
+        background: #00f;
+        color: #fff;
       }
       .option-picker__values {
         padding: 0;
@@ -1433,6 +1439,7 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <h2 id="tests"><a href="#tests">#</a> Tests</h2>
       <ul>
         <li><a href="test.html" target="_blank">No Idea?</a></li>
+        <li><a href="test/disabled.html" target="_blank">Disabled Input &amp; Select</a></li>
       </ul>
       <h2 id="tweaks"><a href="#tweaks">#</a> Tweaks</h2>
       <ul>
@@ -1585,7 +1592,7 @@ Object.defineProperty(Extension, 'name', {
       <hr>
       <p>© 2024 <a href="/">Taufik Nurrohman</a></p>
     </footer>
-    <script src="index.min.js"></script>
+    <script src="index.js"></script>
     <script>
       const picker = new OptionPicker(document.forms[0].country);
       picker.on('change', function (value) {

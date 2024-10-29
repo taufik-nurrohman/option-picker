@@ -6,7 +6,7 @@ import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
-import {toCaseLower, toCount, toObjectValues, toValue} from '@taufik-nurrohman/to';
+import {toCaseLower, toCount, toObjectCount, toObjectValues, toValue} from '@taufik-nurrohman/to';
 
 const FILTER_COMMIT_TIME = 10;
 const SEARCH_CLEAR_TIME = 500;
@@ -20,6 +20,8 @@ const KEY_END = 'End';
 const KEY_ENTER = 'Enter';
 const KEY_ESCAPE = 'Escape';
 const KEY_TAB = 'Tab';
+
+const OPTION_SELF = 0;
 
 const bounce = debounce($ => $.fit(), 10);
 const name = 'OptionPicker';
@@ -56,7 +58,8 @@ function createOptions(options, values) {
             onEvent('touchend', option, onPointerUpOption);
             onEvent('touchstart', option, onPointerDownOption);
         }
-        option._of = v[2];
+        option._ = {};
+        option._[OPTION_SELF] = v[2];
         $._options[k] = option;
         setChildLast(optionGroup || options, option);
         setReference(option, $);
@@ -206,14 +209,14 @@ const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
         q = toCaseLower(query),
         {_mask, self, state} = $,
-        {value} = _mask,
+        {options, value} = _mask,
         {n} = state;
     n += '__option';
     if (selectOnly) {
         let a = getValue(self), b;
         for (let k in _options) {
             let v = _options[k];
-            letAttribute(v._of, 'selected');
+            letAttribute(v._[OPTION_SELF], 'selected');
             letClass(v, n + '--selected');
         }
         for (let k in _options) {
@@ -221,7 +224,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
                 text = toCaseLower(getText(v) + '\t' + (b = getDatum(v, 'value', false)));
             if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v, n + '--disabled')) {
                 self.value = b;
-                setAttribute(v._of, 'selected', "");
+                setAttribute(v._[OPTION_SELF], 'selected', "");
                 setClass(v, n + '--selected');
                 setDatum(value, 'value', b);
                 setHTML(value, getHTML(v));
@@ -232,17 +235,20 @@ const filter = debounce(($, input, _options, selectOnly) => {
             }
         }
     } else {
+        let count = toObjectCount(_options);
         for (let k in _options) {
             let v = _options[k],
                 text = toCaseLower(getText(v) + '\t' + getDatum(v, 'value', false));
             if (("" === q || hasValue(q, text)) && !hasClass(v, n + '--disabled')) {
-                letAttribute(v, 'hidden');
+                v.hidden = false;
             } else {
-                setAttribute(v, 'hidden', "");
+                v.hidden = true;
+                --count;
             }
         }
+        options.hidden = !count;
     }
-    $.fire(selectOnly ? 'search' : 'filter', [query]);
+    $.fire('search', [query]);
 }, FILTER_COMMIT_TIME);
 
 function onBlurMask() {
@@ -354,8 +360,11 @@ function onKeyDownMask(e) {
         keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
         picker = getReference($),
-        {_options} = picker;
+        {_options, self} = picker;
     searchTermClear();
+    if (isDisabled(self) || isReadOnly(self)) {
+        return offEventDefault(e);
+    }
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
         searchTerm = "";
     } else if (KEY_ESCAPE === key) {
@@ -393,10 +402,10 @@ function onKeyDownOption(e) {
         if (KEY_ESCAPE !== key) {
             let a = getValue(self), b;
             if (prevOption = _options[getValue(self)]) {
-                letAttribute(prevOption._of, 'selected');
+                letAttribute(prevOption._[OPTION_SELF], 'selected');
                 letClass(prevOption, n + '--selected');
             }
-            setAttribute($._of, 'selected', "");
+            setAttribute($._[OPTION_SELF], 'selected', "");
             setClass($, n + '--selected');
             self.value = (b = getDatum($, 'value', false));
             if (isInput) {
@@ -496,12 +505,15 @@ function onPasteTextInput() {
 function onPointerDownMask(e) {
     let $ = this,
         picker = getReference($),
-        {state} = picker,
+        {self, state} = picker,
         {n} = state,
         {target} = e;
     offEventDefault(e);
+    if (isDisabled(self) || isReadOnly(self)) {
+        return;
+    }
     if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
-        // User may currently browse the options by dragging the scroll bar
+        // The user is likely browsing the available option(s) by dragging the scroll bar
         return;
     }
     picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
@@ -514,13 +526,13 @@ function onPointerDownOption(e) {
         picker = getReference($),
         {_mask} = picker,
         {options} = _mask;
-    optionsScrollTop = options.scrollTop;
-    // Immediately select and close the option(s) when touching with mouse
+    // Select it immediately, then close the option(s) list when the event occurs with a mouse
     if ('mousedown' === e.type) {
         selectToOption($, picker), picker.exit(true);
-    // Focus to the option on mobile
+    // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
+    // user may be about to scroll the option(s) list
     } else {
-        focusTo($);
+        focusTo($), (optionsScrollTop = options.scrollTop);
     }
     offEventDefault(e);
 }
@@ -549,12 +561,15 @@ function onPointerMoveRoot(e) {
     if (false === touchTop) {
         return;
     }
-    if ('touchmove' === e.type) {
-        let $ = this,
-            picker = getReference($),
-            {_mask} = picker,
+    let $ = this,
+        picker = getReference($);
+    if ('touchmove' === e.type && picker) {
+        let {_mask} = picker,
             {options} = _mask,
             touchTopCurrent = e.touches[0].clientY;
+        // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
+        // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than
+        // doing nothing :\
         options && (options.scrollTop -= touchTopCurrent - touchTop);
         touchTop = touchTopCurrent;
     }
@@ -565,7 +580,10 @@ function onPointerUpOption(e) {
         picker = getReference($),
         {_mask} = picker,
         {options} = _mask;
-    // Select the option then close the option(s) if it was not scrolling
+    // Select it, then close the option(s) list if the `touchstart` (that was done before this `touchend` event) event
+    // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
+    // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
+    // (this event) is fired. If it has a difference, then it scrolls ;)
     if (options.scrollTop === optionsScrollTop) {
         selectToOption($, picker), picker.exit(true);
     }
@@ -631,10 +649,10 @@ function selectToOption($, picker) {
         if ($ === option) {
             continue;
         }
-        letAttribute(option._of, 'selected');
+        letAttribute(option._[OPTION_SELF], 'selected');
         letClass(option, n);
     }
-    setAttribute($._of, 'selected', "");
+    setAttribute($._[OPTION_SELF], 'selected', "");
     setClass($, n);
     self.value = (b = getDatum($, 'value', false));
     if ('input' === getName(self)) {
@@ -741,7 +759,7 @@ $$.attach = function (self, state) {
     onEvent('resize', W, onResizeWindow);
     onEvent('scroll', W, onScrollWindow);
     onEvent('touchend', R, onPointerUpRoot);
-    onEvent('touchmove', R, onPointerMoveRoot);
+    onEvent('touchmove', R, onPointerMoveRoot, {passive: false});
     onEvent('touchstart', R, onPointerDownRoot);
     onEvent('touchstart', mask, onPointerDownMask);
     self.tabIndex = -1;
@@ -757,8 +775,8 @@ $$.attach = function (self, state) {
     _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
     // Attach the current value(s)
-    if (option = $._options[$._value]) {
-        setAttribute(option._of, 'selected', "");
+    if (option = $._options[$._value] || (isInput ? 0 : toObjectValues($._options).find(_option => !isDisabled(_option._[OPTION_SELF])))) {
+        setAttribute(option._[OPTION_SELF], 'selected', "");
         if (isInput) {
             setText(textInput, getText(option));
             if (getText(textInput, false)) {

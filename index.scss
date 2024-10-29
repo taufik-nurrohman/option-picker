@@ -136,6 +136,9 @@ $name: 'option-picker';
     top: 100%;
     visibility: hidden;
     white-space: nowrap;
+    &[hidden] {
+      display: none;
+    }
     &:empty {
       display: none;
     }

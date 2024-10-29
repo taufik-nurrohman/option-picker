@@ -1,7 +1,7 @@
 extends _index.pug
 
 block state
-  - const scripts = ['index.min.js']
+  - const scripts = ['index.js']
   - const styles = ['../layout/index.min.css', 'index.min.css']
   - const theme = '#000'
   - const title = 'Option Picker ' + version
@@ -44,11 +44,13 @@ block style
     |   border: 0;
     |   padding: 0 0.5em;
     | }
-    | .option-picker__option:where(:not(.option-picker__option--disabled)):focus,
+    | .option-picker__option:focus,
+    | .option-picker__option:hover {
+    |   outline: 0;
+    | }
     | .option-picker__option:where(:not(.option-picker__option--disabled)):hover {
     |   background: #00f;
     |   color: #fff;
-    |   outline: 0;
     | }
     | .option-picker__option-group {
     |   border: 0;
@@ -78,6 +80,10 @@ block style
     |   left: -2px;
     |   min-width: calc(100% + 4px);
     |   padding: 0;
+    | }
+    | .option-picker__options:not(:hover) .option-picker__option:where(:not(.option-picker__option--disabled)):focus {
+    |   background: #00f;
+    |   color: #fff;
     | }
     | .option-picker__values {
     |   padding: 0;
@@ -1420,6 +1426,7 @@ block content
       = ' Tests'
     ul
       li: a(href='test.html' target='_blank') No Idea?
+      li: a(href='test/disabled.html' target='_blank') Disabled Input &amp; Select
     h2#tweaks
       a(href='#tweaks') #
       = ' Tweaks'

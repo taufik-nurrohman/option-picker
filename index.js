@@ -95,6 +95,12 @@
         }
         return base ? parseInt(x, base) : parseFloat(x);
     };
+    var toObjectCount = function toObjectCount(x) {
+        return toCount(toObjectKeys(x));
+    };
+    var toObjectKeys = function toObjectKeys(x) {
+        return Object.keys(x);
+    };
     var toObjectValues = function toObjectValues(x) {
         return Object.values(x);
     };
@@ -488,6 +494,7 @@
     var KEY_ENTER = 'Enter';
     var KEY_ESCAPE = 'Escape';
     var KEY_TAB = 'Tab';
+    var OPTION_SELF = 0;
     var bounce = debounce(function ($) {
         return $.fit();
     }, 10);
@@ -530,7 +537,8 @@
                 onEvent('touchend', option, onPointerUpOption);
                 onEvent('touchstart', option, onPointerDownOption);
             }
-            option._of = v[2];
+            option._ = {};
+            option._[OPTION_SELF] = v[2];
             $._options[k] = option;
             setChildLast(optionGroup || options, option);
             setReference(option, $);
@@ -673,6 +681,7 @@
             _mask = $._mask,
             self = $.self,
             state = $.state,
+            options = _mask.options,
             value = _mask.value,
             n = state.n;
         n += '__option';
@@ -681,7 +690,7 @@
                 b;
             for (var k in _options) {
                 var v = _options[k];
-                letAttribute(v._of, 'selected');
+                letAttribute(v._[OPTION_SELF], 'selected');
                 letClass(v, n + '--selected');
             }
             for (var _k in _options) {
@@ -689,7 +698,7 @@
                     text = toCaseLower(getText(_v) + '\t' + (b = getDatum(_v, 'value', false)));
                 if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(_v, n + '--disabled')) {
                     self.value = b;
-                    setAttribute(_v._of, 'selected', "");
+                    setAttribute(_v._[OPTION_SELF], 'selected', "");
                     setClass(_v, n + '--selected');
                     setDatum(value, 'value', b);
                     setHTML(value, getHTML(_v));
@@ -700,17 +709,20 @@
                 }
             }
         } else {
+            var count = toObjectCount(_options);
             for (var _k2 in _options) {
                 var _v2 = _options[_k2],
                     _text = toCaseLower(getText(_v2) + '\t' + getDatum(_v2, 'value', false));
                 if (("" === q || hasValue(q, _text)) && !hasClass(_v2, n + '--disabled')) {
-                    letAttribute(_v2, 'hidden');
+                    _v2.hidden = false;
                 } else {
-                    setAttribute(_v2, 'hidden', "");
+                    _v2.hidden = true;
+                    --count;
                 }
             }
+            options.hidden = !count;
         }
-        $.fire(selectOnly ? 'search' : 'filter', [query]);
+        $.fire('search', [query]);
     }, FILTER_COMMIT_TIME);
 
     function onBlurMask() {
@@ -843,8 +855,12 @@
             keyIsAlt = e.altKey,
             keyIsCtrl = e.ctrlKey,
             picker = getReference($),
-            _options = picker._options;
+            _options = picker._options,
+            self = picker.self;
         searchTermClear();
+        if (isDisabled(self) || isReadOnly(self)) {
+            return offEventDefault(e);
+        }
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
             searchTerm = "";
         } else if (KEY_ESCAPE === key) {
@@ -892,10 +908,10 @@
                 var a = getValue(self),
                     b;
                 if (prevOption = _options[getValue(self)]) {
-                    letAttribute(prevOption._of, 'selected');
+                    letAttribute(prevOption._[OPTION_SELF], 'selected');
                     letClass(prevOption, n + '--selected');
                 }
-                setAttribute($._of, 'selected', "");
+                setAttribute($._[OPTION_SELF], 'selected', "");
                 setClass($, n + '--selected');
                 self.value = b = getDatum($, 'value', false);
                 if (isInput) {
@@ -1004,12 +1020,16 @@
     function onPointerDownMask(e) {
         var $ = this,
             picker = getReference($),
+            self = picker.self,
             state = picker.state,
             n = state.n,
             target = e.target;
         offEventDefault(e);
+        if (isDisabled(self) || isReadOnly(self)) {
+            return;
+        }
         if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
-            // User may currently browse the options by dragging the scroll bar
+            // The user is likely browsing the available option(s) by dragging the scroll bar
             return;
         }
         picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
@@ -1021,13 +1041,13 @@
             picker = getReference($),
             _mask = picker._mask,
             options = _mask.options;
-        optionsScrollTop = options.scrollTop;
-        // Immediately select and close the option(s) when touching with mouse
+        // Select it immediately, then close the option(s) list when the event occurs with a mouse
         if ('mousedown' === e.type) {
             selectToOption($, picker), picker.exit(true);
-            // Focus to the option on mobile
+            // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
+            // user may be about to scroll the option(s) list
         } else {
-            focusTo($);
+            focusTo($), optionsScrollTop = options.scrollTop;
         }
         offEventDefault(e);
     }
@@ -1056,12 +1076,15 @@
         if (false === touchTop) {
             return;
         }
-        if ('touchmove' === e.type) {
-            var $ = this,
-                picker = getReference($),
-                _mask = picker._mask,
+        var $ = this,
+            picker = getReference($);
+        if ('touchmove' === e.type && picker) {
+            var _mask = picker._mask,
                 options = _mask.options,
                 touchTopCurrent = e.touches[0].clientY;
+            // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
+            // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than
+            // doing nothing :\
             options && (options.scrollTop -= touchTopCurrent - touchTop);
             touchTop = touchTopCurrent;
         }
@@ -1072,7 +1095,10 @@
             picker = getReference($),
             _mask = picker._mask,
             options = _mask.options;
-        // Select the option then close the option(s) if it was not scrolling
+        // Select it, then close the option(s) list if the `touchstart` (that was done before this `touchend` event) event
+        // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
+        // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
+        // (this event) is fired. If it has a difference, then it scrolls ;)
         if (options.scrollTop === optionsScrollTop) {
             selectToOption($, picker), picker.exit(true);
         }
@@ -1145,10 +1171,10 @@
             if ($ === option) {
                 continue;
             }
-            letAttribute(option._of, 'selected');
+            letAttribute(option._[OPTION_SELF], 'selected');
             letClass(option, n);
         }
-        setAttribute($._of, 'selected', "");
+        setAttribute($._[OPTION_SELF], 'selected', "");
         setClass($, n);
         self.value = b = getDatum($, 'value', false);
         if ('input' === getName(self)) {
@@ -1258,7 +1284,9 @@
         onEvent('resize', W, onResizeWindow);
         onEvent('scroll', W, onScrollWindow);
         onEvent('touchend', R, onPointerUpRoot);
-        onEvent('touchmove', R, onPointerMoveRoot);
+        onEvent('touchmove', R, onPointerMoveRoot, {
+            passive: false
+        });
         onEvent('touchstart', R, onPointerDownRoot);
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
@@ -1275,8 +1303,10 @@
         _mask[isInput ? 'text' : 'value'] = text;
         $._mask = _mask;
         // Attach the current value(s)
-        if (option = $._options[$._value]) {
-            setAttribute(option._of, 'selected', "");
+        if (option = $._options[$._value] || (isInput ? 0 : toObjectValues($._options).find(function (_option) {
+                return !isDisabled(_option._[OPTION_SELF]);
+            }))) {
+            setAttribute(option._[OPTION_SELF], 'selected', "");
             if (isInput) {
                 setText(textInput, getText(option));
                 if (getText(textInput, false)) {

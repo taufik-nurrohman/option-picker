@@ -119,6 +119,9 @@
   visibility: hidden;
   white-space: nowrap;
 }
+.option-picker__options[hidden] {
+  display: none;
+}
 .option-picker__options:empty {
   display: none;
 }

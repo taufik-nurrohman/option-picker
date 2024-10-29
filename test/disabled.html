@@ -6,6 +6,14 @@
     <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
     <title>Option Picker</title>
     <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        min-width: 12em;
+      }
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
   </head>
   <body>
     <main>
@@ -20,25 +28,36 @@
             <option>Option 2</option>
             <option>Option 3</option>
           </select></p>
-        <p><select disabled name="test-3" size="3">
+        <p><!-- TODO--><select disabled name="test-3" size="3">
             <option>Option 1</option>
             <option>Option 2</option>
             <option>Option 3</option>
           </select></p>
+        <p><input list="test-4" name="test-4" placeholder="Test&hellip;"><datalist id="test-4">
+            <option>Option 1</option>
+            <option>Option 2</option>
+            <option>Option 3</option>
+          </datalist></p>
         <p><button onclick="disable();" type="button">Disable All</button> <button onclick="enable();" type="button">Enable All</button> <button type="submit">Submit</button></p>
       </form>
     </main>
     <script src="../index.min.js"></script>
     <script>
-      const sources = document.querySelectorAll('select');
-      sources.forEach(source => new OP(source));
+      const sources = document.querySelectorAll('input[list], select');
+      sources.forEach(source => new OptionPicker(source));
 
       function disable() {
-          sources.forEach(source => (source.disabled = true));
+          sources.forEach(source => {
+              source.disabled = true;
+              OptionPicker.of(source).detach().attach(); // Refresh!
+          });
       }
 
       function enable() {
-          sources.forEach(source => (source.disabled = false));
+          sources.forEach(source => {
+              source.disabled = false;
+              OptionPicker.of(source).detach().attach(); // Refresh!
+          });
       }
     </script>
   </body>

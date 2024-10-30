@@ -48,6 +48,9 @@
         }
         return isSet(of) && x instanceof of ;
     };
+    var isInteger = function isInteger(x) {
+        return isNumber(x) && 0 === x % 1;
+    };
     var isNull = function isNull(x) {
         return null === x;
     };
@@ -129,6 +132,13 @@
             return true;
         }
         return x;
+    };
+    var fromJSON = function fromJSON(x) {
+        var value = null;
+        try {
+            value = JSON.parse(x);
+        } catch (e) {}
+        return value;
     };
     var _fromStates = function fromStates() {
         for (var _len = arguments.length, lot = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -219,8 +229,14 @@
         return parent.lastElementChild || null;
     };
     var getDatum = function getDatum(node, datum, parseValue) {
-        var value = getAttribute(node, 'data-' + datum, parseValue);
-        (value + "").trim();
+        if (parseValue === void 0) {
+            parseValue = true;
+        }
+        var value = getAttribute(node, 'data-' + datum, parseValue),
+            v = (value + "").trim();
+        if (parseValue && v && ('[' === v[0] && ']' === v.slice(-1) || '{' === v[0] && '}' === v.slice(-1)) && null !== (v = fromJSON(value))) {
+            return v;
+        }
         return value;
     };
     var getHTML = function getHTML(node, trim) {
@@ -257,6 +273,10 @@
     var getPrev = function getPrev(node, anyNode) {
         return node['previous' + (anyNode ? "" : 'Element') + 'Sibling'] || null;
     };
+    var getStyle = function getStyle(node, style, parseValue) {
+        var value = W.getComputedStyle(node).getPropertyValue(style);
+        return value || "" === value || 0 === value ? value : null;
+    };
     var getText = function getText(node, trim) {
         if (trim === void 0) {
             trim = true;
@@ -286,6 +306,9 @@
     };
     var letClass = function letClass(node, value) {
         return node.classList.remove(value), node;
+    };
+    var letDatum = function letDatum(node, datum) {
+        return letAttribute(node, 'data-' + datum);
     };
     var letElement = function letElement(node) {
         var parent = getParent(node);
@@ -417,6 +440,14 @@
         }
         return [x, y, w, h, X, Y];
     };
+    var getScroll = function getScroll(node) {
+        return [node.scrollLeft, node.scrollTop];
+    };
+    var setScroll = function setScroll(node, data) {
+        node.scrollLeft = data[0];
+        node.scrollTop = data[1];
+        return node;
+    };
 
     function hook($, $$) {
         $$ = $$ || $;
@@ -496,7 +527,8 @@
     var KEY_TAB = 'Tab';
     var OPTION_SELF = 0;
     var bounce = debounce(function ($) {
-        return $.fit();
+        var mask = $.mask;
+        !getDatum(mask, 'size') && $.fit();
     }, 10);
     var name = 'OptionPicker';
     var references = new WeakMap();
@@ -631,6 +663,12 @@
         return map.delete(k);
     }
 
+    function scrollTo(node, view) {
+        node.scrollIntoView({
+            block: 'nearest'
+        });
+    }
+
     function setReference(key, value) {
         return setValueInMap(key, value, references);
     }
@@ -658,6 +696,7 @@
     OptionPicker.state = {
         'n': 'option-picker',
         'options': null,
+        'size': 1,
         'with': []
     };
     OptionPicker.version = '2.0.0';
@@ -665,6 +704,39 @@
         value: name
     });
     var $$ = OptionPicker.prototype;
+    defineProperty($$, 'size', {
+        get: function get() {
+            var size = this.state.size || 1;
+            if (!isInteger(size)) {
+                return 1;
+            }
+            return size < 1 ? 1 : size; // <https://html.spec.whatwg.org#attr-select-size>
+        },
+        set: function set(value) {
+            var $ = this,
+                _mask = $._mask,
+                _options = $._options,
+                mask = $.mask,
+                options = _mask.options,
+                size = !isInteger(value) ? 1 : value < 1 ? 1 : value;
+            $.state.size = size;
+            if (1 === size) {
+                letDatum(mask, 'size');
+                letStyle(options, 'max-height');
+            } else {
+                var option = toObjectValues(_options).find(function (_option) {
+                    return !_option.hidden;
+                });
+                if (option) {
+                    var _ref, _getStyle;
+                    var optionsGap = getStyle(options, 'gap'),
+                        optionHeight = (_ref = (_getStyle = getStyle(option, 'height')) != null ? _getStyle : getStyle(option, 'min-height')) != null ? _ref : getStyle(option, 'line-height');
+                    setDatum(mask, 'size', size);
+                    setStyle(options, 'max-height', 'calc((' + optionHeight + ' + ' + optionsGap + ')*' + size + ')');
+                }
+            }
+        }
+    });
     defineProperty($$, 'value', {
         get: function get() {
             var value = getValue(this.self);
@@ -678,8 +750,9 @@
     var filter = debounce(function ($, input, _options, selectOnly) {
         var query = isString(input) ? input : getText(input) || "",
             q = toCaseLower(query),
-            _mask = $._mask,
-            self = $.self,
+            _mask = $._mask;
+        $.mask;
+        var self = $.self,
             state = $.state,
             options = _mask.options,
             value = _mask.value,
@@ -704,6 +777,9 @@
                     setHTML(value, getHTML(_v));
                     if (b !== a) {
                         $.fire('change', [_toValue(b)]);
+                    }
+                    if (hasSize) {
+                        scrollTo(_v);
                     }
                     break;
                 }
@@ -785,6 +861,12 @@
         selectNone();
         setClass(mask, n += '--focus');
         setClass(mask, n += '-option');
+    }
+
+    function onFocusSelf() {
+        var $ = this,
+            picker = getReference($);
+        picker.focus();
     }
 
     function onFocusTextInput() {
@@ -1025,7 +1107,7 @@
             n = state.n,
             target = e.target;
         offEventDefault(e);
-        if (isDisabled(self) || isReadOnly(self)) {
+        if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
             return;
         }
         if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
@@ -1047,7 +1129,7 @@
             // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
             // user may be about to scroll the option(s) list
         } else {
-            focusTo($), optionsScrollTop = options.scrollTop;
+            focusTo($), optionsScrollTop = getScroll(options)[1];
         }
         offEventDefault(e);
     }
@@ -1085,8 +1167,12 @@
             // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
             // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than
             // doing nothing :\
-            options && (options.scrollTop -= touchTopCurrent - touchTop);
-            touchTop = touchTopCurrent;
+            if (options) {
+                var scroll = getScroll(options);
+                scroll[1] -= touchTopCurrent - touchTop;
+                setScroll(options, scroll);
+                touchTop = touchTopCurrent;
+            }
         }
     }
 
@@ -1099,7 +1185,7 @@
         // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
         // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
         // (this event) is fired. If it has a difference, then it scrolls ;)
-        if (options.scrollTop === optionsScrollTop) {
+        if (getScroll(options)[1] === optionsScrollTop) {
             selectToOption($, picker), picker.exit(true);
         }
     }
@@ -1277,6 +1363,7 @@
             onEvent('submit', form, onSubmitForm);
             setReference(form, $);
         }
+        onEvent('focus', self, onFocusSelf);
         onEvent('mousedown', R, onPointerDownRoot);
         onEvent('mousedown', mask, onPointerDownMask);
         onEvent('mousemove', R, onPointerMoveRoot);
@@ -1302,6 +1389,7 @@
         _mask.self = mask;
         _mask[isInput ? 'text' : 'value'] = text;
         $._mask = _mask;
+        $.size = isInput ? state.size : self.size || state.size;
         // Attach the current value(s)
         if (option = $._options[$._value] || (isInput ? 0 : toObjectValues($._options).find(function (_option) {
                 return !isDisabled(_option._[OPTION_SELF]);
@@ -1370,6 +1458,7 @@
             offEvent('keydown', mask, onKeyDownMask);
             offEvent('paste', input, onPasteTextInput);
         }
+        offEvent('focus', self, onFocusSelf);
         offEvent('mousedown', R, onPointerDownRoot);
         offEvent('mousedown', mask, onPointerDownMask);
         offEvent('mousemove', R, onPointerMoveRoot);
@@ -1485,7 +1574,7 @@
         if (input) {
             return focusTo(input), selectTo(input, mode), $;
         }
-        return mask && focusTo(mask), $;
+        return focusTo(mask), $;
     };
     return OptionPicker;
 }));

@@ -31,6 +31,7 @@ $name: 'option-picker';
   border: 1px solid;
   cursor: pointer;
   display: inline-flex;
+  flex-direction: column;
   flex-wrap: wrap;
   position: relative;
   vertical-align: middle;
@@ -175,5 +176,20 @@ $name: 'option-picker';
   &__values {
     @extend %items;
     flex: 1;
+  }
+  &[data-size] {
+    .#{$name}__arrow {
+      display: none;
+    }
+    .#{$name}__option-group {
+      border-width: 1px;
+    }
+    .#{$name}__options {
+      border-width: 0;
+      min-width: 0;
+      padding-top: 0;
+      position: static;
+      visibility: visible;
+    }
   }
 }

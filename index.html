@@ -82,6 +82,10 @@
       .option-picker__values {
         padding: 0;
       }
+      .option-picker[data-size] .option-picker__values {
+        border-bottom: 2px solid;
+        border-color: inherit;
+      }
 
       .option-picker__option[data-value]::before,
       .option-picker__value[data-value]::before {
@@ -1439,7 +1443,10 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <h2 id="tests"><a href="#tests">#</a> Tests</h2>
       <ul>
         <li><a href="test.html" target="_blank">No Idea?</a></li>
-        <li><a href="test/disabled.html" target="_blank">Disabled Input &amp; Select</a></li>
+        <li><a href="test/disabled.html" target="_blank">Disabled State</a></li>
+        <li><a href="test/group.html" target="_blank">Grouped Options</a></li>
+        <li><a href="test/input.html" target="_blank">Options from <code>&lt;datalist&gt;</code></a></li>
+        <li><a href="test/size.html" target="_blank">Visible Options</a></li>
       </ul>
       <h2 id="tweaks"><a href="#tweaks">#</a> Tweaks</h2>
       <ul>
@@ -1592,7 +1599,7 @@ Object.defineProperty(Extension, 'name', {
       <hr>
       <p>© 2024 <a href="/">Taufik Nurrohman</a></p>
     </footer>
-    <script src="index.js"></script>
+    <script src="index.min.js"></script>
     <script>
       const picker = new OptionPicker(document.forms[0].country);
       picker.on('change', function (value) {

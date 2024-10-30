@@ -1,13 +1,19 @@
 extends ../_index.pug
 
 block state
-  - const title = 'Option Picker'
   - const scripts = ['../index.min.js']
   - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
 
 block script
   script
-    | const picker = new OP(document.querySelector('select'));
+    | const picker = new OptionPicker(document.querySelector('select'));
+
+block style
+  style
+    | .option-picker {
+    |   min-width: 12em;
+    | }
 
 block content
   main

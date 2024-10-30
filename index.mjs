@@ -1,10 +1,11 @@
-import {D, R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getText, hasClass, letAttribute, letClass, letElement, setAttribute, setChildLast, setClass, setDatum, setElement, setHTML, setNext, setStyles, setText} from '@taufik-nurrohman/document';
+import {D, R, W, getAttributes, getChildFirst, getChildLast, getDatum, getHTML, getName, getNext, getParent, getParentForm, getPrev, getStyle, getText, hasClass, letAttribute, letClass, letDatum, letElement, letStyle, setAttribute, setChildLast, setClass, setDatum, setElement, setHTML, setNext, setStyle, setStyles, setText} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getRect} from '@taufik-nurrohman/rect';
+import {getOffset, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
 import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
-import {isArray, isFunction, isInstance, isObject, isSet, isString} from '@taufik-nurrohman/is';
+import {isArray, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
 import {toCaseLower, toCount, toObjectCount, toObjectValues, toValue} from '@taufik-nurrohman/to';
 
@@ -23,7 +24,11 @@ const KEY_TAB = 'Tab';
 
 const OPTION_SELF = 0;
 
-const bounce = debounce($ => $.fit(), 10);
+const bounce = debounce($ => {
+    let {mask} = $;
+    !getDatum(mask, 'size') && $.fit();
+}, 10);
+
 const name = 'OptionPicker';
 const references = new WeakMap;
 
@@ -147,6 +152,10 @@ function letValueInMap(k, map) {
     return map.delete(k);
 }
 
+function scrollTo(node, view) {
+    node.scrollIntoView({block: 'nearest'});
+}
+
 function setReference(key, value) {
     return setValueInMap(key, value, references);
 }
@@ -183,6 +192,7 @@ OptionPicker.of = getReference;
 OptionPicker.state = {
     'n': 'option-picker',
     'options': null,
+    'size': 1,
     'with': []
 };
 
@@ -193,6 +203,35 @@ defineProperty(OptionPicker, 'name', {
 });
 
 const $$ = OptionPicker.prototype;
+
+defineProperty($$, 'size', {
+    get: function () {
+        let size = this.state.size || 1;
+        if (!isInteger(size)) {
+            return 1;
+        }
+        return size < 1 ? 1 : size; // <https://html.spec.whatwg.org#attr-select-size>
+    },
+    set: function (value) {
+        let $ = this,
+            {_mask, _options, mask} = $,
+            {options} = _mask,
+            size = !isInteger(value) ? 1 : (value < 1 ? 1 : value);
+        $.state.size = size;
+        if (1 === size) {
+            letDatum(mask, 'size');
+            letStyle(options, 'max-height');
+        } else {
+            let option = toObjectValues(_options).find(_option => !_option.hidden);
+            if (option) {
+                let optionsGap = getStyle(options, 'gap', false),
+                    optionHeight = getStyle(option, 'height', false) ?? getStyle(option, 'min-height', false) ?? getStyle(option, 'line-height', false);
+                setDatum(mask, 'size', size);
+                setStyle(options, 'max-height', 'calc((' + optionHeight + ' + ' + optionsGap + ')*' + size + ')');
+            }
+        }
+    }
+})
 
 defineProperty($$, 'value', {
     get: function () {
@@ -208,7 +247,7 @@ defineProperty($$, 'value', {
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
         q = toCaseLower(query),
-        {_mask, self, state} = $,
+        {_mask, mask, self, state} = $,
         {options, value} = _mask,
         {n} = state;
     n += '__option';
@@ -230,6 +269,9 @@ const filter = debounce(($, input, _options, selectOnly) => {
                 setHTML(value, getHTML(v));
                 if (b !== a) {
                     $.fire('change', [toValue(b)]);
+                }
+                if (hasSize) {
+                    scrollTo(v, options);
                 }
                 break;
             }
@@ -304,6 +346,12 @@ function onFocusOption() {
     selectNone();
     setClass(mask, n += '--focus');
     setClass(mask, n += '-option');
+}
+
+function onFocusSelf() {
+    let $ = this,
+        picker = getReference($);
+    picker.focus();
 }
 
 function onFocusTextInput() {
@@ -509,7 +557,7 @@ function onPointerDownMask(e) {
         {n} = state,
         {target} = e;
     offEventDefault(e);
-    if (isDisabled(self) || isReadOnly(self)) {
+    if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
         return;
     }
     if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
@@ -532,7 +580,7 @@ function onPointerDownOption(e) {
     // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
     // user may be about to scroll the option(s) list
     } else {
-        focusTo($), (optionsScrollTop = options.scrollTop);
+        focusTo($), (optionsScrollTop = getScroll(options)[1]);
     }
     offEventDefault(e);
 }
@@ -570,8 +618,12 @@ function onPointerMoveRoot(e) {
         // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
         // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than
         // doing nothing :\
-        options && (options.scrollTop -= touchTopCurrent - touchTop);
-        touchTop = touchTopCurrent;
+        if (options) {
+            let scroll = getScroll(options);
+            scroll[1] -= touchTopCurrent - touchTop;
+            setScroll(options, scroll);
+            touchTop = touchTopCurrent;
+        }
     }
 }
 
@@ -584,7 +636,7 @@ function onPointerUpOption(e) {
     // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
     // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
     // (this event) is fired. If it has a difference, then it scrolls ;)
-    if (options.scrollTop === optionsScrollTop) {
+    if (getScroll(options)[1] === optionsScrollTop) {
         selectToOption($, picker), picker.exit(true);
     }
 }
@@ -752,6 +804,7 @@ $$.attach = function (self, state) {
         onEvent('submit', form, onSubmitForm);
         setReference(form, $);
     }
+    onEvent('focus', self, onFocusSelf);
     onEvent('mousedown', R, onPointerDownRoot);
     onEvent('mousedown', mask, onPointerDownMask);
     onEvent('mousemove', R, onPointerMoveRoot);
@@ -774,6 +827,7 @@ $$.attach = function (self, state) {
     _mask.self = mask;
     _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
+    $.size = isInput ? state.size : (self.size || state.size);
     // Attach the current value(s)
     if (option = $._options[$._value] || (isInput ? 0 : toObjectValues($._options).find(_option => !isDisabled(_option._[OPTION_SELF])))) {
         setAttribute(option._[OPTION_SELF], 'selected', "");
@@ -838,6 +892,7 @@ $$.detach = function () {
         offEvent('keydown', mask, onKeyDownMask);
         offEvent('paste', input, onPasteTextInput);
     }
+    offEvent('focus', self, onFocusSelf);
     offEvent('mousedown', R, onPointerDownRoot);
     offEvent('mousedown', mask, onPointerDownMask);
     offEvent('mousemove', R, onPointerMoveRoot);
@@ -947,7 +1002,7 @@ $$.focus = function (mode) {
     if (input) {
         return focusTo(input), selectTo(input, mode), $;
     }
-    return (mask && focusTo(mask)), $;
+    return focusTo(mask), $;
 };
 
 export default OptionPicker;

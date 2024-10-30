@@ -33,6 +33,7 @@
   border: 1px solid;
   cursor: pointer;
   display: inline-flex;
+  flex-direction: column;
   flex-wrap: wrap;
   position: relative;
   vertical-align: middle;
@@ -156,4 +157,17 @@
 }
 .option-picker__values {
   flex: 1;
+}
+.option-picker[data-size] .option-picker__arrow {
+  display: none;
+}
+.option-picker[data-size] .option-picker__option-group {
+  border-width: 1px;
+}
+.option-picker[data-size] .option-picker__options {
+  border-width: 0;
+  min-width: 0;
+  padding-top: 0;
+  position: static;
+  visibility: visible;
 }

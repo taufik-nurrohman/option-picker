@@ -9,6 +9,7 @@ block state
 block script
   script
     | const picker = new OptionPicker(document.forms[0].country);
+    | picker.size=10;
     | picker.on('change', function (value) {
     |     console.log(value);
     | });
@@ -76,6 +77,7 @@ block style
     | }
     | .option-picker__options {
     |   background: #fff;
+    |   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
     |   gap: 0;
     |   left: -2px;
     |   min-width: calc(100% + 4px);
@@ -87,6 +89,9 @@ block style
     | }
     | .option-picker__values {
     |   padding: 0;
+    | }
+    | .option-picker[data-size] .option-picker__options {
+    |   box-shadow: none;
     | }
     | .option-picker[data-size] .option-picker__values {
     |   border-bottom: 2px solid;
@@ -1455,7 +1460,101 @@ block content
     h3: code state
     p The configuration data.
     h3: code state.options
-    p TODO
+    p A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map. Possible values are as follows:
+    p #[strong Array] is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options.
+    pre: code
+      | const options = [
+      |     'Option 1',
+      |     'Option 2',
+      |     'Option 3'
+      | ];
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+    pre: code
+      | const options = [
+      |     ['Option 1', {
+      |         value: 1
+      |     }],
+      |     ['Option 2', {
+      |         value: 2
+      |     }],
+      |     ['Option 3', {
+      |         disabled: true,
+      |         value: 3
+      |     }]
+      | ];
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+    p #[strong Object] is another data structure that is also easy to write. The object item keys act as option values, and the object item values act as option labels. The only problem with this data structure is that it cannot guarantee that the order will remain the same when transformed into a series of options, especially if each object key is written as a number.
+    pre: code
+      | const options = {
+      |     '1': 'Option 1',
+      |     '2': 'Option 2',
+      |     '3': 'Option 3'
+      | };
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+      p The solution would be to set the object keys as text and then set the object item value in the attributes object.
+    pre: code
+      | const options = {
+      |     'option-1': ['Option 1', {
+      |         value: 1
+      |     }],
+      |     'option-2': ['Option 2', {
+      |         value: 2
+      |     }],
+      |     'option-3': ['Option 3', {
+      |         disabled: true,
+      |         value: 3
+      |     }]
+      | };
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+    p #[strong Map] is another type of data structure, similar to an object, but it guarantees that the order will remain the same when transformed into a series of options.
+    pre: code
+      | const options = new Map;
+      |
+      | options.set(1, 'Option 1');
+      | options.set(2, 'Option 2');
+      | options.set(3, 'Option 3');
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+    pre: code
+      | const options = new Map;
+      |
+      | options.set(1, ['Option 1', {
+      |     value: 1
+      | }]);
+      |
+      | options.set(2, ['Option 2', {
+      |     value: 2
+      | }]);
+      |
+      | options.set(3, ['Option 3', {
+      |     disabled: true,
+      |     value: 3
+      | }]);
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+    p #[strong Function] that returns one of the three data structures above can also be used. The first argument of this function holds the typed search query. Useful for creating dynamic options list capabilities using #[a(href='https://en.wikipedia.org/wiki/Ajax_(programming)' rel='nofollow' target='_blank') AJAX].
+    pre: code
+      | const options = function (query) {
+      |     return [
+      |         'Option 1',
+      |         'Option 2',
+      |         'Option 3'
+      |     ];
+      | };
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+    pre: code
+      | const options = function (query) {
+      |     return fetch('/options.php?query=' + encodeURIComponent(query)).then(response =&gt; response.json());
+      | };
+      |
+      | const picker = new OptionPicker(document.querySelector('select'), {options});
+    h3: code state.size
+    p Set the value to an integer greater than #[code 1] to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a #[code &lt;select&gt;] element when given the #[code size] attribute.
     h3: code state.with
     p List of callable functions or objects containing an #[code attach()] method to be invoked each time the application is initialized. A very simple “plugin” system.
     h2#methods
@@ -1526,7 +1625,7 @@ block content
     h4: code OptionPicker.of(self)
     p Gets #[code OptionPicker] instance of an element.
     pre: code
-      | document.querySelectorAll('input[list], select').forEach(self => {
+      | document.querySelectorAll('input[list], select').forEach(self =&gt; {
       |     const picker = OptionPicker.of(self);
       | });
     h2#properties
@@ -1546,6 +1645,10 @@ block content
     p Returns the #[code &lt;input&gt;] or #[code &lt;select&gt;] element.
     pre: code
       | console.log(picker.self.getAttribute('name'));
+    h4: code picker.size
+    p Changes the layout of a drop-down select box to a scrollable area select box. This is valid only if the value is an integer greater than #[code 1]. Otherwise, it will be considered as an invalid value and will revert the layout to its default layout, which is a drop-down select box.
+    pre: code
+      | picker.size = 5;
     h4: code picker.state
     p Returns the application states if any.
     pre: code

@@ -70,6 +70,7 @@
       }
       .option-picker__options {
         background: #fff;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
         gap: 0;
         left: -2px;
         min-width: calc(100% + 4px);
@@ -81,6 +82,9 @@
       }
       .option-picker__values {
         padding: 0;
+      }
+      .option-picker[data-size] .option-picker__options {
+        box-shadow: none;
       }
       .option-picker[data-size] .option-picker__values {
         border-bottom: 2px solid;
@@ -1463,7 +1467,92 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <h3><code>state</code></h3>
       <p>The configuration data.</p>
       <h3><code>state.options</code></h3>
-      <p>TODO</p>
+      <p>A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map. Possible values are as follows:</p>
+      <p><strong>Array</strong> is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options.</p>
+      <pre><code>const options = [
+    'Option 1',
+    'Option 2',
+    'Option 3'
+];
+
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <pre><code>const options = [
+    ['Option 1', {
+        value: 1
+    }],
+    ['Option 2', {
+        value: 2
+    }],
+    ['Option 3', {
+        disabled: true,
+        value: 3
+    }]
+];
+
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <p><strong>Object</strong> is another data structure that is also easy to write. The object item keys act as option values, and the object item values act as option labels. The only problem with this data structure is that it cannot guarantee that the order will remain the same when transformed into a series of options, especially if each object key is written as a number.</p>
+      <pre><code>const options = {
+    '1': 'Option 1',
+    '2': 'Option 2',
+    '3': 'Option 3'
+};
+
+const picker = new OptionPicker(document.querySelector('select'), {options});<p>The solution would be to set the object keys as text and then set the object item value in the attributes object.</p></code></pre>
+      <pre><code>const options = {
+    'option-1': ['Option 1', {
+        value: 1
+    }],
+    'option-2': ['Option 2', {
+        value: 2
+    }],
+    'option-3': ['Option 3', {
+        disabled: true,
+        value: 3
+    }]
+};
+
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <p><strong>Map</strong> is another type of data structure, similar to an object, but it guarantees that the order will remain the same when transformed into a series of options.</p>
+      <pre><code>const options = new Map;
+
+options.set(1, 'Option 1');
+options.set(2, 'Option 2');
+options.set(3, 'Option 3');
+
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <pre><code>const options = new Map;
+
+options.set(1, ['Option 1', {
+    value: 1
+}]);
+
+options.set(2, ['Option 2', {
+    value: 2
+}]);
+
+options.set(3, ['Option 3', {
+    disabled: true,
+    value: 3
+}]);
+
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <p><strong>Function</strong> that returns one of the three data structures above can also be used. The first argument of this function holds the typed search query. Useful for creating dynamic options list capabilities using <a href="https://en.wikipedia.org/wiki/Ajax_(programming)" rel="nofollow" target="_blank">AJAX</a>.</p>
+      <pre><code>const options = function (query) {
+    return [
+        'Option 1',
+        'Option 2',
+        'Option 3'
+    ];
+};
+
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <pre><code>const options = function (query) {
+    return fetch('/options.php?query=' + encodeURIComponent(query)).then(response =&gt; response.json());
+};
+
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <h3><code>state.size</code></h3>
+      <p>Set the value to an integer greater than <code>1</code> to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a <code>&lt;select&gt;</code> element when given the <code>size</code> attribute.</p>
       <h3><code>state.with</code></h3>
       <p>List of callable functions or objects containing an <code>attach()</code> method to be invoked each time the application is initialized. A very simple “plugin” system.</p>
       <h2 id="methods"><a href="#methods">#</a> Methods</h2>
@@ -1519,7 +1608,7 @@ picker.set('baz', 2); // Insert “baz” tag at index 2 in the list</code></pre
       <pre><code>const picker = OptionPicker.from(document.querySelector('select'));</code></pre>
       <h4><code>OptionPicker.of(self)</code></h4>
       <p>Gets <code>OptionPicker</code> instance of an element.</p>
-      <pre><code>document.querySelectorAll('input[list], select').forEach(self => {
+      <pre><code>document.querySelectorAll('input[list], select').forEach(self =&gt; {
     const picker = OptionPicker.of(self);
 });</code></pre>
       <h2 id="properties"><a href="#properties">#</a> Properties</h2>
@@ -1534,6 +1623,9 @@ picker.set('baz', 2); // Insert “baz” tag at index 2 in the list</code></pre
       <h4><code>picker.self</code></h4>
       <p>Returns the <code>&lt;input&gt;</code> or <code>&lt;select&gt;</code> element.</p>
       <pre><code>console.log(picker.self.getAttribute('name'));</code></pre>
+      <h4><code>picker.size</code></h4>
+      <p>Changes the layout of a drop-down select box to a scrollable area select box. This is valid only if the value is an integer greater than <code>1</code>. Otherwise, it will be considered as an invalid value and will revert the layout to its default layout, which is a drop-down select box.</p>
+      <pre><code>picker.size = 5;</code></pre>
       <h4><code>picker.state</code></h4>
       <p>Returns the application states if any.</p>
       <pre><code>console.log(picker.state);</code></pre>
@@ -1602,6 +1694,7 @@ Object.defineProperty(Extension, 'name', {
     <script src="index.min.js"></script>
     <script>
       const picker = new OptionPicker(document.forms[0].country);
+      picker.size = 10;
       picker.on('change', function (value) {
           console.log(value);
       });

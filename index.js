@@ -527,8 +527,7 @@
     var KEY_TAB = 'Tab';
     var OPTION_SELF = 0;
     var bounce = debounce(function ($) {
-        var mask = $.mask;
-        !getDatum(mask, 'size') && $.fit();
+        return $.fit();
     }, 10);
     var name = 'OptionPicker';
     var references = new WeakMap();
@@ -576,6 +575,34 @@
             setReference(option, $);
         });
         $.state.options = values;
+    }
+
+    function createOptionsCall($, options, maskOptions) {
+        var map = new Map();
+        if (isArray(options)) {
+            forEachArray(options, function (option) {
+                if (isArray(option)) {
+                    var _option$, _option$2;
+                    option[0] = (_option$ = option[0]) != null ? _option$ : "";
+                    option[1] = (_option$2 = option[1]) != null ? _option$2 : {};
+                    setValueInMap(option[0], option, map);
+                } else {
+                    setValueInMap(option, [option, {}], map);
+                }
+            });
+        } else if (isObject(options)) {
+            for (var k in options) {
+                if (isArray(options[k])) {
+                    var _options$k$, _options$k$2;
+                    options[k][0] = (_options$k$ = options[k][0]) != null ? _options$k$ : "";
+                    options[k][1] = (_options$k$2 = options[k][1]) != null ? _options$k$2 : {};
+                    setValueInMap(k, options[k], map);
+                } else {
+                    setValueInMap(k, [options[k], {}], map);
+                }
+            }
+        }
+        createOptions.call($, maskOptions, map);
     }
 
     function defineProperty(of, key, state) {
@@ -659,6 +686,10 @@
         return self.readOnly;
     }
 
+    function letReference(k) {
+        return letValueInMap(k, references);
+    }
+
     function letValueInMap(k, map) {
         return map.delete(k);
     }
@@ -696,7 +727,7 @@
     OptionPicker.state = {
         'n': 'option-picker',
         'options': null,
-        'size': 1,
+        'size': null,
         'with': []
     };
     OptionPicker.version = '2.0.0';
@@ -717,12 +748,15 @@
                 _mask = $._mask,
                 _options = $._options,
                 mask = $.mask,
-                options = _mask.options,
-                size = !isInteger(value) ? 1 : value < 1 ? 1 : value;
+                state = $.state,
+                options = _mask.options;
+            state.n;
+            var size = !isInteger(value) ? 1 : value < 1 ? 1 : value;
             $.state.size = size;
             if (1 === size) {
                 letDatum(mask, 'size');
                 letStyle(options, 'max-height');
+                letReference(R);
             } else {
                 var option = toObjectValues(_options).find(function (_option) {
                     return !_option.hidden;
@@ -730,9 +764,11 @@
                 if (option) {
                     var _ref, _getStyle;
                     var optionsGap = getStyle(options, 'gap'),
+                        optionsPaddingBottom = getStyle(options, 'padding-bottom'),
                         optionHeight = (_ref = (_getStyle = getStyle(option, 'height')) != null ? _getStyle : getStyle(option, 'min-height')) != null ? _ref : getStyle(option, 'line-height');
                     setDatum(mask, 'size', size);
-                    setStyle(options, 'max-height', 'calc((' + optionHeight + ' + ' + optionsGap + ')*' + size + ')');
+                    setStyle(options, 'max-height', 'calc((' + optionHeight + ' + max(' + optionsGap + ',' + optionsPaddingBottom + '))*' + size + ')');
+                    setReference(R, $);
                 }
             }
         }
@@ -799,6 +835,16 @@
             options.hidden = !count;
         }
         $.fire('search', [query]);
+        var optionsCall = state.options;
+        if (isFunction(optionsCall)) {
+            optionsCall = optionsCall.call($, query);
+            if (isInstance(optionsCall, Promise)) {
+                optionsCall.then(function (v) {
+                    createOptionsCall($, v, options);
+                    $.fire('load', [v, query]);
+                });
+            }
+        }
     }, FILTER_COMMIT_TIME);
 
     function onBlurMask() {
@@ -1149,8 +1195,12 @@
             n = state.n,
             target = e.target;
         if (mask !== target && mask !== getParent(target, '.' + n)) {
-            letValueInMap($, references);
-            picker.exit();
+            if (getDatum(mask, 'size')) {
+                picker.blur();
+            } else {
+                letReference($);
+                picker.exit();
+            }
         }
     }
 
@@ -1275,6 +1325,7 @@
         }
     }
     $$.attach = function (self, state) {
+        var _state$size;
         var $ = this;
         self = self || $.self;
         state = state || $.state;
@@ -1301,32 +1352,17 @@
         var _state2 = state,
             options = _state2.options;
         if (isFunction(options)) {
-            options = options.call($);
-        }
-        var map = new Map();
-        if (isArray(options)) {
-            forEachArray(options, function (option) {
-                if (isArray(option)) {
-                    var _option$, _option$2;
-                    option[0] = (_option$ = option[0]) != null ? _option$ : "";
-                    option[1] = (_option$2 = option[1]) != null ? _option$2 : {};
-                    setValueInMap(option[0], option, map);
-                } else {
-                    setValueInMap(option, [option, {}], map);
-                }
-            });
-        } else if (isObject(options)) {
-            for (var k in options) {
-                if (isArray(options[k])) {
-                    var _options$k$, _options$k$2;
-                    options[k][0] = (_options$k$ = options[k][0]) != null ? _options$k$ : "";
-                    options[k][1] = (_options$k$2 = options[k][1]) != null ? _options$k$2 : {};
-                    continue;
-                }
-                setValueInMap(k, [options[k], {}], map);
+            options = options.call($, null);
+            if (isInstance(options, Promise)) {
+                options.then(function (options) {
+                    createOptionsCall($, options, maskOptions);
+                    $.fire('load', [options, null]);
+                });
             }
         }
-        createOptions.call($, maskOptions, options = map);
+        if (!isInstance(options, Promise)) {
+            createOptionsCall($, options, maskOptions);
+        }
         var maskValues = setElement('div', {
             'class': n + '__values'
         });
@@ -1389,7 +1425,7 @@
         _mask.self = mask;
         _mask[isInput ? 'text' : 'value'] = text;
         $._mask = _mask;
-        $.size = isInput ? state.size : self.size || state.size;
+        $.size = (_state$size = state.size) != null ? _state$size : isInput ? 1 : self.size;
         // Attach the current value(s)
         if (option = $._options[$._value] || (isInput ? 0 : toObjectValues($._options).find(function (_option) {
                 return !isDisabled(_option._[OPTION_SELF]);
@@ -1549,18 +1585,23 @@
             _mask = $._mask,
             mask = $.mask,
             options = _mask.options;
-        var rectMask = getRect(mask),
+        if (getDatum(mask, 'size')) {
+            return $;
+        }
+        var borderMaskBottom = getStyle(mask, 'border-bottom-width'),
+            borderMaskTop = getStyle(mask, 'border-top-width'),
+            rectMask = getRect(mask),
             rectWindow = getRect(W);
         if (rectMask[1] + rectMask[3] / 2 > rectWindow[3] / 2) {
             setStyles(options, {
                 'bottom': '100%',
-                'max-height': rectMask[1],
+                'max-height': 'calc(' + rectMask[1] + 'px + ' + borderMaskBottom + ')',
                 'top': 'auto'
             });
         } else {
             setStyles(options, {
                 'bottom': 'auto',
-                'max-height': rectWindow[3] - rectMask[1] - rectMask[3],
+                'max-height': 'calc(' + (rectWindow[3] - rectMask[1] - rectMask[3]) + 'px + ' + borderMaskTop + ')',
                 'top': '100%'
             });
         }

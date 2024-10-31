@@ -24,10 +24,7 @@ const KEY_TAB = 'Tab';
 
 const OPTION_SELF = 0;
 
-const bounce = debounce($ => {
-    let {mask} = $;
-    !getDatum(mask, 'size') && $.fit();
-}, 10);
+const bounce = debounce($ => $.fit(), 10);
 
 const name = 'OptionPicker';
 const references = new WeakMap;
@@ -70,6 +67,32 @@ function createOptions(options, values) {
         setReference(option, $);
     });
     $.state.options = values;
+}
+
+function createOptionsCall($, options, maskOptions) {
+    const map = new Map;
+    if (isArray(options)) {
+        forEachArray(options, option => {
+            if (isArray(option)) {
+                option[0] = option[0] ?? "";
+                option[1] = option[1] ?? {};
+                setValueInMap(option[0], option, map);
+            } else {
+                setValueInMap(option, [option, {}], map);
+            }
+        });
+    } else if (isObject(options)) {
+        for (let k in options) {
+            if (isArray(options[k])) {
+                options[k][0] = options[k][0] ?? "";
+                options[k][1] = options[k][1] ?? {};
+                setValueInMap(k, options[k], map);
+            } else {
+                setValueInMap(k, [options[k], {}], map);
+            }
+        }
+    }
+    createOptions.call($, maskOptions, map);
 }
 
 function defineProperty(of, key, state) {
@@ -148,6 +171,10 @@ function isReadOnly(self) {
     return self.readOnly;
 }
 
+function letReference(k) {
+    return letValueInMap(k, references);
+}
+
 function letValueInMap(k, map) {
     return map.delete(k);
 }
@@ -192,7 +219,7 @@ OptionPicker.of = getReference;
 OptionPicker.state = {
     'n': 'option-picker',
     'options': null,
-    'size': 1,
+    'size': null,
     'with': []
 };
 
@@ -214,20 +241,24 @@ defineProperty($$, 'size', {
     },
     set: function (value) {
         let $ = this,
-            {_mask, _options, mask} = $,
+            {_mask, _options, mask, state} = $,
             {options} = _mask,
+            {n} = state,
             size = !isInteger(value) ? 1 : (value < 1 ? 1 : value);
         $.state.size = size;
         if (1 === size) {
             letDatum(mask, 'size');
             letStyle(options, 'max-height');
+            letReference(R);
         } else {
             let option = toObjectValues(_options).find(_option => !_option.hidden);
             if (option) {
                 let optionsGap = getStyle(options, 'gap', false),
+                    optionsPaddingBottom = getStyle(options, 'padding-bottom', false),
                     optionHeight = getStyle(option, 'height', false) ?? getStyle(option, 'min-height', false) ?? getStyle(option, 'line-height', false);
                 setDatum(mask, 'size', size);
-                setStyle(options, 'max-height', 'calc((' + optionHeight + ' + ' + optionsGap + ')*' + size + ')');
+                setStyle(options, 'max-height', 'calc((' + optionHeight + ' + max(' + optionsGap + ',' + optionsPaddingBottom + '))*' + size + ')');
+                setReference(R, $);
             }
         }
     }
@@ -291,6 +322,16 @@ const filter = debounce(($, input, _options, selectOnly) => {
         options.hidden = !count;
     }
     $.fire('search', [query]);
+    let optionsCall = state.options;
+    if (isFunction(optionsCall)) {
+        optionsCall = optionsCall.call($, query);
+        if (isInstance(optionsCall, Promise)) {
+            optionsCall.then(v => {
+                createOptionsCall($, v, options);
+                $.fire('load', [v, query]);
+            });
+        }
+    }
 }, FILTER_COMMIT_TIME);
 
 function onBlurMask() {
@@ -600,8 +641,12 @@ function onPointerDownRoot(e) {
         {n} = state,
         {target} = e;
     if (mask !== target && mask !== getParent(target, '.' + n)) {
-        letValueInMap($, references);
-        picker.exit();
+        if (getDatum(mask, 'size')) {
+            picker.blur();
+        } else {
+            letReference($);
+            picker.exit();
+        }
     }
 }
 
@@ -744,30 +789,17 @@ $$.attach = function (self, state) {
     });
     let {options} = state;
     if (isFunction(options)) {
-        options = options.call($);
-    }
-    const map = new Map;
-    if (isArray(options)) {
-        forEachArray(options, option => {
-            if (isArray(option)) {
-                option[0] = option[0] ?? "";
-                option[1] = option[1] ?? {};
-                setValueInMap(option[0], option, map);
-            } else {
-                setValueInMap(option, [option, {}], map);
-            }
-        });
-    } else if (isObject(options)) {
-        for (let k in options) {
-            if (isArray(options[k])) {
-                options[k][0] = options[k][0] ?? "";
-                options[k][1] = options[k][1] ?? {};
-                continue;
-            }
-            setValueInMap(k, [options[k], {}], map);
+        options = options.call($, null);
+        if (isInstance(options, Promise)) {
+            options.then(options => {
+                createOptionsCall($, options, maskOptions);
+                $.fire('load', [options, null]);
+            });
         }
     }
-    createOptions.call($, maskOptions, options = map);
+    if (!isInstance(options, Promise)) {
+        createOptionsCall($, options, maskOptions);
+    }
     const maskValues = setElement('div', {
         'class': n + '__values'
     });
@@ -827,7 +859,7 @@ $$.attach = function (self, state) {
     _mask.self = mask;
     _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
-    $.size = isInput ? state.size : (self.size || state.size);
+    $.size = state.size ?? (isInput ? 1 : self.size);
     // Attach the current value(s)
     if (option = $._options[$._value] || (isInput ? 0 : toObjectValues($._options).find(_option => !isDisabled(_option._[OPTION_SELF])))) {
         setAttribute(option._[OPTION_SELF], 'selected', "");
@@ -977,18 +1009,23 @@ $$.fit = function () {
     let $ = this,
         {_mask, mask} = $,
         {options} = _mask;
-    let rectMask = getRect(mask),
+    if (getDatum(mask, 'size')) {
+        return $;
+    }
+    let borderMaskBottom = getStyle(mask, 'border-bottom-width', false),
+        borderMaskTop = getStyle(mask, 'border-top-width', false),
+        rectMask = getRect(mask),
         rectWindow = getRect(W);
     if (rectMask[1] + (rectMask[3] / 2) > (rectWindow[3] / 2)) {
         setStyles(options, {
             'bottom': '100%',
-            'max-height': rectMask[1],
+            'max-height': 'calc(' + rectMask[1] + 'px + ' + borderMaskBottom + ')',
             'top': 'auto'
         });
     } else {
         setStyles(options, {
             'bottom': 'auto',
-            'max-height': rectWindow[3] - rectMask[1] - rectMask[3],
+            'max-height': 'calc(' + (rectWindow[3] - rectMask[1] - rectMask[3]) + 'px + ' + borderMaskTop + ')',
             'top': '100%'
         });
     }

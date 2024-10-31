@@ -9,7 +9,6 @@ block state
 block script
   script
     | const picker = new OptionPicker(document.forms[0].country);
-    | picker.size=10;
     | picker.on('change', function (value) {
     |     console.log(value);
     | });

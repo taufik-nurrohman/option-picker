@@ -520,8 +520,10 @@
     var SEARCH_CLEAR_TIME = 500;
     var KEY_ARROW_DOWN = 'ArrowDown';
     var KEY_ARROW_UP = 'ArrowUp';
+    var KEY_BEGIN = 'Home';
     var KEY_DELETE_LEFT = 'Backspace';
     var KEY_DELETE_RIGHT = 'Delete';
+    var KEY_END = 'End';
     var KEY_ENTER = 'Enter';
     var KEY_ESCAPE = 'Escape';
     var KEY_TAB = 'Tab';
@@ -1026,6 +1028,8 @@
             n = state.n;
         n += '__option';
         var isInput = 'input' === getName(self),
+            firstOption,
+            lastOption,
             nextOption,
             parentOption,
             prevOption;
@@ -1084,7 +1088,7 @@
             if (nextOption) {
                 focusTo(nextOption);
             } else {
-                var firstOption = toObjectValues(_options).find(function (v) {
+                firstOption = toObjectValues(_options).find(function (v) {
                     return !v.hidden && !hasClass(v, n + '--disabled');
                 });
                 firstOption && focusTo(firstOption);
@@ -1119,11 +1123,23 @@
             if (prevOption) {
                 focusTo(prevOption);
             } else {
-                var lastOption = toObjectValues(_options).findLast(function (v) {
+                lastOption = toObjectValues(_options).findLast(function (v) {
                     return !v.hidden && !hasClass(v, n + '--disabled');
                 });
                 lastOption && focusTo(lastOption);
             }
+        } else if (KEY_BEGIN === key) {
+            exit = true;
+            firstOption = toObjectValues(_options).find(function (v) {
+                return !v.hidden && !hasClass(v, n + '--disabled');
+            });
+            firstOption && focusTo(firstOption);
+        } else if (KEY_END === key) {
+            exit = true;
+            lastOption = toObjectValues(_options).findLast(function (v) {
+                return !v.hidden && !hasClass(v, n + '--disabled');
+            });
+            lastOption && focusTo(lastOption);
         } else {
             isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
             picker.exit(!(exit = false));

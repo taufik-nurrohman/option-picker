@@ -484,7 +484,7 @@ function onKeyDownOption(e) {
         {n} = state;
     n += '__option';
     let isInput = 'input' === getName(self),
-        nextOption, parentOption, prevOption;
+        firstOption, lastOption, nextOption, parentOption, prevOption;
     if (KEY_DELETE_LEFT === key) {
         picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
@@ -539,7 +539,7 @@ function onKeyDownOption(e) {
         if (nextOption) {
             focusTo(nextOption);
         } else {
-            let firstOption = toObjectValues(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
+            firstOption = toObjectValues(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
             firstOption && focusTo(firstOption);
         }
     } else if (KEY_ARROW_UP === key) {
@@ -572,9 +572,17 @@ function onKeyDownOption(e) {
         if (prevOption) {
             focusTo(prevOption);
         } else {
-            let lastOption = toObjectValues(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
+            lastOption = toObjectValues(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
             lastOption && focusTo(lastOption);
         }
+    } else if (KEY_BEGIN === key) {
+        exit = true;
+        firstOption = toObjectValues(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
+        firstOption && focusTo(firstOption);
+    } else if (KEY_END === key) {
+        exit = true;
+        lastOption = toObjectValues(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
+        lastOption && focusTo(lastOption);
     } else {
         isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
         picker.exit(!(exit = false));

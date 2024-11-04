@@ -526,6 +526,8 @@
     var KEY_END = 'End';
     var KEY_ENTER = 'Enter';
     var KEY_ESCAPE = 'Escape';
+    var KEY_PAGE_DOWN = 'PageDown';
+    var KEY_PAGE_UP = 'PageUp';
     var KEY_TAB = 'Tab';
     var OPTION_SELF = 0;
     var bounce = debounce(function ($) {
@@ -788,13 +790,14 @@
     var filter = debounce(function ($, input, _options, selectOnly) {
         var query = isString(input) ? input : getText(input) || "",
             q = toCaseLower(query),
-            _mask = $._mask;
-        $.mask;
-        var self = $.self,
+            _mask = $._mask,
+            mask = $.mask,
+            self = $.self,
             state = $.state,
             options = _mask.options,
             value = _mask.value,
-            n = state.n;
+            n = state.n,
+            hasSize = getDatum(mask, 'size');
         n += '__option';
         if (selectOnly) {
             var a = getValue(self),
@@ -999,7 +1002,7 @@
         } else if (KEY_TAB === key) {
             searchTerm = "";
             picker.exit(!(exit = false));
-        } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || "" === searchTerm && ' ' === key) {
+        } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
             picker.enter(exit = true).fit();
         } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
             searchTerm += key;
@@ -1058,9 +1061,13 @@
                 }
             }
             picker.exit(exit = KEY_TAB !== key);
-        } else if (KEY_ARROW_DOWN === key) {
+        } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
             exit = true;
-            nextOption = getNext($);
+            if (KEY_PAGE_DOWN === key && hasClass(parentOption = getParent($), n + '-group')) {
+                nextOption = getNext(parentOption);
+            } else {
+                nextOption = getNext($);
+            }
             // Skip disabled and hidden option(s)…
             while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
@@ -1093,9 +1100,13 @@
                 });
                 firstOption && focusTo(firstOption);
             }
-        } else if (KEY_ARROW_UP === key) {
+        } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
             exit = true;
-            prevOption = getPrev($);
+            if (KEY_PAGE_UP === key && hasClass(parentOption = getParent($), n + '-group')) {
+                prevOption = getPrev(parentOption);
+            } else {
+                prevOption = getPrev($);
+            }
             // Skip disabled and hidden option(s)…
             while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
@@ -1184,10 +1195,14 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
+            mask = picker.mask,
             options = _mask.options;
         // Select it immediately, then close the option(s) list when the event occurs with a mouse
         if ('mousedown' === e.type) {
-            selectToOption($, picker), picker.exit(true);
+            selectToOption($, picker);
+            if (!getDatum(mask, 'size')) {
+                picker.exit(true);
+            }
             // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
             // user may be about to scroll the option(s) list
         } else {

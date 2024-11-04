@@ -1450,6 +1450,7 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
         <li><a href="test/disabled.html" target="_blank">Disabled State</a></li>
         <li><a href="test/group.html" target="_blank">Grouped Options</a></li>
         <li><a href="test/input.html" target="_blank">Options from <code>&lt;datalist&gt;</code></a></li>
+        <li><a href="test/self.html" target="_blank">Multiple Instances</a></li>
         <li><a href="test/size.html" target="_blank">Visible Options</a></li>
       </ul>
       <h2 id="tweaks"><a href="#tweaks">#</a> Tweaks</h2>
@@ -1467,8 +1468,8 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <h3><code>state</code></h3>
       <p>The configuration data.</p>
       <h3><code>state.options</code></h3>
-      <p>A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map. Possible values are as follows:</p>
-      <p><strong>Array</strong> is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options.</p>
+      <p>A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.</p>
+      <p><strong>Array</strong> is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an <code>&lt;option&gt;</code> element without a <code>value</code> attribute.</p>
       <pre><code>const options = [
     'Option 1',
     'Option 2',
@@ -1497,7 +1498,8 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
     '3': 'Option 3'
 };
 
-const picker = new OptionPicker(document.querySelector('select'), {options});<p>The solution would be to set the object keys as text and then set the object item value in the attributes object.</p></code></pre>
+const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
+      <p>The solution would be to set the object item key as text and then set the object item value in the attributes object.</p>
       <pre><code>const options = {
     'option-1': ['Option 1', {
         value: 1
@@ -1552,7 +1554,7 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
 
 const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
       <h3><code>state.size</code></h3>
-      <p>Set the value to an integer greater than <code>1</code> to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a <code>&lt;select&gt;</code> element when given the <code>size</code> attribute.</p>
+      <p>Set the value to an integer greater than <code>1</code> to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a <code>&lt;select&gt;</code> element when given the <code>size</code> attribute. It has a default value of <code>null</code>. If <code>self</code> is a <code>&lt;select&gt;</code> element, then the application will try to use the <code>size</code> attribute value of that element. This does not apply if <code>self</code> is an <code>&lt;input&gt;</code> element, because <code>size</code> attribute on an <code>&lt;input&gt;</code> element has different semantics. <sup><a href="https://html.spec.whatwg.org#attr-input-size" rel="nofollow" target="_blank">1</a></sup> <sup><a href="https://html.spec.whatwg.org#attr-select-size" rel="nofollow" target="_blank">2</a></sup></p>
       <h3><code>state.with</code></h3>
       <p>List of callable functions or objects containing an <code>attach()</code> method to be invoked each time the application is initialized. A very simple “plugin” system.</p>
       <h2 id="methods"><a href="#methods">#</a> Methods</h2>

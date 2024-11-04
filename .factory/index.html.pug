@@ -1437,6 +1437,7 @@ block content
       li: a(href='test/disabled.html' target='_blank') Disabled State
       li: a(href='test/group.html' target='_blank') Grouped Options
       li: a(href='test/input.html' target='_blank') Options from #[code &lt;datalist&gt;]
+      li: a(href='test/self.html' target='_blank') Multiple Instances
       li: a(href='test/size.html' target='_blank') Visible Options
     h2#tweaks
       a(href='#tweaks') #
@@ -1459,8 +1460,8 @@ block content
     h3: code state
     p The configuration data.
     h3: code state.options
-    p A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map. Possible values are as follows:
-    p #[strong Array] is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options.
+    p A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.
+    p #[strong Array] is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an #[code &lt;option&gt;] element without a #[code value] attribute.
     pre: code
       | const options = [
       |     'Option 1',
@@ -1493,7 +1494,7 @@ block content
       | };
       |
       | const picker = new OptionPicker(document.querySelector('select'), {options});
-      p The solution would be to set the object keys as text and then set the object item value in the attributes object.
+    p The solution would be to set the object item key as text and then set the object item value in the attributes object.
     pre: code
       | const options = {
       |     'option-1': ['Option 1', {
@@ -1553,7 +1554,7 @@ block content
       |
       | const picker = new OptionPicker(document.querySelector('select'), {options});
     h3: code state.size
-    p Set the value to an integer greater than #[code 1] to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a #[code &lt;select&gt;] element when given the #[code size] attribute.
+    p Set the value to an integer greater than #[code 1] to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a #[code &lt;select&gt;] element when given the #[code size] attribute. It has a default value of #[code null]. If #[code self] is a #[code &lt;select&gt;] element, then the application will try to use the #[code size] attribute value of that element. This does not apply if #[code self] is an #[code &lt;input&gt;] element, because #[code size] attribute on an #[code &lt;input&gt;] element has different semantics. #[sup #[a(href='https://html.spec.whatwg.org#attr-input-size' rel='nofollow' target='_blank') 1]] #[sup #[a(href='https://html.spec.whatwg.org#attr-select-size' rel='nofollow' target='_blank') 2]]
     h3: code state.with
     p List of callable functions or objects containing an #[code attach()] method to be invoked each time the application is initialized. A very simple “plugin” system.
     h2#methods

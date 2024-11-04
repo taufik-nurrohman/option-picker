@@ -1,27 +1,44 @@
 extends ../_index.pug
 
 block state
-  - const title = 'Option Picker'
   - const scripts = ['../index.min.js']
   - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
 
 block script
   script
-    | const picker = new OP(document.querySelector('select'));
+    | const picker = new OptionPicker(document.querySelector('select'));
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
 
 block content
   main
     form(method='get' target='_blank')
       p
         select(name='test')
-          optgroup(label='Group 1')
-            option Option 1
-            option Option 2
-            option Option 3
-          optgroup(label='Group 2')
-            option Red
-            option Green
+          optgroup(label='Color')
+            option Black
             option Blue
-          option Other
+            option Brown
+            option Gray
+            option Green
+            option Orange
+            option Pink
+            option Purple
+            option Red
+            option White
+            option Yellow
+          optgroup(label='Gender')
+            option Female
+            option Male
+          optgroup(label='Size')
+            option Large
+            option Medium
+            option Small
+          option Any
       p
         button(type='submit') Submit

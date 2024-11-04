@@ -20,6 +20,8 @@ const KEY_DELETE_RIGHT = 'Delete';
 const KEY_END = 'End';
 const KEY_ENTER = 'Enter';
 const KEY_ESCAPE = 'Escape';
+const KEY_PAGE_DOWN = 'PageDown';
+const KEY_PAGE_UP = 'PageUp';
 const KEY_TAB = 'Tab';
 
 const OPTION_SELF = 0;
@@ -280,7 +282,8 @@ const filter = debounce(($, input, _options, selectOnly) => {
         q = toCaseLower(query),
         {_mask, mask, self, state} = $,
         {options, value} = _mask,
-        {n} = state;
+        {n} = state,
+        hasSize = getDatum(mask, 'size');
     n += '__option';
     if (selectOnly) {
         let a = getValue(self), b;
@@ -462,7 +465,7 @@ function onKeyDownMask(e) {
     } else if (KEY_TAB === key) {
         searchTerm = "";
         picker.exit(!(exit = false));
-    } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || ("" === searchTerm && ' ' === key)) {
+    } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
         picker.enter(exit = true).fit();
     } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
         searchTerm += key;
@@ -509,9 +512,13 @@ function onKeyDownOption(e) {
             }
         }
         picker.exit(exit = KEY_TAB !== key);
-    } else if (KEY_ARROW_DOWN === key) {
+    } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
         exit = true;
-        nextOption = getNext($);
+        if (KEY_PAGE_DOWN === key && hasClass(parentOption = getParent($), n + '-group')) {
+            nextOption = getNext(parentOption);
+        } else {
+            nextOption = getNext($);
+        }
         // Skip disabled and hidden option(s)…
         while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
@@ -542,9 +549,13 @@ function onKeyDownOption(e) {
             firstOption = toObjectValues(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
             firstOption && focusTo(firstOption);
         }
-    } else if (KEY_ARROW_UP === key) {
+    } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
-        prevOption = getPrev($);
+        if (KEY_PAGE_UP === key && hasClass(parentOption = getParent($), n + '-group')) {
+            prevOption = getPrev(parentOption);
+        } else {
+            prevOption = getPrev($);
+        }
         // Skip disabled and hidden option(s)…
         while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
             prevOption = getPrev(prevOption);
@@ -621,11 +632,14 @@ let optionsScrollTop = 0;
 function onPointerDownOption(e) {
     let $ = this,
         picker = getReference($),
-        {_mask} = picker,
+        {_mask, mask} = picker,
         {options} = _mask;
     // Select it immediately, then close the option(s) list when the event occurs with a mouse
     if ('mousedown' === e.type) {
-        selectToOption($, picker), picker.exit(true);
+        selectToOption($, picker);
+        if (!getDatum(mask, 'size')) {
+            picker.exit(true);
+        }
     // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
     // user may be about to scroll the option(s) list
     } else {

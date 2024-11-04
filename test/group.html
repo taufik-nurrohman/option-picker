@@ -6,29 +6,46 @@
     <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
     <title>Option Picker</title>
     <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
   </head>
   <body>
     <main>
       <form method="get" target="_blank">
         <p><select name="test">
-            <optgroup label="Group 1">
-              <option>Option 1</option>
-              <option>Option 2</option>
-              <option>Option 3</option>
-            </optgroup>
-            <optgroup label="Group 2">
-              <option>Red</option>
-              <option>Green</option>
+            <optgroup label="Color">
+              <option>Black</option>
               <option>Blue</option>
+              <option>Brown</option>
+              <option>Gray</option>
+              <option>Green</option>
+              <option>Orange</option>
+              <option>Pink</option>
+              <option>Purple</option>
+              <option>Red</option>
+              <option>White</option>
+              <option>Yellow</option>
             </optgroup>
-            <option>Other</option>
+            <optgroup label="Gender">
+              <option>Female</option>
+              <option>Male</option>
+            </optgroup>
+            <optgroup label="Size">
+              <option>Large</option>
+              <option>Medium</option>
+              <option>Small</option>
+            </optgroup>
+            <option>Any</option>
           </select></p>
         <p><button type="submit">Submit</button></p>
       </form>
     </main>
     <script src="../index.min.js"></script>
     <script>
-      const picker = new OP(document.querySelector('select'));
+      const picker = new OptionPicker(document.querySelector('select'));
     </script>
   </body>
 </html>

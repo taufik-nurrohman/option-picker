@@ -222,6 +222,7 @@ OptionPicker.state = {
     'n': 'option-picker',
     'options': null,
     'size': null,
+    'strict': false,
     'with': []
 };
 
@@ -433,6 +434,9 @@ function onKeyDownTextInput(e) {
         currentOption && focusTo(currentOption);
         exit = true;
     } else if (KEY_TAB === key) {
+        if (state.strict) {
+            // TODO: Automatically select the first option
+        }
         picker.exit();
     } else {
         filter(picker, $, _options);
@@ -829,6 +833,7 @@ $$.attach = function (self, state) {
         'class': n + '__' + (isInput ? 'text' : 'value')
     });
     const textInput = setElement('span', {
+        'autocapitalize': 'off',
         'contenteditable': isDisabled(self) || isReadOnly(self) || !isInput ? false : "",
         'spellcheck': !isInput ? false : 'false'
     });

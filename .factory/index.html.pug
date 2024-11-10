@@ -1093,7 +1093,7 @@ block content
     hgroup
       h1= title
       p Accessible custom #[code &lt;select&gt;] (and #[code &lt;input list&gt;]) element.
-    p Press #[kbd Enter] or #[kbd Space] key to open/close the options list. Use #[kbd ArrowDown] and #[kbd ArrowUp] keys to open the options list and then focus on an option, then press #[kbd Enter], #[kbd Space], or #[kbd Tab] to select it. On the “strict” option picker presentation (the example below), you should be able to type away when you focus on it to select the first option that contains text that matches the search query you are currently typing. On the “loose” option picker presentation (#[a(href='test/input.html' target='_blank') this example]), when you start to input a value, the available options get filtered instead of selected immediately.
+    p Press #[kbd Enter] or #[kbd Space] key to open/close the options list. Use #[kbd ArrowDown] and #[kbd ArrowUp] keys to open the options list and then focus on an option, then press #[kbd Enter], #[kbd Space], or #[kbd Tab] to select it. On the “strict” option picker presentation (the example below), you should be able to type away when you focus on it to select the first active option that contains text that matches the search query you are currently typing. On the “loose” option picker presentation (#[a(href='test/input.html' target='_blank') this example]), when you start to input a value, the available options get filtered instead of selected immediately.
   main
     form(method='get' target='_blank')
       p(role='group')
@@ -1549,12 +1549,14 @@ block content
       | const picker = new OptionPicker(document.querySelector('select'), {options});
     pre: code
       | const options = function (query) {
-      |     return fetch('/options.php?query=' + encodeURIComponent(query)).then(response =&gt; response.json());
+      |     return fetch('./options.php?query=' + encodeURIComponent(query)).then(response =&gt; response.json());
       | };
       |
       | const picker = new OptionPicker(document.querySelector('select'), {options});
     h3: code state.size
     p Set the value to an integer greater than #[code 1] to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a #[code &lt;select&gt;] element when given the #[code size] attribute. It has a default value of #[code null]. If #[code self] is a #[code &lt;select&gt;] element, then the application will try to use the #[code size] attribute value of that element. This does not apply if #[code self] is an #[code &lt;input&gt;] element, because #[code size] attribute on an #[code &lt;input&gt;] element has different semantics. #[sup #[a(href='https://html.spec.whatwg.org#attr-input-size' rel='nofollow' target='_blank') 1]] #[sup #[a(href='https://html.spec.whatwg.org#attr-select-size' rel='nofollow' target='_blank') 2]]
+    h3: code state.strict
+    p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
     h3: code state.with
     p List of callable functions or objects containing an #[code attach()] method to be invoked each time the application is initialized. A very simple “plugin” system.
     h2#methods

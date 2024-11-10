@@ -732,6 +732,7 @@
         'n': 'option-picker',
         'options': null,
         'size': null,
+        'strict': false,
         'with': []
     };
     OptionPicker.version = '2.0.0';
@@ -967,6 +968,7 @@
             currentOption && focusTo(currentOption);
             exit = true;
         } else if (KEY_TAB === key) {
+            if (state.strict);
             picker.exit();
         } else {
             filter(picker, $, _options);
@@ -1401,6 +1403,7 @@
             'class': n + '__' + (isInput ? 'text' : 'value')
         });
         var textInput = setElement('span', {
+            'autocapitalize': 'off',
             'contenteditable': isDisabled(self) || isReadOnly(self) || !isInput ? false : "",
             'spellcheck': !isInput ? false : 'false'
         });

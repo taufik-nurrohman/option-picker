@@ -1089,7 +1089,7 @@
         <h1>Option Picker 2.0.0</h1>
         <p>Accessible custom <code>&lt;select&gt;</code> (and <code>&lt;input list&gt;</code>) element.</p>
       </hgroup>
-      <p>Press <kbd>Enter</kbd> or <kbd>Space</kbd> key to open/close the options list. Use <kbd>ArrowDown</kbd> and <kbd>ArrowUp</kbd> keys to open the options list and then focus on an option, then press <kbd>Enter</kbd>, <kbd>Space</kbd>, or <kbd>Tab</kbd> to select it. On the “strict” option picker presentation (the example below), you should be able to type away when you focus on it to select the first option that contains text that matches the search query you are currently typing. On the “loose” option picker presentation (<a href="test/input.html" target="_blank">this example</a>), when you start to input a value, the available options get filtered instead of selected immediately.</p>
+      <p>Press <kbd>Enter</kbd> or <kbd>Space</kbd> key to open/close the options list. Use <kbd>ArrowDown</kbd> and <kbd>ArrowUp</kbd> keys to open the options list and then focus on an option, then press <kbd>Enter</kbd>, <kbd>Space</kbd>, or <kbd>Tab</kbd> to select it. On the “strict” option picker presentation (the example below), you should be able to type away when you focus on it to select the first active option that contains text that matches the search query you are currently typing. On the “loose” option picker presentation (<a href="test/input.html" target="_blank">this example</a>), when you start to input a value, the available options get filtered instead of selected immediately.</p>
     </header>
     <main>
       <form method="get" target="_blank">
@@ -1549,12 +1549,14 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
 
 const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
       <pre><code>const options = function (query) {
-    return fetch('/options.php?query=' + encodeURIComponent(query)).then(response =&gt; response.json());
+    return fetch('./options.php?query=' + encodeURIComponent(query)).then(response =&gt; response.json());
 };
 
 const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
       <h3><code>state.size</code></h3>
       <p>Set the value to an integer greater than <code>1</code> to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a <code>&lt;select&gt;</code> element when given the <code>size</code> attribute. It has a default value of <code>null</code>. If <code>self</code> is a <code>&lt;select&gt;</code> element, then the application will try to use the <code>size</code> attribute value of that element. This does not apply if <code>self</code> is an <code>&lt;input&gt;</code> element, because <code>size</code> attribute on an <code>&lt;input&gt;</code> element has different semantics. <sup><a href="https://html.spec.whatwg.org#attr-input-size" rel="nofollow" target="_blank">1</a></sup> <sup><a href="https://html.spec.whatwg.org#attr-select-size" rel="nofollow" target="_blank">2</a></sup></p>
+      <h3><code>state.strict</code></h3>
+      <p>Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the <kbd>Tab</kbd> key will automatically select the first active option.</p>
       <h3><code>state.with</code></h3>
       <p>List of callable functions or objects containing an <code>attach()</code> method to be invoked each time the application is initialized. A very simple “plugin” system.</p>
       <h2 id="methods"><a href="#methods">#</a> Methods</h2>

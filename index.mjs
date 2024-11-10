@@ -7,9 +7,9 @@ import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
-import {toCaseLower, toCount, toObjectCount, toObjectValues, toValue} from '@taufik-nurrohman/to';
+import {toCaseLower, toCount, toValue} from '@taufik-nurrohman/to';
 
-const FILTER_COMMIT_TIME = 10;
+const FILTER_COMMIT_TIME = 50;
 const SEARCH_CLEAR_TIME = 500;
 
 const KEY_ARROW_DOWN = 'ArrowDown';
@@ -64,9 +64,9 @@ function createOptions(options, values) {
         }
         option._ = {};
         option._[OPTION_SELF] = v[2];
-        $._options[k] = option;
         setChildLast(optionGroup || options, option);
         setReference(option, $);
+        setValueInMap(k, option, $._options);
     });
     $.state.options = values;
 }
@@ -165,6 +165,10 @@ function getValueInMap(k, map) {
     return map.get(k);
 }
 
+function hasKeyInMap(k, map) {
+    return map.has(k);
+}
+
 function isDisabled(self) {
     return self.disabled;
 }
@@ -191,6 +195,34 @@ function setReference(key, value) {
 
 function setValueInMap(k, v, map) {
     return map.set(k, v);
+}
+
+function toKeyFirstFromMap(map) {
+    return toKeysFromMap(map).shift();
+}
+
+function toKeyLastFromMap(map) {
+    return toKeysFromMap(map).pop();
+}
+
+function toKeysFromMap(map) {
+    let out = [];
+    forEachMap(map, (v, k) => out.push(k));
+    return out;
+}
+
+function toValueFirstFromMap(map) {
+    return toValuesFromMap(map).shift();
+}
+
+function toValueLastFromMap(map) {
+    return toValuesFromMap(map).pop();
+}
+
+function toValuesFromMap(map) {
+    let out = [];
+    forEachMap(map, v => out.push(v));
+    return out;
 }
 
 function OptionPicker(self, state) {
@@ -254,7 +286,7 @@ defineProperty($$, 'size', {
             letStyle(options, 'max-height');
             letReference(R);
         } else {
-            let option = toObjectValues(_options).find(_option => !_option.hidden);
+            let option = toValuesFromMap(_options).find(_option => !_option.hidden);
             if (option) {
                 let optionsGap = getStyle(options, 'gap', false),
                     optionsPaddingBottom = getStyle(options, 'padding-bottom', false),
@@ -288,41 +320,40 @@ const filter = debounce(($, input, _options, selectOnly) => {
     n += '__option';
     if (selectOnly) {
         let a = getValue(self), b;
-        for (let k in _options) {
-            let v = _options[k];
+        forEachMap(_options, (v, k) => {
             letAttribute(v._[OPTION_SELF], 'selected');
             letClass(v, n + '--selected');
-        }
-        for (let k in _options) {
-            let v = _options[k],
-                text = toCaseLower(getText(v) + '\t' + (b = getDatum(v, 'value', false)));
-            if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v, n + '--disabled')) {
-                self.value = b;
-                setAttribute(v._[OPTION_SELF], 'selected', "");
-                setClass(v, n + '--selected');
-                setDatum(value, 'value', b);
-                setHTML(value, getHTML(v));
-                if (b !== a) {
-                    $.fire('change', [toValue(b)]);
+        });
+        try {
+            forEachMap(_options, (v, k) => {
+                let text = toCaseLower(getText(v) + '\t' + (b = getDatum(v, 'value', false)));
+                if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v, n + '--disabled')) {
+                    self.value = b;
+                    setAttribute(v._[OPTION_SELF], 'selected', "");
+                    setClass(v, n + '--selected');
+                    setDatum(value, 'value', b);
+                    setHTML(value, getHTML(v));
+                    if (b !== a) {
+                        $.fire('change', [toValue(b)]);
+                    }
+                    if (hasSize) {
+                        scrollTo(v, options);
+                    }
+                    throw "";
                 }
-                if (hasSize) {
-                    scrollTo(v, options);
-                }
-                break;
-            }
-        }
+            });
+        } catch (e) {}
     } else {
-        let count = toObjectCount(_options);
-        for (let k in _options) {
-            let v = _options[k],
-                text = toCaseLower(getText(v) + '\t' + getDatum(v, 'value', false));
+        let count = _options.size;
+        forEachMap(_options, (v, k) => {
+            let text = toCaseLower(getText(v) + '\t' + getDatum(v, 'value', false));
             if (("" === q || hasValue(q, text)) && !hasClass(v, n + '--disabled')) {
                 v.hidden = false;
             } else {
                 v.hidden = true;
                 --count;
             }
-        }
+        });
         options.hidden = !count;
     }
     $.fire('search', [query]);
@@ -424,9 +455,9 @@ function onKeyDownTextInput(e) {
         delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
     }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
-        let currentOption = _options[getValue(self)];
+        let currentOption = getValueInMap(getValue(self), _options);
         if (!currentOption || currentOption.hidden) {
-            currentOption = toObjectValues(_options).shift();
+            currentOption = toValueFirstFromMap(_options);
             while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
                 currentOption = getNext(currentOption);
             }
@@ -497,7 +528,7 @@ function onKeyDownOption(e) {
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
         if (KEY_ESCAPE !== key) {
             let a = getValue(self), b;
-            if (prevOption = _options[getValue(self)]) {
+            if (prevOption = getValueInMap(a, _options)) {
                 letAttribute(prevOption._[OPTION_SELF], 'selected');
                 letClass(prevOption, n + '--selected');
             }
@@ -550,7 +581,7 @@ function onKeyDownOption(e) {
         if (nextOption) {
             focusTo(nextOption);
         } else {
-            firstOption = toObjectValues(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
+            firstOption = toValuesFromMap(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
             firstOption && focusTo(firstOption);
         }
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
@@ -587,16 +618,16 @@ function onKeyDownOption(e) {
         if (prevOption) {
             focusTo(prevOption);
         } else {
-            lastOption = toObjectValues(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
+            lastOption = toValuesFromMap(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
             lastOption && focusTo(lastOption);
         }
     } else if (KEY_BEGIN === key) {
         exit = true;
-        firstOption = toObjectValues(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
+        firstOption = toValuesFromMap(_options).find(v => !v.hidden && !hasClass(v, n + '--disabled'));
         firstOption && focusTo(firstOption);
     } else if (KEY_END === key) {
         exit = true;
-        lastOption = toObjectValues(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
+        lastOption = toValuesFromMap(_options).findLast(v => !v.hidden && !hasClass(v, n + '--disabled'));
         lastOption && focusTo(lastOption);
     } else {
         isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
@@ -767,14 +798,13 @@ function selectToOption($, picker) {
         {n} = state;
     n += '__option--selected';
     let a = getValue(self), b;
-    for (let k in _options) {
-        let option = _options[k];
-        if ($ === option) {
-            continue;
+    forEachMap(_options, (v, k) => {
+        if ($ === v) {
+            return;
         }
-        letAttribute(option._[OPTION_SELF], 'selected');
-        letClass(option, n);
-    }
+        letAttribute(v._[OPTION_SELF], 'selected');
+        letClass(v, n);
+    });
     setAttribute($._[OPTION_SELF], 'selected', "");
     setClass($, n);
     self.value = (b = getDatum($, 'value', false));
@@ -795,7 +825,7 @@ $$.attach = function (self, state) {
     self = self || $.self;
     state = state || $.state;
     $._active = !isDisabled(self) && !isReadOnly(self);
-    $._options = {};
+    $._options = new Map;
     $._value = getValue(self) || null;
     $.self = self;
     $.state = state;
@@ -888,7 +918,7 @@ $$.attach = function (self, state) {
     $._mask = _mask;
     $.size = state.size ?? (isInput ? 1 : self.size);
     // Attach the current value(s)
-    if (option = $._options[$._value] || (isInput ? 0 : toObjectValues($._options).find(_option => !isDisabled(_option._[OPTION_SELF])))) {
+    if (option = getValueInMap($._value, $._options) || (isInput ? 0 : toValuesFromMap($._options).find(_option => !isDisabled(_option._[OPTION_SELF])))) {
         setAttribute(option._[OPTION_SELF], 'selected', "");
         if (isInput) {
             setText(textInput, getText(option));
@@ -1004,7 +1034,7 @@ $$.enter = function (focus) {
         $.fire('focus');
         if ('input' === getName(self)) {
             focusTo(input), selectTo(input);
-        } else if (option = _options[getValue(self)]) {
+        } else if (option = getValueInMap(getValue(self), _options)) {
             focusTo(option);
         }
         $.fire('focus.option');

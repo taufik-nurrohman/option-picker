@@ -550,6 +550,9 @@
                 disabled = _v$.disabled,
                 selected = _v$.selected,
                 value = _v$.value;
+            if (isDisabled(self)) {
+                disabled = true;
+            }
             var option = setElement('span', v[0], {
                 'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
                 'data-value': _fromValue(value || k),

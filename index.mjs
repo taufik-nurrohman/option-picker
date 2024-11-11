@@ -49,6 +49,9 @@ function createOptions(options, values) {
             optionGroup = false;
         }
         let {disabled, selected, value} = v[1];
+        if (isDisabled(self)) {
+            disabled = true;
+        }
         let option = setElement('span', v[0], {
             'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
             'data-value': fromValue(value || k),

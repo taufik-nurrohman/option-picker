@@ -1,0 +1,37 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('select'), {
+    |     options: [
+    |         ['Option 1', {
+    |             value: 1
+    |         }],
+    |         ['Option 2', {
+    |             value: 2
+    |         }],
+    |         ['Option 3', {
+    |             disabled: true,
+    |             value: 3
+    |         }]
+    |     ]
+    | });
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(name='test')
+      p
+        button(type='submit') Submit

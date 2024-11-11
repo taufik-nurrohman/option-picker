@@ -66,7 +66,17 @@ function createOptions(options, values) {
             onEvent('touchstart', option, onPointerDownOption);
         }
         option._ = {};
-        option._[OPTION_SELF] = v[2];
+        if (v[2]) {
+            option._[OPTION_SELF] = v[2];
+        } else {
+            const o = setElement('option', v[0], {
+                'disabled': disabled ? "" : false,
+                'selected': selected ? "" : false,
+                'value': value || k
+            });
+            self.add(o);
+            option._[OPTION_SELF] = o;
+        }
         setChildLast(optionGroup || options, option);
         setReference(option, $);
         setValueInMap(k, option, $._options);
@@ -309,6 +319,7 @@ defineProperty($$, 'value', {
     },
     set: function (value) {
         let $ = this;
+        // TODO: Properly set `selected` attribute to the mask option(s) as well
         $.fire('change', [toValue(value)]);
     }
 });

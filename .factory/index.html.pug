@@ -86,6 +86,9 @@ block style
     |   background: #00f;
     |   color: #fff;
     | }
+    | .option-picker__options:hover .option-picker__option:where(:not(.option-picker__option--disabled):not(.option-picker__option--selected):not(:hover)):focus {
+    |   background: #eee;
+    | }
     | .option-picker__values {
     |   padding: 0;
     | }
@@ -1437,6 +1440,7 @@ block content
       li: a(href='test/disabled.html' target='_blank') Disabled State
       li: a(href='test/group.html' target='_blank') Grouped Options
       li: a(href='test/input.html' target='_blank') Options from #[code &lt;datalist&gt;]
+      li Options from Array: #[a(href='test/options.array.html' target='_blank') 1], #[a(href='test/options.array-1.html' target='_blank') 2]
       li: a(href='test/self.html' target='_blank') Multiple Instances
       li: a(href='test/size.html' target='_blank') Visible Options
     h2#tweaks
@@ -1450,6 +1454,8 @@ block content
     pre: code
       | const picker = new OptionPicker(self, state = {
       |     options: null,
+      |     size: null,
+      |     strict: false,
       |     with: []
       | });
     h2#parameters

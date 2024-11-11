@@ -80,6 +80,9 @@
         background: #00f;
         color: #fff;
       }
+      .option-picker__options:hover .option-picker__option:where(:not(.option-picker__option--disabled):not(.option-picker__option--selected):not(:hover)):focus {
+        background: #eee;
+      }
       .option-picker__values {
         padding: 0;
       }
@@ -1450,6 +1453,7 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
         <li><a href="test/disabled.html" target="_blank">Disabled State</a></li>
         <li><a href="test/group.html" target="_blank">Grouped Options</a></li>
         <li><a href="test/input.html" target="_blank">Options from <code>&lt;datalist&gt;</code></a></li>
+        <li>Options from Array: <a href="test/options.array.html" target="_blank">1</a>, <a href="test/options.array-1.html" target="_blank">2</a></li>
         <li><a href="test/self.html" target="_blank">Multiple Instances</a></li>
         <li><a href="test/size.html" target="_blank">Visible Options</a></li>
       </ul>
@@ -1460,6 +1464,8 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <h2 id="constructor"><a href="#constructor">#</a> Constructor</h2>
       <pre><code>const picker = new OptionPicker(self, state = {
     options: null,
+    size: null,
+    strict: false,
     with: []
 });</code></pre>
       <h2 id="parameters"><a href="#parameters">#</a> Parameters</h2>

@@ -960,6 +960,7 @@
             picker = getReference($),
             _mask = picker._mask,
             _options = picker._options,
+            mask = picker.mask,
             self = picker.self,
             state = picker.state,
             hint = _mask.hint,
@@ -981,6 +982,7 @@
                     currentOption = getNext(currentOption);
                 }
             }
+            currentOption && !hasClass(mask, n + '--open') && picker.enter();
             currentOption && focusTo(currentOption);
             exit = true;
         } else if (KEY_TAB === key) {

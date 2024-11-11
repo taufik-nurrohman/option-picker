@@ -460,7 +460,7 @@ function onKeyDownTextInput(e) {
     let $ = this, exit,
         key = e.key,
         picker = getReference($),
-        {_mask, _options, self, state} = picker,
+        {_mask, _options, mask, self, state} = picker,
         {hint} = _mask,
         {n} = state;
     n += '__option--disabled';
@@ -476,6 +476,7 @@ function onKeyDownTextInput(e) {
                 currentOption = getNext(currentOption);
             }
         }
+        currentOption && !hasClass(mask, n + '--open') && picker.enter();
         currentOption && focusTo(currentOption);
         exit = true;
     } else if (KEY_TAB === key) {

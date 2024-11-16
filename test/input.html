@@ -827,8 +827,8 @@
     <script>
       document.querySelectorAll('input').forEach(input => {
           let picker = new OptionPicker(input);
-          picker.on('change', v => console.log(['change', v]));
-          picker.on('filter', v => console.log(['filter', v]));
+          picker.on('change', (e, v) => console.log(['change', v]));
+          picker.on('filter', (e, v) => console.log(['filter', v]));
       });
     </script>
   </body>

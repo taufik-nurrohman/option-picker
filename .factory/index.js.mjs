@@ -318,16 +318,17 @@ defineProperty($$, 'value', {
         return "" === value ? null : value;
     },
     set: function (value) {
-        let $ = this;
+        let $ = this,
+            {_event} = $;
         // TODO: Properly set `selected` attribute to the mask option(s) as well
-        $.fire('change', [toValue(value)]);
+        $.fire('change', [_event, toValue(value)]);
     }
 });
 
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
         q = toCaseLower(query),
-        {_mask, mask, self, state} = $,
+        {_event, _mask, mask, self, state} = $,
         {options, value} = _mask,
         {n} = state,
         hasSize = getDatum(mask, 'size');
@@ -348,7 +349,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
                     setDatum(value, 'value', b);
                     setHTML(value, getHTML(v));
                     if (b !== a) {
-                        $.fire('change', [toValue(b)]);
+                        $.fire('change', [_event, toValue(b)]);
                     }
                     if (hasSize) {
                         scrollTo(v, options);
@@ -370,86 +371,94 @@ const filter = debounce(($, input, _options, selectOnly) => {
         });
         options.hidden = !count;
     }
-    $.fire('search', [query]);
+    $.fire('search', [_event, query]);
     let optionsCall = state.options;
     if (isFunction(optionsCall)) {
         optionsCall = optionsCall.call($, query);
         if (isInstance(optionsCall, Promise)) {
             optionsCall.then(v => {
                 createOptionsCall($, v, options);
-                $.fire('load', [v, query]);
+                $.fire('load', [_event, v, query]);
             });
         }
     }
 }, FILTER_COMMIT_TIME);
 
-function onBlurMask() {
+function onBlurMask(e) {
     let $ = this,
         picker = getReference($),
         {state} = picker,
         {n} = state;
+    picker._event = e;
     letClass($, n += '--focus');
     letClass($, n += '-self');
 }
 
-function onBlurOption() {
+function onBlurOption(e) {
     let $ = this,
         picker = getReference($),
         {mask, state} = picker,
         {n} = state;
+    picker._event = e;
     letClass($, n += '--focus');
     letClass($, n += '-option');
 }
 
-function onBlurTextInput() {
+function onBlurTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, mask, state} = picker,
         {text} = _mask,
         {n} = state;
+    picker._event = e;
     letClass(mask, n + '--focus-text');
     letClass(text, n + '__text--focus');
 }
 
-function onCutTextInput() {
+function onCutTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, self} = picker,
         {hint} = _mask;
+    picker._event = e;
     delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
 }
 
-function onFocusMask() {
+function onFocusMask(e) {
     let $ = this,
         picker = getReference($),
         {state} = picker,
         {n} = state;
+    picker._event = e;
     setClass($, n += '--focus');
     setClass($, n += '-self');
 }
 
-function onFocusOption() {
+function onFocusOption(e) {
     let $ = this,
         picker = getReference($),
         {mask, state} = picker,
         {n} = state;
     selectNone();
+    picker._event = e;
     setClass(mask, n += '--focus');
     setClass(mask, n += '-option');
 }
 
-function onFocusSelf() {
+function onFocusSelf(e) {
     let $ = this,
         picker = getReference($);
+    picker._event = e;
     picker.focus();
 }
 
-function onFocusTextInput() {
+function onFocusTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, mask, self, state} = picker,
         {input, text} = _mask,
         {n} = state;
+    picker._event = e;
     setClass(text, n + '__text--focus');
     setClass(mask, n += '--focus');
     setClass(mask, n += '-text');
@@ -464,6 +473,7 @@ function onKeyDownTextInput(e) {
         {hint} = _mask,
         {n} = state;
     n += '__option--disabled';
+    picker._event = e;
     delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
         delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
@@ -507,6 +517,7 @@ function onKeyDownMask(e) {
     if (isDisabled(self) || isReadOnly(self)) {
         return offEventDefault(e);
     }
+    picker._event = e;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
         searchTerm = "";
     } else if (KEY_ESCAPE === key) {
@@ -538,6 +549,7 @@ function onKeyDownOption(e) {
     n += '__option';
     let isInput = 'input' === getName(self),
         firstOption, lastOption, nextOption, parentOption, prevOption;
+    picker._event = e;
     if (KEY_DELETE_LEFT === key) {
         picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
@@ -558,7 +570,7 @@ function onKeyDownOption(e) {
                 setHTML(value, getHTML($));
             }
             if (b !== a) {
-                picker.fire('change', [toValue(b)]);
+                picker.fire('change', [e, toValue(b)]);
             }
         }
         picker.exit(exit = KEY_TAB !== key);
@@ -651,11 +663,12 @@ function onKeyDownOption(e) {
     exit && (offEventDefault(e), offEventPropagation(e));
 }
 
-function onPasteTextInput() {
+function onPasteTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, self} = picker,
         {hint} = _mask;
+    picker._event = e;
     delay(() => setText($, getText($)))(); // Convert to plain text
     delay(() => setText(hint, getText($, false) ? "" : self.placeholder), 1)();
 }
@@ -670,6 +683,7 @@ function onPointerDownMask(e) {
     if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
         return;
     }
+    picker._event = e;
     if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
         // The user is likely browsing the available option(s) by dragging the scroll bar
         return;
@@ -684,6 +698,7 @@ function onPointerDownOption(e) {
         picker = getReference($),
         {_mask, mask} = picker,
         {options} = _mask;
+    picker._event = e;
     // Select it immediately, then close the option(s) list when the event occurs with a mouse
     if ('mousedown' === e.type) {
         selectToOption($, picker);
@@ -712,6 +727,7 @@ function onPointerDownRoot(e) {
     let {mask, state} = picker,
         {n} = state,
         {target} = e;
+    picker._event = e;
     if (mask !== target && mask !== getParent(target, '.' + n)) {
         if (getDatum(mask, 'size')) {
             picker.blur();
@@ -728,6 +744,7 @@ function onPointerMoveRoot(e) {
     }
     let $ = this,
         picker = getReference($);
+    picker._event = e;
     if ('touchmove' === e.type && picker) {
         let {_mask} = picker,
             {options} = _mask,
@@ -749,6 +766,7 @@ function onPointerUpOption(e) {
         picker = getReference($),
         {_mask} = picker,
         {options} = _mask;
+    picker._event = e;
     // Select it, then close the option(s) list if the `touchstart` (that was done before this `touchend` event) event
     // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
     // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
@@ -758,29 +776,34 @@ function onPointerUpOption(e) {
     }
 }
 
-function onPointerUpRoot(e) {
+function onPointerUpRoot() {
     touchTop = false;
 }
 
 function onResetForm(e) {
     let $ = this,
         picker = getReference($);
+    picker._event = e;
     picker.let().fire('reset', [e]);
 }
 
-function onResizeWindow() {
+function onResizeWindow(e) {
     let $ = this,
         picker = getReference($);
-    picker && bounce(picker);
+    if (!picker) {
+        return;
+    }
+    bounce(picker), (picker._event = e);
 }
 
-function onScrollWindow() {
-    onResizeWindow.call(this);
+function onScrollWindow(e) {
+    onResizeWindow.call(this, e);
 }
 
 function onSubmitForm(e) {
     let $ = this,
         picker = getReference($);
+    picker._event = e;
     return picker.fire('submit', [e]);
 }
 
@@ -808,7 +831,7 @@ function selectTo(node, mode) {
 }
 
 function selectToOption($, picker) {
-    let {_mask, _options, self, state} = picker,
+    let {_event, _mask, _options, self, state} = picker,
         {hint, input, options, value} = _mask,
         {n} = state;
     n += '__option--selected';
@@ -831,7 +854,7 @@ function selectToOption($, picker) {
         setHTML(value, getHTML($));
     }
     if (b !== a) {
-        picker.fire('change', [toValue(b)]);
+        picker.fire('change', [_event, toValue(b)]);
     }
 }
 
@@ -840,6 +863,7 @@ $$.attach = function (self, state) {
     self = self || $.self;
     state = state || $.state;
     $._active = !isDisabled(self) && !isReadOnly(self);
+    $._event = null;
     $._options = new Map;
     $._value = getValue(self) || null;
     $.self = self;
@@ -864,7 +888,7 @@ $$.attach = function (self, state) {
         if (isInstance(options, Promise)) {
             options.then(options => {
                 createOptionsCall($, options, maskOptions);
-                $.fire('load', [options, null]);
+                $.fire('load', [picker._event, options, null]);
             });
         }
     }
@@ -1032,7 +1056,7 @@ $$.detach = function () {
 
 $$.enter = function (focus) {
     let $ = this, option,
-        {_mask, _options, mask, self, state} = $,
+        {_event, _mask, _options, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
     setClass(mask, n + '--focus');
@@ -1044,35 +1068,35 @@ $$.enter = function (focus) {
     }
     setReference(R, $); // Link current picker to the root target
     setReference(W, $);
-    $.fire('enter');
+    $.fire('enter', [_event]);
     if (focus) {
-        $.fire('focus');
+        $.fire('focus', [_event]);
         if ('input' === getName(self)) {
             focusTo(input), selectTo(input);
         } else if (option = getValueInMap(getValue(self), _options)) {
             focusTo(option);
         }
-        $.fire('focus.option');
+        $.fire('focus.option', [_event]);
     }
     return $;
 };
 
 $$.exit = function (focus) {
     let $ = this,
-        {_mask, mask, self, state} = $,
+        {_event, _mask, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
     letClass(mask, n + '--focus');
     letClass(mask, n + '--focus-option');
     letClass(mask, n += '--open');
-    $.fire('exit');
+    $.fire('exit', [_event]);
     if (focus) {
         if ('input' === getName(self)) {
             focusTo(input), selectTo(input);
         } else {
             focusTo(mask);
         }
-        $.fire('focus').fire('focus.self');
+        $.fire('focus', [_event]).fire('focus.self', [_event]);
     }
     return $;
 }

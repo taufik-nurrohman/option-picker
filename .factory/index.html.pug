@@ -1679,6 +1679,19 @@ block content
       | picker.value = 'foo bar baz';
     h3 Static Properties
     p Static properties are properties available directly on the #[code OptionPicker] object.
+    h4: code OptionPicker._
+    p Alias for #[code OptionPicker.prototype].
+    pre: code
+      | OptionPicker._.clear = function () {
+      |     if ('input' !== this.self.tagName.toLowerCase()) {
+      |         return this;
+      |     }
+      |     return (this.value = ""), this;
+      | };
+      |
+      | const picker = new OptionPicker(document.querySelector('input'));
+      |
+      | picker.clear(); // Clear value
     h4: code OptionPicker.state
     p Returns the default values of #[code picker.state].
     pre: code

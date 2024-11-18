@@ -1653,6 +1653,18 @@ picker.set('baz', 2); // Insert “baz” tag at index 2 in the list</code></pre
 picker.value = 'foo bar baz';</code></pre>
       <h3>Static Properties</h3>
       <p>Static properties are properties available directly on the <code>OptionPicker</code> object.</p>
+      <h4><code>OptionPicker._</code></h4>
+      <p>Alias for <code>OptionPicker.prototype</code>.</p>
+      <pre><code>OptionPicker._.clear = function () {
+    if ('input' !== this.self.tagName.toLowerCase()) {
+        return this;
+    }
+    return (this.value = ""), this;
+};
+
+const picker = new OptionPicker(document.querySelector('input'));
+
+picker.clear(); // Clear value</code></pre>
       <h4><code>OptionPicker.state</code></h4>
       <p>Returns the default values of <code>picker.state</code>.</p>
       <pre><code>const picker = new OptionPicker(document.querySelector('select'), {

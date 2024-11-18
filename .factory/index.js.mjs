@@ -251,7 +251,7 @@ function OptionPicker(self, state) {
         return new OptionPicker(self, state);
     }
 
-    setReference(self, hook($, OptionPicker.prototype));
+    setReference(self, hook($, OptionPicker._));
 
     return $.attach(self, fromStates({}, OptionPicker.state, (state || {})));
 
@@ -277,7 +277,7 @@ defineProperty(OptionPicker, 'name', {
     value: name
 });
 
-const $$ = OptionPicker.prototype;
+const $$ = OptionPicker._ = OptionPicker.prototype;
 
 defineProperty($$, 'size', {
     get: function () {

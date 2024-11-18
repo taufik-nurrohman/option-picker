@@ -737,7 +737,7 @@
         if (!isInstance($, OptionPicker)) {
             return new OptionPicker(self, state);
         }
-        setReference(self, hook($, OptionPicker.prototype));
+        setReference(self, hook($, OptionPicker._));
         return $.attach(self, _fromStates({}, OptionPicker.state, state || {}));
     }
     OptionPicker.from = function (self, state) {
@@ -755,7 +755,7 @@
     defineProperty(OptionPicker, 'name', {
         value: name
     });
-    var $$ = OptionPicker.prototype;
+    var $$ = OptionPicker._ = OptionPicker.prototype;
     defineProperty($$, 'size', {
         get: function get() {
             var size = this.state.size || 1;

@@ -1709,6 +1709,11 @@
         }
         return focusTo(mask), $;
     };
+    // TODO
+    $$.get = function (v) {};
+    // TODO
+    $$.let = function (v) {};
+    // TODO
     $$.set = function (v, at) {
         var $ = this,
             _active = $._active,
@@ -1732,16 +1737,9 @@
         option._ = {};
         option._[OPTION_SELF] = setElement('option');
         if (isSet(v[3]));
-        // TODO
         if (isInteger(at) && at >= 0) {
-            var exist,
-                options = toKeysFromMap(_options);
-            if (-1 !== (exist = options.indexOf(v[0]))) {
-                letValueInMap(v[0], _options);
-                options.splice(exist, 1);
-            }
+            var options = toKeysFromMap(_options);
             options.splice(at, 0, v[0]);
-            console.log(options);
             $._options = new Map();
             setValueInMap(v[0], option, _options);
             if (isFunction(_set)) {
@@ -1753,13 +1751,9 @@
                 setChildLast(_mask.options, v);
             });
         } else {
-            var _exist;
             setValueInMap(v[0], option, $._options);
             if (isFunction(_set)) {
                 _set.call($, option);
-            }
-            if (_exist = getValueInMap(v[0], $._options)) {
-                letElement(_exist);
             }
             setChildLast(_mask.options, option);
         }

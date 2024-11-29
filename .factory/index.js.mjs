@@ -1143,6 +1143,13 @@ $$.focus = function (mode) {
     return focusTo(mask), $;
 };
 
+// TODO
+$$.get = function (v) {};
+
+// TODO
+$$.let = function (v) {};
+
+// TODO
 $$.set = function (v, at) {
     let $ = this,
         {_active, _mask, _options, _set, state} = $,
@@ -1164,15 +1171,9 @@ $$.set = function (v, at) {
     if (isSet(v[3])) {
         // Option group
     }
-    // TODO
     if (isInteger(at) && at >= 0) {
-        let exist, options = toKeysFromMap(_options);
-        if (-1 !== (exist = options.indexOf(v[0]))) {
-            letValueInMap(v[0], _options);
-            options.splice(exist, 1);
-        }
+        let options = toKeysFromMap(_options);
         options.splice(at, 0, v[0]);
-        console.log(options);
         $._options = new Map;
         setValueInMap(v[0], option, _options);
         if (isFunction(_set)) {
@@ -1184,13 +1185,9 @@ $$.set = function (v, at) {
             setChildLast(_mask.options, v);
         });
     } else {
-        let exist;
         setValueInMap(v[0], option, $._options);
         if (isFunction(_set)) {
             _set.call($, option);
-        }
-        if (exist = getValueInMap(v[0], $._options)) {
-            letElement(exist);
         }
         setChildLast(_mask.options, option);
     }

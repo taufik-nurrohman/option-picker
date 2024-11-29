@@ -537,7 +537,7 @@
         values = isInstance(values, Map) && values.size > 0 ? values : getOptions(self);
         forEachMap(values, function (v, k) {
             if ('data-group' in v[1]) {
-                if (!optionGroup || getDatum(optionGroup, 'value', false) !== v[1]['data-group']) {
+                if (!optionGroup || getOptionValue(optionGroup) !== v[1]['data-group']) {
                     setChildLast(options, optionGroup = setElement('span', {
                         'class': n + '-group',
                         'data-value': v[1]['data-group']
@@ -555,6 +555,7 @@
             }
             var option = setElement('span', v[0], {
                 'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
+                'data-group': 'data-group' in v[1] ? v[1]['data-group'] : false,
                 'data-value': _fromValue(value || k),
                 'tabindex': disabled ? false : -1
             });
@@ -627,6 +628,10 @@
 
     function forEachMap(map, then) {
         forEachArray(map, then);
+    }
+
+    function getOptionValue(option) {
+        return getDatum(option, 'value', false);
     }
 
     function getOptions(self) {
@@ -714,6 +719,14 @@
 
     function setValueInMap(k, v, map) {
         return map.set(k, v);
+    }
+
+    function toKeysFromMap(map) {
+        var out = [];
+        forEachMap(map, function (v, k) {
+            return out.push(k);
+        });
+        return out;
     }
 
     function toValueFirstFromMap(map) {
@@ -828,7 +841,7 @@
             });
             try {
                 forEachMap(_options, function (v, k) {
-                    var text = toCaseLower(getText(v) + '\t' + (b = getDatum(v, 'value', false)));
+                    var text = toCaseLower(getText(v) + '\t' + (b = getOptionValue(v)));
                     if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v, n + '--disabled')) {
                         self.value = b;
                         setAttribute(v._[OPTION_SELF], 'selected', "");
@@ -848,7 +861,7 @@
         } else {
             var count = _options.size;
             forEachMap(_options, function (v, k) {
-                var text = toCaseLower(getText(v) + '\t' + getDatum(v, 'value', false));
+                var text = toCaseLower(getText(v) + '\t' + getOptionValue(v));
                 if (("" === q || hasValue(q, text)) && !hasClass(v, n + '--disabled')) {
                     v.hidden = false;
                 } else {
@@ -1081,7 +1094,7 @@
                 }
                 setAttribute($._[OPTION_SELF], 'selected', "");
                 setClass($, n + '--selected');
-                self.value = b = getDatum($, 'value', false);
+                self.value = b = getOptionValue($);
                 if (isInput) {
                     setText(hint, "");
                     setText(input, getText($));
@@ -1387,7 +1400,7 @@
         });
         setAttribute($._[OPTION_SELF], 'selected', "");
         setClass($, n);
-        self.value = b = getDatum($, 'value', false);
+        self.value = b = getOptionValue($);
         if ('input' === getName(self)) {
             setText(hint, "");
             setText(input, getText($));
@@ -1514,7 +1527,7 @@
                     setText(textInputHint, "");
                 }
             } else {
-                setDatum(text, 'value', getDatum(option, 'value', false));
+                setDatum(text, 'value', getOptionValue(option));
                 setHTML(text, getHTML(option));
             }
         }
@@ -1695,6 +1708,62 @@
             return focusTo(input), selectTo(input, mode), $;
         }
         return focusTo(mask), $;
+    };
+    $$.set = function (v, at) {
+        var $ = this,
+            _active = $._active,
+            _mask = $._mask,
+            _options = $._options,
+            _set = $._set,
+            state = $.state,
+            n = state.n;
+        if (!_active) {
+            return $;
+        }
+        if (!isArray(v)) {
+            v = [v, v];
+        }
+        var option = setElement('span', v[1] || v[0], {
+            'class': n + '__option',
+            'data-group': isSet(v[3]) ? v[3] : false,
+            'data-value': v[0],
+            'tabindex': _active ? -1 : false
+        });
+        option._ = {};
+        option._[OPTION_SELF] = setElement('option');
+        if (isSet(v[3]));
+        // TODO
+        if (isInteger(at) && at >= 0) {
+            var exist,
+                options = toKeysFromMap(_options);
+            if (-1 !== (exist = options.indexOf(v[0]))) {
+                letValueInMap(v[0], _options);
+                options.splice(exist, 1);
+            }
+            options.splice(at, 0, v[0]);
+            console.log(options);
+            $._options = new Map();
+            setValueInMap(v[0], option, _options);
+            if (isFunction(_set)) {
+                _set.call($, option);
+            }
+            forEachArray(options, function (k) {
+                var v;
+                setValueInMap(k, v = getValueInMap(k, _options), $._options);
+                setChildLast(_mask.options, v);
+            });
+        } else {
+            var _exist;
+            setValueInMap(v[0], option, $._options);
+            if (isFunction(_set)) {
+                _set.call($, option);
+            }
+            if (_exist = getValueInMap(v[0], $._options)) {
+                letElement(_exist);
+            }
+            setChildLast(_mask.options, option);
+        }
+        return $;
     };
     return OptionPicker;
 }));

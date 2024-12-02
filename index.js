@@ -1757,6 +1757,7 @@
             _mask = $._mask,
             _options = $._options,
             _set = $._set,
+            self = $.self,
             state = $.state,
             n = state.n;
         state.pattern;
@@ -1769,7 +1770,8 @@
         if (hasKeyInMap(v[0], _options)) {
             return $.fire('has.option', [_event, v[0]]);
         }
-        var option = setElement('span', (_v$2 = v[1]) != null ? _v$2 : v[0], {
+        var isInput = 'input' === getName(self),
+            option = setElement('span', (_v$2 = v[1]) != null ? _v$2 : v[0], {
                 'class': n + '__option',
                 'data-group': isSet(v[3]) ? v[3] : false,
                 'data-value': v[0],
@@ -1804,6 +1806,7 @@
                 var v;
                 setValueInMap(k, v = getValueInMap(k, _options), $._options);
                 setChildLast(_mask.options, v);
+                setChildLast(isInput ? self.list : self, v._[OPTION_SELF]);
             });
         } else {
             setValueInMap(v[0], option, $._options);
@@ -1811,6 +1814,7 @@
                 _set.call($, option);
             }
             setChildLast(_mask.options, option);
+            setChildLast(isInput ? self.list : self, optionRaw);
         }
         // self.value = toKeysFromMap($._tags).join(state.join);
         $.fire('set.option', [_event, v[0]]);

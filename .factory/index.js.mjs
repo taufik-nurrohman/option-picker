@@ -1179,7 +1179,7 @@ $$.let = function (v) {
 // TODO
 $$.set = function (v, at, _attach) {
     let $ = this,
-        {_active, _event, _mask, _options, _set, state} = $,
+        {_active, _event, _mask, _options, _set, self, state} = $,
         {n, pattern} = state;
     if (!_active && !_attach) {
         return $;
@@ -1190,7 +1190,8 @@ $$.set = function (v, at, _attach) {
     if (hasKeyInMap(v[0], _options)) {
         return $.fire('has.option', [_event, v[0]]);
     }
-    let option = setElement('span', v[1] ?? v[0], {
+    let isInput = 'input' === getName(self),
+        option = setElement('span', v[1] ?? v[0], {
             'class': n + '__option',
             'data-group': isSet(v[3]) ? v[3] : false,
             'data-value': v[0],
@@ -1227,6 +1228,7 @@ $$.set = function (v, at, _attach) {
             let v;
             setValueInMap(k, v = getValueInMap(k, _options), $._options);
             setChildLast(_mask.options, v);
+            setChildLast(isInput ? self.list : self, v._[OPTION_SELF]);
         });
     } else {
         setValueInMap(v[0], option, $._options);
@@ -1234,6 +1236,7 @@ $$.set = function (v, at, _attach) {
             _set.call($, option);
         }
         setChildLast(_mask.options, option);
+        setChildLast(isInput ? self.list : self, optionRaw);
     }
     // self.value = toKeysFromMap($._tags).join(state.join);
     $.fire('set.option', [_event, v[0]]);

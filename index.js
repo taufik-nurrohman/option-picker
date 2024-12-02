@@ -691,6 +691,10 @@
         return map.get(k);
     }
 
+    function hasKeyInMap(k, map) {
+        return map.has(k);
+    }
+
     function isDisabled(self) {
         return self.disabled;
     }
@@ -1712,31 +1716,82 @@
     // TODO
     $$.get = function (v) {};
     // TODO
-    $$.let = function (v) {};
-    // TODO
-    $$.set = function (v, at) {
+    $$.let = function (v) {
         var $ = this,
             _active = $._active,
-            _mask = $._mask,
-            _options = $._options,
-            _set = $._set,
-            state = $.state,
-            n = state.n;
+            _event = $._event,
+            _let = $._let,
+            _options = $._options;
+        $.state;
         if (!_active) {
             return $;
         }
         if (!isArray(v)) {
             v = [v, v];
         }
-        var option = setElement('span', v[1] || v[0], {
-            'class': n + '__option',
-            'data-group': isSet(v[3]) ? v[3] : false,
-            'data-value': v[0],
-            'tabindex': _active ? -1 : false
-        });
+        if (!hasKeyInMap(v[0], _options)) {
+            return $.fire('not.option', [_event, v[0]]);
+        }
+        var option = getValueInMap(v[0], _options);
+        if (isFunction(_let)) {
+            _let.call($, option);
+        }
+        offEvent('blur', option, onBlurOption);
+        offEvent('focus', option, onFocusOption);
+        offEvent('keydown', option, onKeyDownOption);
+        offEvent('mousedown', option, onPointerDownOption);
+        offEvent('touchend', option, onPointerUpOption);
+        offEvent('touchstart', option, onPointerDownOption);
+        letElement(option);
+        letValueInMap(v[0], $._options);
+        // self.value = toKeysFromMap($._tags).join(state.join);
+        $.fire('let.option', [_event, v[0]]);
+        return $;
+    };
+    // TODO
+    $$.set = function (v, at, _attach) {
+        var _v$2, _v$3;
+        var $ = this,
+            _active = $._active,
+            _event = $._event,
+            _mask = $._mask,
+            _options = $._options,
+            _set = $._set,
+            state = $.state,
+            n = state.n;
+        state.pattern;
+        if (!_active && !_attach) {
+            return $;
+        }
+        if (!isArray(v)) {
+            v = [v, v];
+        }
+        if (hasKeyInMap(v[0], _options)) {
+            return $.fire('has.option', [_event, v[0]]);
+        }
+        var option = setElement('span', (_v$2 = v[1]) != null ? _v$2 : v[0], {
+                'class': n + '__option',
+                'data-group': isSet(v[3]) ? v[3] : false,
+                'data-value': v[0],
+                'tabindex': _active ? -1 : false
+            }),
+            optionRaw = setElement('option', (_v$3 = v[1]) != null ? _v$3 : v[0], {
+                'value': v[0]
+            });
         option._ = {};
-        option._[OPTION_SELF] = setElement('option');
-        if (isSet(v[3]));
+        option._[OPTION_SELF] = optionRaw;
+        if (isSet(v[3])) {
+            setElement('span', {});
+        }
+        if (_active) {
+            onEvent('blur', option, onBlurOption);
+            onEvent('focus', option, onFocusOption);
+            onEvent('keydown', option, onKeyDownOption);
+            onEvent('mousedown', option, onPointerDownOption);
+            onEvent('touchend', option, onPointerUpOption);
+            onEvent('touchstart', option, onPointerDownOption);
+            setReference(option, $);
+        }
         if (isInteger(at) && at >= 0) {
             var options = toKeysFromMap(_options);
             options.splice(at, 0, v[0]);
@@ -1757,6 +1812,8 @@
             }
             setChildLast(_mask.options, option);
         }
+        // self.value = toKeysFromMap($._tags).join(state.join);
+        $.fire('set.option', [_event, v[0]]);
         return $;
     };
     return OptionPicker;

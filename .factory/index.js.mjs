@@ -1147,29 +1147,73 @@ $$.focus = function (mode) {
 $$.get = function (v) {};
 
 // TODO
-$$.let = function (v) {};
-
-// TODO
-$$.set = function (v, at) {
+$$.let = function (v) {
     let $ = this,
-        {_active, _mask, _options, _set, state} = $,
-        {n} = state;
+        {_active, _event, _let, _options, state} = $;
     if (!_active) {
         return $;
     }
     if (!isArray(v)) {
         v = [v, v];
     }
-    const option = setElement('span', v[1] || v[0], {
-        'class': n + '__option',
-        'data-group': isSet(v[3]) ? v[3] : false,
-        'data-value': v[0],
-        'tabindex': _active ? -1 : false
-    });
+    if (!hasKeyInMap(v[0], _options)) {
+        return $.fire('not.option', [_event, v[0]]);
+    }
+    let option = getValueInMap(v[0], _options);
+    if (isFunction(_let)) {
+        _let.call($, option);
+    }
+    offEvent('blur', option, onBlurOption);
+    offEvent('focus', option, onFocusOption);
+    offEvent('keydown', option, onKeyDownOption);
+    offEvent('mousedown', option, onPointerDownOption);
+    offEvent('touchend', option, onPointerUpOption);
+    offEvent('touchstart', option, onPointerDownOption);
+    letElement(option);
+    letValueInMap(v[0], $._options);
+    // self.value = toKeysFromMap($._tags).join(state.join);
+    $.fire('let.option', [_event, v[0]]);
+    return $;
+};
+
+// TODO
+$$.set = function (v, at, _attach) {
+    let $ = this,
+        {_active, _event, _mask, _options, _set, state} = $,
+        {n, pattern} = state;
+    if (!_active && !_attach) {
+        return $;
+    }
+    if (!isArray(v)) {
+        v = [v, v];
+    }
+    if (hasKeyInMap(v[0], _options)) {
+        return $.fire('has.option', [_event, v[0]]);
+    }
+    let option = setElement('span', v[1] ?? v[0], {
+            'class': n + '__option',
+            'data-group': isSet(v[3]) ? v[3] : false,
+            'data-value': v[0],
+            'tabindex': _active ? -1 : false
+        }),
+        optionRaw = setElement('option', v[1] ?? v[0], {
+            'value': v[0]
+        }),
+        optionGroup,
+        optionGroupRaw;
     option._ = {};
-    option._[OPTION_SELF] = setElement('option');
+    option._[OPTION_SELF] = optionRaw;
     if (isSet(v[3])) {
-        // Option group
+        optionGroup = setElement('span', {});
+    }
+    if (_active) {
+        onEvent('blur', option, onBlurOption);
+        onEvent('focus', option, onFocusOption);
+        onEvent('keydown', option, onKeyDownOption);
+        onEvent('mousedown', option, onPointerDownOption);
+        onEvent('touchend', option, onPointerUpOption);
+        onEvent('touchstart', option, onPointerDownOption);
+        setReference(option, $);
     }
     if (isInteger(at) && at >= 0) {
         let options = toKeysFromMap(_options);
@@ -1191,6 +1235,8 @@ $$.set = function (v, at) {
         }
         setChildLast(_mask.options, option);
     }
+    // self.value = toKeysFromMap($._tags).join(state.join);
+    $.fire('set.option', [_event, v[0]]);
     return $;
 };
 

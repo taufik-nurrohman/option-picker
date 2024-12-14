@@ -330,6 +330,10 @@ defineProperty($$, 'value', {
     }
 });
 
+$$._let = false;
+
+$$._set = false;
+
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
         q = toCaseLower(query),
@@ -1143,10 +1147,28 @@ $$.focus = function (mode) {
     return focusTo(mask), $;
 };
 
-// TODO
-$$.get = function (v) {};
+$$.get = function (v) {
+    let $ = this,
+        {_active, _event, _options} = $;
+    if (!_active) {
+        return false;
+    }
+    $.fire('get.option', [_event, v]);
+    if (!hasKeyInMap(v, _options)) {
+        return null;
+    }
+    let indexOf = -1;
+    try {
+        forEachMap(_options, (value, k) => {
+            ++indexOf;
+            if (v === k) {
+                throw "";
+            }
+        });
+    } catch (e) {}
+    return indexOf;
+};
 
-// TODO
 $$.let = function (v) {
     let $ = this,
         {_active, _event, _let, _options, state} = $;
@@ -1171,12 +1193,10 @@ $$.let = function (v) {
     offEvent('touchstart', option, onPointerDownOption);
     letElement(option);
     letValueInMap(v[0], $._options);
-    // self.value = toKeysFromMap($._tags).join(state.join);
     $.fire('let.option', [_event, v[0]]);
     return $;
 };
 
-// TODO
 $$.set = function (v, at, _attach) {
     let $ = this,
         {_active, _event, _mask, _options, _set, self, state} = $,
@@ -1199,14 +1219,9 @@ $$.set = function (v, at, _attach) {
         }),
         optionRaw = setElement('option', v[1] ?? v[0], {
             'value': v[0]
-        }),
-        optionGroup,
-        optionGroupRaw;
+        });
     option._ = {};
     option._[OPTION_SELF] = optionRaw;
-    if (isSet(v[3])) {
-        optionGroup = setElement('span', {});
-    }
     if (_active) {
         onEvent('blur', option, onBlurOption);
         onEvent('focus', option, onFocusOption);
@@ -1238,7 +1253,6 @@ $$.set = function (v, at, _attach) {
         setChildLast(_mask.options, option);
         setChildLast(isInput ? self.list : self, optionRaw);
     }
-    // self.value = toKeysFromMap($._tags).join(state.join);
     $.fire('set.option', [_event, v[0]]);
     return $;
 };

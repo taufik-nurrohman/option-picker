@@ -823,6 +823,8 @@
             $.fire('change', [_event, _toValue(value)]);
         }
     });
+    $$._let = false;
+    $$._set = false;
     var filter = debounce(function ($, input, _options, selectOnly) {
         var query = isString(input) ? input : getText(input) || "",
             q = toCaseLower(query),
@@ -1713,9 +1715,29 @@
         }
         return focusTo(mask), $;
     };
-    // TODO
-    $$.get = function (v) {};
-    // TODO
+    $$.get = function (v) {
+        var $ = this,
+            _active = $._active,
+            _event = $._event,
+            _options = $._options;
+        if (!_active) {
+            return false;
+        }
+        $.fire('get.option', [_event, v]);
+        if (!hasKeyInMap(v, _options)) {
+            return null;
+        }
+        var indexOf = -1;
+        try {
+            forEachMap(_options, function (value, k) {
+                ++indexOf;
+                if (v === k) {
+                    throw "";
+                }
+            });
+        } catch (e) {}
+        return indexOf;
+    };
     $$.let = function (v) {
         var $ = this,
             _active = $._active,
@@ -1744,11 +1766,9 @@
         offEvent('touchstart', option, onPointerDownOption);
         letElement(option);
         letValueInMap(v[0], $._options);
-        // self.value = toKeysFromMap($._tags).join(state.join);
         $.fire('let.option', [_event, v[0]]);
         return $;
     };
-    // TODO
     $$.set = function (v, at, _attach) {
         var _v$2, _v$3;
         var $ = this,
@@ -1782,9 +1802,6 @@
             });
         option._ = {};
         option._[OPTION_SELF] = optionRaw;
-        if (isSet(v[3])) {
-            setElement('span', {});
-        }
         if (_active) {
             onEvent('blur', option, onBlurOption);
             onEvent('focus', option, onFocusOption);
@@ -1816,7 +1833,6 @@
             setChildLast(_mask.options, option);
             setChildLast(isInput ? self.list : self, optionRaw);
         }
-        // self.value = toKeysFromMap($._tags).join(state.join);
         $.fire('set.option', [_event, v[0]]);
         return $;
     };

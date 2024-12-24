@@ -1,0 +1,118 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('select'));
+    |
+    | picker.on('change', function () {
+    |     console.log(this.value);
+    | });
+    |
+    | function createOptions_1(picker) {
+    |     picker.options = ['Option 1 (Array 1)', 'Option 2 (Array 1)', 'Option 3 (Array 1)'];
+    | }
+    |
+    | function createOptions_1_1(picker) {
+    |     picker.options = [
+    |         ['Option 1 (Array 1.1)', {
+    |             value: 1
+    |         }],
+    |         ['Option 2 (Array 1.1)', {
+    |             value: 2
+    |         }],
+    |         ['Option 3 (Array 1.1)', {
+    |             disabled: true,
+    |             value: 3
+    |         }]
+    |     ];
+    | }
+    |
+    | function createOptions_2(picker) {
+    |     picker.options = {
+    |         '3': 'Option 1 (Object 1)',
+    |         '2': 'Option 2 (Object 1)',
+    |         '1': 'Option 3 (Object 1)'
+    |     };
+    | }
+    |
+    | function createOptions_2_1(picker) {
+    |     picker.options = {
+    |         'option-3': 'Option 1 (Object 1.1)',
+    |         'option-2': 'Option 2 (Object 1.1)',
+    |         'option-1': 'Option 3 (Object 1.1)'
+    |     };
+    | }
+    |
+    | function createOptions_2_2(picker) {
+    |     picker.options = {
+    |         'option-3': ['Option 1 (Object 1.2)', {
+    |             value: 1
+    |         }],
+    |         'option-2': ['Option 2 (Object 1.2)', {
+    |             value: 2
+    |         }],
+    |         'option-1': ['Option 3 (Object 1.2)', {
+    |             disabled: true,
+    |             value: 3
+    |         }]
+    |     };
+    | }
+    |
+    | function createOptions_3(picker) {
+    |     const options = new Map;
+    |     options.set(1, 'Option 1 (Map 1)');
+    |     options.set(2, 'Option 2 (Map 1)');
+    |     options.set(3, 'Option 3 (Map 1)');
+    |     picker.options = options;
+    | }
+    |
+    | function createOptions_3_1(picker) {
+    |     const options = new Map;
+    |     options.set(1, ['Option 1 (Map 1.1)', {
+    |         value: 1
+    |     }]);
+    |     options.set(2, ['Option 2 (Map 1.1)', {
+    |         value: 2
+    |     }]);
+    |     options.set(3, ['Option 3 (Map 1.1)', {
+    |         disabled: true,
+    |         value: 3
+    |     }]);
+    |     picker.options = options;
+    | }
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(name='test')
+          option Option 1
+          option Option 2
+          option(value='3') Option 3
+      p
+        button(onclick='createOptions_1(picker);' type='button') Create from Array
+        = ' '
+        button(onclick='createOptions_1_1(picker);' type='button') Create from Array 2
+        = ' '
+        button(onclick='createOptions_2(picker);' type='button') Create from Object
+        = ' '
+        button(onclick='createOptions_2_1(picker);' type='button') Create from Object 2
+        = ' '
+        button(onclick='createOptions_2_2(picker);' type='button') Create from Object 3
+        = ' '
+        button(onclick='createOptions_3(picker);' type='button') Create from Map
+        = ' '
+        button(onclick='createOptions_3_1(picker);' type='button') Create from Map 2
+      p
+        button(type='submit') Submit

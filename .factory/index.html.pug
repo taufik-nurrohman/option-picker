@@ -1587,20 +1587,11 @@ block content
     pre: code
       | picker.fire('change', []);
     h4: code picker.focus(mode = true)
-    p Focuses to the option picker’s input or self. If it has a text, it will select the text as well.
+    p Focuses to the option picker’s input or self. The #[code mode] value has no effect on the “strict” option picker presentation.
     pre: code
       | picker.focus(); // Focus and select the text
       | picker.focus(-1); // Focus and put the caret to the start of the text
       | picker.focus(+1); // Focus and put the caret to the end of the text
-    h4: code picker.get(name)
-    p Returns the tag position in the list, starting from #[code 0].
-    pre: code
-      | if (null !== picker.get('foo')) { … }
-    h4: code picker.let(name)
-    p Removes a tag by its name.
-    pre: code
-      | picker.let('foo'); // Remove “foo” tag
-      | picker.let(); // Reset to the initial value
     h4: code picker.off(event, then)
     p Removes an event.
     pre: code
@@ -1610,20 +1601,14 @@ block content
     p Adds a new event.
     pre: code
       | picker.on('change', function () {
-      |     console.log(this.value.split(this.state.join));
+      |     console.log(this.value);
       | });
     pre: code
       | function onChange() {
-      |     console.log(this.value.split(this.state.join));
+      |     console.log(this.value);
       | }
       |
       | picker.on('change', onChange);
-    h4: code picker.set(name, at = -1)
-    p Adds a new tag with the given name.
-    pre: code
-      | picker.set('foo'); // Append “foo” tag
-      | picker.set('bar', 0); // Prepend “bar” tag
-      | picker.set('baz', 2); // Insert “baz” tag at index 2 in the list
     h3 Static Methods
     p Static methods are methods available directly on the #[code OptionPicker] object.
     h4: code OptionPicker.from(self, state)
@@ -1649,6 +1634,73 @@ block content
     p Returns the option picker’s mask.
     pre: code
       | picker.mask.classList.add(picker.state.n + '--dark');
+    h4: code picker.options
+    p Gets the current options list data, or sets (overwrites) the current options list with new data.
+    pre: code
+      | console.log(picker.options);
+    pre: code
+      | picker.options = [
+      |     'Option 1',
+      |     'Option 2',
+      |     'Option 3'
+      | ];
+    pre: code
+      | picker.options = [
+      |     ['Option 1', {
+      |         value: 1
+      |     }],
+      |     ['Option 2', {
+      |         value: 2
+      |     }],
+      |     ['Option 3', {
+      |         disabled: true,
+      |         value: 3
+      |     }]
+      | ];
+    pre: code
+      | picker.options = {
+      |     '1': 'Option 1',
+      |     '2': 'Option 2',
+      |     '3': 'Option 3'
+      | };
+    pre: code
+      | picker.options = {
+      |     'option-1': ['Option 1', {
+      |         value: 1
+      |     }],
+      |     'option-2': ['Option 2', {
+      |         value: 2
+      |     }],
+      |     'option-3': ['Option 3', {
+      |         disabled: true,
+      |         value: 3
+      |     }]
+      | };
+    pre: code
+      | const options = new Map;
+      |
+      | options.set(1, 'Option 1');
+      | options.set(2, 'Option 2');
+      | options.set(3, 'Option 3');
+      |
+      | picker.options = options;
+    pre: code
+      | const options = new Map;
+      |
+      | options.set(1, ['Option 1', {
+      |     value: 1
+      | }]);
+      |
+      | options.set(2, ['Option 2', {
+      |     value: 2
+      | }]);
+      |
+      | options.set(3, ['Option 3', {
+      |     disabled: true,
+      |     value: 3
+      | }]);
+      |
+      | picker.options = options;
     h4: code picker.self
     p Returns the #[code &lt;input&gt;] or #[code &lt;select&gt;] element.
     pre: code
@@ -1662,11 +1714,11 @@ block content
     pre: code
       | console.log(picker.state);
     h4: code picker.text
-    p Gets or sets the current text in the option picker’s input.
+    p Gets or sets the current text in the “loose” option picker’s input.
     pre: code
       | console.log(picker.text);
     pre: code
-      | picker.text = 'foo bar baz';
+      | picker.text = 'Option 3';
     h4: code picker.value
     p Proxy that passes to the #[code picker.self.value] property, with additional actions that are executed while the value is being set.
     pre: code
@@ -1676,7 +1728,7 @@ block content
       |     console.log(this.value);
       | });
       |
-      | picker.value = 'foo bar baz';
+      | picker.value = '3';
     h3 Static Properties
     p Static properties are properties available directly on the #[code OptionPicker] object.
     h4: code OptionPicker._

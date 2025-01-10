@@ -2,7 +2,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright © 2024 Taufik Nurrohman <https://github.com/taufik-nurrohman>
+ * Copyright © 2025 Taufik Nurrohman <https://github.com/taufik-nurrohman>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to deal
@@ -569,14 +569,14 @@
             if (isFloat(v) || isInteger(v) || isString(v)) {
                 v = [v, {}];
             }
-            if ('data-group' in v[1]) {
-                if (!optionGroup || getOptionValue(optionGroup) !== v[1]['data-group']) {
+            if ('&' in v[1]) {
+                if (!optionGroup || getOptionValue(optionGroup) !== v[1]['&']) {
                     setChildLast(options, optionGroup = setElement('span', {
                         'class': n + '-group',
-                        'data-value': v[1]['data-group']
+                        'data-value': v[1]['&']
                     }));
                     setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
-                        'label': v[1]['data-group']
+                        'label': v[1]['&']
                     }));
                 }
             } else {
@@ -591,7 +591,7 @@
             }
             option = setElement('span', _fromValue(v[0]), {
                 'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
-                'data-group': 'data-group' in v[1] ? v[1]['data-group'] : false,
+                'data-group': '&' in v[1] ? v[1]['&'] : false,
                 'data-value': _fromValue(value || k),
                 'tabindex': disabled ? false : -1
             });
@@ -693,7 +693,7 @@
             });
             if ('optgroup' === getName(v)) {
                 forEachMap(getOptions(v), function (vv, kk) {
-                    vv[1]['data-group'] = v.label;
+                    vv[1]['&'] = v.label;
                     setValueInMap(_fromValue(kk), vv, map);
                 });
                 return 1; // continue
@@ -905,17 +905,18 @@
             options = _mask.options,
             value = _mask.value,
             n = state.n,
+            strict = state.strict,
             hasSize = getDatum(mask, 'size');
         n += '__option';
         if (selectOnly) {
             var a = getValue(self),
                 b;
-            forEachMap(_options, function (v, k) {
+            forEachMap(_options, function (v) {
                 letAttribute(v._[OPTION_SELF], 'selected');
                 letClass(v, n + '--selected');
             });
             try {
-                forEachMap(_options, function (v, k) {
+                forEachMap(_options, function (v) {
                     var text = toCaseLower(getText(v) + '\t' + (b = getOptionValue(v)));
                     if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v, n + '--disabled')) {
                         self.value = b;
@@ -924,7 +925,7 @@
                         setDatum(value, 'value', b);
                         setHTML(value, getHTML(v));
                         if (b !== a) {
-                            $.fire('change', [_event, _toValue(b)]);
+                            $.fire('change', [_event, b]);
                         }
                         if (hasSize) {
                             scrollTo(v, options);
@@ -935,7 +936,7 @@
             } catch (e) {}
         } else {
             var count = _options.size;
-            forEachMap(_options, function (v, k) {
+            forEachMap(_options, function (v) {
                 var text = toCaseLower(getText(v) + '\t' + getOptionValue(v));
                 if (("" === q || hasValue(q, text)) && !hasClass(v, n + '--disabled')) {
                     v.hidden = false;
@@ -945,6 +946,7 @@
                 }
             });
             options.hidden = !count;
+            strict || (self.value = query);
         }
         $.fire('search', [_event, query]);
         var call = state.options;
@@ -986,13 +988,37 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
+            _options = picker._options,
             mask = picker.mask,
+            self = picker.self,
             state = picker.state,
+            options = _mask.options,
             text = _mask.text,
-            n = state.n;
+            n = state.n,
+            strict = state.strict;
         picker._event = e;
         letClass(mask, n + '--focus-text');
         letClass(text, n + '__text--focus');
+        if (strict) {
+            // Automatically select the first option
+            var currentOption = toValuesFromMap(_options).find(function (v) {
+                    return getText(v, false) === getText($, false);
+                }),
+                firstOption = currentOption || toValuesFromMap(_options).find(function (v) {
+                    return !v.hidden && !hasClass(v, n + '__option--disabled');
+                });
+            if (firstOption && !options.hidden) {
+                selectToOption(firstOption, picker);
+            } else {
+                forEachMap(_options, function (v) {
+                    letAttribute(v._[OPTION_SELF], 'selected');
+                    letClass(v, n + '__option--selected');
+                    v.hidden = false;
+                });
+                options.hidden = false;
+                picker.text = self.value = "";
+            }
+        }
     }
 
     function onCutTextInput(e) {
@@ -1065,7 +1091,6 @@
             state = picker.state,
             hint = _mask.hint,
             n = state.n;
-        n += '__option--disabled';
         picker._event = e;
         delay(function () {
             return setText(hint, getText($, false) ? "" : self.placeholder);
@@ -1079,7 +1104,7 @@
             var currentOption = getValueInMap(getValue(self), _options);
             if (!currentOption || currentOption.hidden) {
                 currentOption = toValueFirstFromMap(_options);
-                while (currentOption && (hasClass(currentOption, n) || currentOption.hidden)) {
+                while (currentOption && (hasClass(currentOption, n + '__option--disabled') || currentOption.hidden)) {
                     currentOption = getNext(currentOption);
                 }
             }
@@ -1095,7 +1120,6 @@
             currentOption && focusTo(currentOption);
             exit = true;
         } else if (KEY_TAB === key) {
-            if (state.strict);
             picker.exit();
         } else {
             filter(picker, $, _options);
@@ -1188,7 +1212,7 @@
                     setHTML(value, getHTML($));
                 }
                 if (b !== a) {
-                    picker.fire('change', [e, _toValue(b)]);
+                    picker.fire('change', [e, b]);
                 }
             }
             picker.exit(exit = KEY_TAB !== key);
@@ -1476,7 +1500,7 @@
         n += '__option--selected';
         var a = getValue(self),
             b;
-        forEachMap(_options, function (v, k) {
+        forEachMap(_options, function (v) {
             if ($ === v) {
                 return;
             }
@@ -1494,7 +1518,7 @@
             setHTML(value, getHTML($));
         }
         if (b !== a) {
-            picker.fire('change', [_event, _toValue(b)]);
+            picker.fire('change', [_event, b]);
         }
     }
     $$.attach = function (self, state) {

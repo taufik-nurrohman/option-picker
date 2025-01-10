@@ -1,0 +1,37 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker_1 = new OptionPicker(document.querySelector('input[name=color]'));
+    | const picker_2 = new OptionPicker(document.querySelector('input[name=color-strict]'), {
+    |     strict: true
+    | });
+
+block style
+  style
+    | .option-picker {
+    |   min-width: 20em;
+    | }
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get')
+      p Type “Yellow” in the input box below, and then press the #[kbd Tab] key or just click randomly outside the input box to trigger the blur event.
+      p
+        input(list='colors' name='color' placeholder='Select or type a color name…' type='text')
+        = ' '
+        input(list='colors' name='color-strict' placeholder='Can only select “Blue”, “Green”, or “Red”' type='text')
+      p
+        button(type='submit') Submit
+      datalist#colors
+        option Blue
+        option Green
+        option Red

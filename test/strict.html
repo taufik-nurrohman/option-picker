@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        min-width: 20em;
+      }
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form method="get">
+        <p>Type “Yellow” in the input box below, and then press the <kbd>Tab</kbd> key or just click randomly outside the input box to trigger the blur event.</p>
+        <p><input list="colors" name="color" placeholder="Select or type a color name…" type="text"> <input list="colors" name="color-strict" placeholder="Can only select “Blue”, “Green”, or “Red”" type="text"></p>
+        <p><button type="submit">Submit</button></p><datalist id="colors">
+          <option>Blue</option>
+          <option>Green</option>
+          <option>Red</option>
+        </datalist>
+      </form>
+    </main>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker_1 = new OptionPicker(document.querySelector('input[name=color]'));
+      const picker_2 = new OptionPicker(document.querySelector('input[name=color-strict]'), {
+          strict: true
+      });
+    </script>
+  </body>
+</html>

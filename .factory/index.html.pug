@@ -1,7 +1,7 @@
 extends _index.pug
 
 block state
-  - const scripts = ['index.min.js']
+  - const scripts = ['index.js']
   - const styles = ['../layout/index.min.css', 'index.min.css']
   - const theme = '#000'
   - const title = 'Option Picker ' + version
@@ -1646,6 +1646,11 @@ block content
       |     'Option 2',
       |     'Option 3'
       | ];
+      |
+      | // Or…
+      | picker.options.set('Option 1');
+      | picker.options.set('Option 2');
+      | picker.options.set('Option 3');
     pre: code
       | picker.options = [
       |     ['Option 1', {
@@ -1659,12 +1664,24 @@ block content
       |         value: 3
       |     }]
       | ];
+      |
+      | // Or…
+      | picker.options.set(1, 'Option 1');
+      | picker.options.set(2, 'Option 2');
+      | picker.options.set(3, ['Option 3', {
+      |     disabled: true
+      | }]);
     pre: code
       | picker.options = {
       |     '1': 'Option 1',
       |     '2': 'Option 2',
       |     '3': 'Option 3'
       | };
+      |
+      | // Or…
+      | picker.options.set(1, 'Option 1');
+      | picker.options.set(2, 'Option 2');
+      | picker.options.set(3, 'Option 3');
     pre: code
       | picker.options = {
       |     'option-1': ['Option 1', {
@@ -1678,6 +1695,20 @@ block content
       |         value: 3
       |     }]
       | };
+      |
+      | // Or…
+      | picker.options.set('option-1', ['Option 1', {
+      |     value: 1
+      | }]);
+      |
+      | picker.options.set('option-2', ['Option 2', {
+      |     value: 2
+      | }]);
+      |
+      | picker.options.set('option-3', ['Option 3', {
+      |     disabled: true,
+      |     value: 3
+      | }]);
     pre: code
       | const options = new Map;
       |

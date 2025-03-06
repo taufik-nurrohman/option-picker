@@ -1627,7 +1627,12 @@ picker.on('change', onChange);</code></pre>
     'Option 1',
     'Option 2',
     'Option 3'
-];</code></pre>
+];
+
+// Or…
+picker.options.set('Option 1');
+picker.options.set('Option 2');
+picker.options.set('Option 3');</code></pre>
       <pre><code>picker.options = [
     ['Option 1', {
         value: 1
@@ -1639,12 +1644,24 @@ picker.on('change', onChange);</code></pre>
         disabled: true,
         value: 3
     }]
-];</code></pre>
+];
+
+// Or…
+picker.options.set(1, 'Option 1');
+picker.options.set(2, 'Option 2');
+picker.options.set(3, ['Option 3', {
+    disabled: true
+}]);</code></pre>
       <pre><code>picker.options = {
     '1': 'Option 1',
     '2': 'Option 2',
     '3': 'Option 3'
-};</code></pre>
+};
+
+// Or…
+picker.options.set(1, 'Option 1');
+picker.options.set(2, 'Option 2');
+picker.options.set(3, 'Option 3');</code></pre>
       <pre><code>picker.options = {
     'option-1': ['Option 1', {
         value: 1
@@ -1656,7 +1673,21 @@ picker.on('change', onChange);</code></pre>
         disabled: true,
         value: 3
     }]
-};</code></pre>
+};
+
+// Or…
+picker.options.set('option-1', ['Option 1', {
+    value: 1
+}]);
+
+picker.options.set('option-2', ['Option 2', {
+    value: 2
+}]);
+
+picker.options.set('option-3', ['Option 3', {
+    disabled: true,
+    value: 3
+}]);</code></pre>
       <pre><code>const options = new Map;
 
 options.set(1, 'Option 1');
@@ -1763,7 +1794,7 @@ Object.defineProperty(Extension, 'name', {
       <hr>
       <p>© 2025 <a href="/">Taufik Nurrohman</a></p>
     </footer>
-    <script src="index.min.js"></script>
+    <script src="index.js"></script>
     <script>
       const picker = new OptionPicker(document.forms[0].country);
       picker.on('change', function (e, value) {

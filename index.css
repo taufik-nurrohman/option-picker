@@ -94,6 +94,7 @@
 .option-picker__option--selected {
   background: rgba(0, 0, 255, 0.5);
 }
+.option-picker__option--focus,
 .option-picker__option:focus,
 .option-picker__option:where(:not(.option-picker__option--disabled)):hover {
   outline: 1px solid;

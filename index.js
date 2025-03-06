@@ -27,131 +27,6 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = f() : typeof define === 'function' && define.amd ? define(f) : (g = typeof globalThis !== 'undefined' ? globalThis : g || self, g.OptionPicker = f());
 })(this, (function () {
     'use strict';
-
-    function _construct(t, e, r) {
-        if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments);
-        var o = [null];
-        o.push.apply(o, e);
-        var p = new(t.bind.apply(t, o))();
-        return r && _setPrototypeOf(p, r.prototype), p;
-    }
-
-    function _defineProperties(e, r) {
-        for (var t = 0; t < r.length; t++) {
-            var o = r[t];
-            o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-        }
-    }
-
-    function _createClass(e, r, t) {
-        return r && _defineProperties(e.prototype, r), Object.defineProperty(e, "prototype", {
-            writable: !1
-        }), e;
-    }
-
-    function _get() {
-        return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) {
-            var p = _superPropBase(e, t);
-            if (p) {
-                var n = Object.getOwnPropertyDescriptor(p, t);
-                return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value;
-            }
-        }, _get.apply(null, arguments);
-    }
-
-    function _getPrototypeOf(t) {
-        return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) {
-            return t.__proto__ || Object.getPrototypeOf(t);
-        }, _getPrototypeOf(t);
-    }
-
-    function _inherits(t, e) {
-        if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function");
-        t.prototype = Object.create(e && e.prototype, {
-            constructor: {
-                value: t,
-                writable: !0,
-                configurable: !0
-            }
-        }), Object.defineProperty(t, "prototype", {
-            writable: !1
-        }), e && _setPrototypeOf(t, e);
-    }
-
-    function _isNativeFunction(t) {
-        try {
-            return -1 !== Function.toString.call(t).indexOf("[native code]");
-        } catch (n) {
-            return "function" == typeof t;
-        }
-    }
-
-    function _isNativeReflectConstruct() {
-        try {
-            var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-        } catch (t) {}
-        return (_isNativeReflectConstruct = function () {
-            return !!t;
-        })();
-    }
-
-    function _setPrototypeOf(t, e) {
-        return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) {
-            return t.__proto__ = e, t;
-        }, _setPrototypeOf(t, e);
-    }
-
-    function _superPropBase(t, o) {
-        for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t)););
-        return t;
-    }
-
-    function _superPropGet(t, e, o, r) {
-        var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), e, o);
-        return 2 & r && "function" == typeof p ? function (t) {
-            return p.apply(o, t);
-        } : p;
-    }
-
-    function _toPrimitive(t, r) {
-        if ("object" != typeof t || !t) return t;
-        var e = t[Symbol.toPrimitive];
-        if (void 0 !== e) {
-            var i = e.call(t, r);
-            if ("object" != typeof i) return i;
-            throw new TypeError("@@toPrimitive must return a primitive value.");
-        }
-        return (String)(t);
-    }
-
-    function _toPropertyKey(t) {
-        var i = _toPrimitive(t, "string");
-        return "symbol" == typeof i ? i : i + "";
-    }
-
-    function _wrapNativeSuper(t) {
-        var r = "function" == typeof Map ? new Map() : void 0;
-        return _wrapNativeSuper = function (t) {
-            if (null === t || !_isNativeFunction(t)) return t;
-            if ("function" != typeof t) throw new TypeError("Super expression must either be null or a function");
-            if (void 0 !== r) {
-                if (r.has(t)) return r.get(t);
-                r.set(t, Wrapper);
-            }
-
-            function Wrapper() {
-                return _construct(t, arguments, _getPrototypeOf(this).constructor);
-            }
-            return Wrapper.prototype = Object.create(t.prototype, {
-                constructor: {
-                    value: Wrapper,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
-                }
-            }), _setPrototypeOf(Wrapper, t);
-        }, _wrapNativeSuper(t);
-    }
     var hasValue = function hasValue(x, data) {
         return -1 !== data.indexOf(x);
     };
@@ -661,108 +536,6 @@
     }, 10);
     var name = 'OptionPicker';
     var references = new WeakMap();
-    // Extends the native `Map()` class to match my method naming preference: `count`, `get()`, `has()`, `let()`, `set()`
-    var TagPickerOptions = /*#__PURE__*/ function (_Map) {
-        function TagPickerOptions(of, iterable) {
-            var _this;
-            _this = _Map.call(this, iterable) || this;
-            _this.picker = of || {};
-            return _this;
-        }
-        _inherits(TagPickerOptions, _Map);
-        var _proto = TagPickerOptions.prototype;
-        _proto.let = function _let(key) {
-            var picker = this.picker,
-                _mask = picker._mask;
-            _mask.options;
-            var option = this.get(key);
-            if (!option) {
-                return false;
-            }
-            // TODO
-            //console.log(option);
-            return _superPropGet(TagPickerOptions, "delete", this, 3)([key]);
-        };
-        _proto.set = function set(k, v) {
-            var itemsParent,
-                option,
-                optionReal,
-                optionGroup,
-                optionGroupReal,
-                picker = this.picker,
-                _mask = picker._mask,
-                self = picker.self,
-                state = picker.state,
-                options = _mask.options,
-                n = state.n;
-            n += '__option';
-            if ('input' === getName(self)) {
-                (itemsParent = self.list) ? getChildren(itemsParent): [];
-            } else {
-                getChildren(itemsParent = self);
-            }
-            if (!isSet(v)) {
-                v = [k, {}];
-            } else if (isFloat(v) || isInteger(v) || isString(v)) {
-                v = [v, {}];
-            }
-            if ('&' in v[1]) {
-                optionGroup = getElement('.' + n + '-group[data-value="' + v[1]['&'].replace(/"/g, '\\"') + '"]', options);
-                if (!optionGroup || getOptionValue(optionGroup) !== v[1]['&']) {
-                    setChildLast(options, optionGroup = setElement('span', {
-                        'class': n + '-group',
-                        'data-value': v[1]['&']
-                    }));
-                    setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
-                        'label': v[1]['&']
-                    }));
-                }
-            } else {
-                optionGroup = optionGroupReal = false;
-            }
-            var _v$ = v[1],
-                disabled = _v$.disabled,
-                selected = _v$.selected,
-                value = _v$.value;
-            if (isDisabled(self)) {
-                disabled = true;
-            }
-            value = _fromValue(value || k);
-            option = v[2] || setElement('span', _fromValue(v[0]), {
-                'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
-                'data-group': '&' in v[1] ? v[1]['&'] : false,
-                'data-value': value,
-                'tabindex': disabled ? false : -1
-            });
-            optionReal = v[3] || setElement('option', _fromValue(v[0]), {
-                'disabled': disabled ? "" : false,
-                'selected': selected ? "" : false,
-                'value': value
-            });
-            option._ = {};
-            option._[OPTION_SELF] = optionReal;
-            if (!disabled && !v[2]) {
-                onEvent('blur', option, onBlurOption);
-                onEvent('focus', option, onFocusOption);
-                onEvent('keydown', option, onKeyDownOption);
-                onEvent('mousedown', option, onPointerDownOption);
-                onEvent('touchend', option, onPointerUpOption);
-                onEvent('touchstart', option, onPointerDownOption);
-            }
-            setChildLast(optionGroup || options, option);
-            setChildLast(optionGroupReal || itemsParent, optionReal);
-            setReference(option, picker);
-            v[2] = option;
-            v[3] = optionReal;
-            return _superPropGet(TagPickerOptions, "set", this, 3)([value, v]);
-        };
-        return _createClass(TagPickerOptions, [{
-            key: "count",
-            get: function get() {
-                return this.size;
-            }
-        }]);
-    }( /*#__PURE__*/ _wrapNativeSuper(Map));
 
     function createOptions($, options, values) {
         var items,
@@ -787,7 +560,7 @@
         }
         // Reset option(s) data
         // $._options.let();
-        $._options = new TagPickerOptions($, []);
+        $._options = new OptionPickerOptions($);
         // Remove option(s) presentation
         setHTML(options, "");
         forEachMap(values, function (v, k) {
@@ -837,6 +610,9 @@
     }
 
     function forEachMap(map, then) {
+        if (map instanceof OptionPickerOptions) {
+            map = map.map;
+        }
         forEachArray(map, then);
     }
 
@@ -901,6 +677,10 @@
         return map.get(k);
     }
 
+    function hasKeyInMap(k, map) {
+        return map.has(k);
+    }
+
     function isDisabled(self) {
         return self.disabled;
     }
@@ -914,6 +694,9 @@
     }
 
     function letValueInMap(k, map) {
+        if (map instanceof OptionPickerOptions) {
+            return map.let(k);
+        }
         return map.delete(k);
     }
 
@@ -1113,17 +896,27 @@
                 });
             } catch (e) {}
         } else {
-            var size = _options.size;
+            var count = _options.count,
+                firstOption;
             forEachMap(_options, function (v) {
+                letClass(v[2], n + '--focus');
                 var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-                if (("" === q || hasValue(q, text)) && !hasClass(v[2], n + '--disabled')) {
+                if ("" === q || hasValue(q, text)) {
                     v[2].hidden = false;
+                    if (strict) {
+                        // Focus visually to the first option
+                        if (firstOption = toValuesFromMap(_options).find(function (v) {
+                                return !v[2].hidden && !hasClass(v[2], n + '--disabled');
+                            })) {
+                            setClass(firstOption[2], n + '--focus');
+                        }
+                    }
                 } else {
                     v[2].hidden = true;
-                    --size;
+                    --count;
                 }
             });
-            options.hidden = !size;
+            options.hidden = !count;
             self.value = strict ? "" : query;
         }
         $.fire('search', [_event, query]);
@@ -1186,7 +979,7 @@
                     return !v[2].hidden && !hasClass(v[2], n + '__option--disabled');
                 });
             if (firstOption && !options.hidden) {
-                selectToOption(firstOption, picker);
+                selectToOption(firstOption[2], picker);
             } else {
                 forEachMap(_options, function (v) {
                     letAttribute(v[3], 'selected');
@@ -1268,7 +1061,9 @@
             self = picker.self,
             state = picker.state,
             hint = _mask.hint,
-            n = state.n;
+            input = _mask.input,
+            n = state.n,
+            strict = state.strict;
         picker._event = e;
         delay(function () {
             return setText(hint, getText($, false) ? "" : self.placeholder);
@@ -1279,7 +1074,8 @@
             }, FILTER_COMMIT_TIME + 1)();
         }
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
-            var currentOption = getValueInMap(getValue(self), _options);
+            var currentOption = getValueInMap(getValue(self), _options),
+                firstOption;
             currentOption = currentOption ? currentOption[2] : 0;
             if (!currentOption || currentOption.hidden) {
                 currentOption = toValueFirstFromMap(_options);
@@ -1288,19 +1084,26 @@
                     currentOption = getNext(currentOption);
                 }
             }
-            if (KEY_ENTER === key && !hasClass(mask, n + '--open')) {
-                console.log({
-                    currentOption: currentOption
-                });
-                forEachMap(_options, function (v) {
-                    return v[2].hidden = false;
-                });
+            if (KEY_ENTER === key) {
+                if (!hasClass(mask, n + '--open')) {
+                    forEachMap(_options, function (v) {
+                        return v[2].hidden = false;
+                    });
+                    picker.enter();
+                } else {
+                    if (strict) {
+                        if (firstOption = toValuesFromMap(_options).find(function (v) {
+                                return !v[2].hidden && !hasClass(v[2], n + '--disabled');
+                            })) {
+                            selectToOption(firstOption[2], picker);
+                            picker.exit(), focusTo(input), selectTo(input);
+                        }
+                    }
+                }
             }
-            currentOption && !hasClass(mask, n + '--open') && picker.enter();
             currentOption && focusTo(currentOption);
             exit = true;
         } else if (KEY_TAB === key) {
-            console.log('tab');
             picker.exit();
         } else {
             filter(picker, $, _options);
@@ -1709,7 +1512,7 @@
         state = state || $.state;
         $._active = !isDisabled(self) && !isReadOnly(self);
         $._event = null;
-        $._options = new TagPickerOptions($, []);
+        $._options = new OptionPickerOptions($);
         $._value = getValue(self) || null;
         $.self = self;
         $.state = state;
@@ -1990,5 +1793,110 @@
         }
         return focusTo(mask), $;
     };
+
+    function OptionPickerOptions(of, options) {
+        var $ = this;
+        if (!isInstance($, OptionPickerOptions)) {
+            return new OptionPickerOptions(of);
+        }
+        $.count = 0;
+        $.map = new Map();
+        $.of = of;
+        return $;
+    }
+    var $$$ = OptionPickerOptions.prototype;
+    $$$.get = function (key) {
+        return getValueInMap(_fromValue(key), this.map);
+    };
+    $$$.has = function (key) {
+        return hasKeyInMap(_fromValue(key), this.map);
+    };
+    $$$.let = function (key) {
+        var $ = this;
+        if (letValueInMap(_fromValue(key), $.map)) {
+            --$.count;
+        }
+        return $;
+    };
+    $$$.set = function (key, value) {
+        var $ = this;
+        if ($.has(key)) {
+            return $;
+        }
+        var itemsParent,
+            option,
+            optionReal,
+            optionGroup,
+            optionGroupReal,
+            map = $.map,
+            of = $.of,
+            _mask = of._mask,
+            self = of.self,
+            state = of.state,
+            options = _mask.options,
+            n = state.n;
+        n += '__option';
+        if ('input' === getName(self)) {
+            (itemsParent = self.list) ? getChildren(itemsParent): [];
+        } else {
+            getChildren(itemsParent = self);
+        }
+        if (!isSet(value)) {
+            value = [key, {}];
+        } else if (isFloat(value) || isInteger(value) || isString(value)) {
+            value = [value, {}];
+        }
+        if ('&' in value[1]) {
+            optionGroup = getElement('.' + n + '-group[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', options);
+            if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
+                setChildLast(options, optionGroup = setElement('span', {
+                    'class': n + '-group',
+                    'data-value': value[1]['&']
+                }));
+                setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
+                    'label': value[1]['&']
+                }));
+            }
+        } else {
+            optionGroup = optionGroupReal = false;
+        }
+        var _value$ = value[1],
+            disabled = _value$.disabled,
+            selected = _value$.selected,
+            v = _value$.value;
+        if (isDisabled(self)) {
+            disabled = true;
+        }
+        v = _fromValue(v || key);
+        option = value[2] || setElement('span', _fromValue(value[0]), {
+            'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
+            'data-group': '&' in value[1] ? value[1]['&'] : false,
+            'data-value': v,
+            'tabindex': disabled ? false : -1
+        });
+        optionReal = value[3] || setElement('option', _fromValue(value[0]), {
+            'disabled': disabled ? "" : false,
+            'selected': selected ? "" : false,
+            'value': v
+        });
+        option._ = {};
+        option._[OPTION_SELF] = optionReal;
+        if (!disabled && !value[2]) {
+            onEvent('blur', option, onBlurOption);
+            onEvent('focus', option, onFocusOption);
+            onEvent('keydown', option, onKeyDownOption);
+            onEvent('mousedown', option, onPointerDownOption);
+            onEvent('touchend', option, onPointerUpOption);
+            onEvent('touchstart', option, onPointerDownOption);
+        }
+        setChildLast(optionGroup || options, option);
+        setChildLast(optionGroupReal || itemsParent, optionReal);
+        setReference(option, of);
+        value[2] = option;
+        value[3] = optionReal;
+        ++$.count;
+        return setValueInMap(key, value, map), $;
+    };
+    OptionPicker.Options = OptionPickerOptions;
     return OptionPicker;
 }));

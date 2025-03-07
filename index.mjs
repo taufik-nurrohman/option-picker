@@ -7,7 +7,7 @@ import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isFloat, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
-import {toCaseLower, toCount} from '@taufik-nurrohman/to';
+import {toCaseLower, toCount, toValue} from '@taufik-nurrohman/to';
 
 const FILTER_COMMIT_TIME = 50;
 const SEARCH_CLEAR_TIME = 500;
@@ -52,13 +52,8 @@ function createOptions($, options, values) {
         items[i] && letElement(items[i]);
     }
     // Reset option(s) data
-    // $._options.let();
-    $._options = new OptionPickerOptions($);
-    // Remove option(s) presentation
-    setHTML(options, "");
-    forEachMap(values, (v, k) => {
-        setValueInMap(k, v, $._options);
-    });
+    $._options.let();
+    forEachMap(values, (v, k) => setValueInMap(k, v, $._options));
     $.state.options = values;
 }
 
@@ -69,9 +64,9 @@ function createOptionsFrom($, options, maskOptions) {
             if (isArray(option)) {
                 option[0] = option[0] ?? "";
                 option[1] = option[1] ?? {};
-                setValueInMap(fromValue(option[1].value ?? option[0]), option, map);
+                setValueInMap(toValue(option[1].value ?? option[0]), option, map);
             } else {
-                setValueInMap(fromValue(option), [option, {}], map);
+                setValueInMap(toValue(option), [option, {}], map);
             }
         });
     } else if (isObject(options, 0)) {
@@ -79,9 +74,9 @@ function createOptionsFrom($, options, maskOptions) {
             if (isArray(options[k])) {
                 options[k][0] = options[k][0] ?? "";
                 options[k][1] = options[k][1] ?? {};
-                setValueInMap(fromValue(options[k][1].value ?? k), options[k], map);
+                setValueInMap(toValue(options[k][1].value ?? k), options[k], map);
             } else {
-                setValueInMap(fromValue(k), [options[k], {}], map);
+                setValueInMap(toValue(k), [options[k], {}], map);
             }
         }
     }
@@ -94,6 +89,44 @@ function defineProperty(of, key, state) {
 
 function focusTo(node) {
     node.focus();
+}
+
+function focusToOption(option, picker, focusOnly) {
+    let {mask, state} = picker,
+        {n} = state;
+    if (option) {
+        focusToOptionsNone(picker);
+        focusOnly ? focusTo(option) : setClass(option, n + '__option--focus');
+        setClass(mask, n += '--focus');
+        letClass(mask, n + '-self');
+        setClass(mask, n += '-option');
+        return option;
+    }
+}
+
+function focusToOptionFirst(picker, focusOnly, k) {
+    let {_options, state} = picker,
+        {n} = state, option;
+    n += '__option--disabled';
+    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !v[2].hidden && !hasClass(v[2], n))) {
+        return focusToOption(option[2], picker, focusOnly);
+    }
+}
+
+function focusToOptionLast(picker, focusOnly) {
+    return focusToOptionFirst(picker, focusOnly, 'Last');
+}
+
+function focusToOptions(options, picker) {}
+
+function focusToOptionsNone(picker) {
+    let {_options, mask, state} = picker,
+        {n} = state;
+    letClass(mask, n + '--focus-option');
+    setClass(mask, n + '--focus');
+    setClass(mask, n + '--focus-self');
+    n += '__option--focus';
+    forEachMap(_options, v => letClass(v[2], n));
 }
 
 function forEachArray(array, then) {
@@ -136,14 +169,14 @@ function getOptions(self) {
         if ('optgroup' === getName(v)) {
             forEachMap(getOptions(v), (vv, kk) => {
                 vv[1]['&'] = v.label;
-                setValueInMap(fromValue(kk), vv, map);
+                setValueInMap(toValue(kk), vv, map);
             });
             continue;
         }
-        setValueInMap(fromValue(v.value), [getText(v) || v.value, attributes, null, v], map);
+        setValueInMap(toValue(v.value), [getText(v) || v.value, attributes, null, v], map);
     }
     // If there is no selected option(s), get it from the current value
-    if (0 === toCount(selected) && (item = getValueInMap(value = fromValue(value), map))) {
+    if (0 === toCount(selected) && (item = getValueInMap(value = toValue(value), map))) {
         item[1].selected = true;
         setValueInMap(value, item, map);
     }
@@ -273,14 +306,15 @@ defineProperty($$, 'options', {
     set: function (options) {
         let $ = this,
             {_mask, state} = $,
-            {n} = state;
+            {n} = state, option;
         n += '__option';
         if (isFloat(options) || isInteger(options) || isString(options)) {
             options = [options];
         }
         createOptionsFrom($, options, _mask.options);
-        let firstOption = toValuesFromMap($._options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'));
-        firstOption && ($.value = getOptionValue(firstOption[2]));
+        if (option = toValuesFromMap($._options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'))) {
+            $.value = getOptionValue(option[2]);
+        }
     }
 });
 
@@ -346,13 +380,19 @@ defineProperty($$, 'value', {
     },
     set: function (value) {
         let $ = this,
-            {_options} = $, v;
-        if (v = getValueInMap(fromValue(value), _options)) {
+            {_options, mask, state} = $,
+            {n} = state, v;
+        if (v = getValueInMap(toValue(value), _options)) {
             selectToOption(v[2], $);
+            letClass(mask, n += '--focus');
+            letClass(mask, n + '-option');
+            letClass(mask, n + '-self');
+            letClass(mask, n + '-text');
         }
     }
 });
 
+// TODO: `<select multiple>`
 defineProperty($$, 'values', {
     get: function () {
     },
@@ -367,25 +407,13 @@ const filter = debounce(($, input, _options, selectOnly) => {
         {options, value} = _mask,
         {n, strict} = state,
         hasSize = getDatum(mask, 'size');
-    n += '__option';
+    n += '__option--disabled';
     if (selectOnly) {
-        let a = getValue(self), b;
-        forEachMap(_options, v => {
-            letAttribute(v[3], 'selected');
-            letClass(v[2], n + '--selected');
-        });
         try {
             forEachMap(_options, v => {
-                let text = toCaseLower(getText(v[2]) + '\t' + (b = getOptionValue(v[2])));
-                if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v[2], n + '--disabled')) {
-                    self.value = b;
-                    setAttribute(v[3], 'selected', "");
-                    setClass(v[2], n + '--selected');
-                    setDatum(value, 'value', b);
-                    setHTML(value, getHTML(v[2]));
-                    if (b !== a) {
-                        $.fire('change', [_event, b]);
-                    }
+                let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
+                if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v[2], n)) {
+                    selectToOption(v[2], $);
                     if (hasSize) {
                         scrollTo(v[2], options);
                     }
@@ -394,24 +422,22 @@ const filter = debounce(($, input, _options, selectOnly) => {
             });
         } catch (e) {}
     } else {
-        let count = _options.count, firstOption;
+        let {count} = _options;
+        focusToOptionsNone($);
         forEachMap(_options, v => {
-            letClass(v[2], n + '--focus');
             let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-            if (("" === q || hasValue(q, text))) {
+            if ("" === q || hasValue(q, text)) {
                 v[2].hidden = false;
-                if (strict) {
-                    // Focus visually to the first option
-                    if (firstOption = toValuesFromMap(_options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'))) {
-                        setClass(firstOption[2], n + '--focus');
-                    }
-                }
             } else {
                 v[2].hidden = true;
                 --count;
             }
         });
         options.hidden = !count;
+        // Focus visually to the first option!
+        if (strict) {
+            focusToOptionFirst($);
+        }
         self.value = strict ? "" : query;
     }
     $.fire('search', [_event, query]);
@@ -445,6 +471,7 @@ function onBlurOption(e) {
         {mask, state} = picker,
         {n} = state;
     picker._event = e;
+    letClass(mask, n + '--focus-option');
     letClass($, n += '--focus');
     letClass($, n += '-option');
 }
@@ -452,26 +479,15 @@ function onBlurOption(e) {
 function onBlurTextInput(e) {
     let $ = this,
         picker = getReference($),
-        {_mask, _options, mask, self, state} = picker,
-        {options, text} = _mask,
+        {state} = picker,
         {n, strict} = state;
     picker._event = e;
     letClass(mask, n + '--focus-text');
     letClass(text, n + '__text--focus');
     if (strict) {
-        // Automatically select the first option
-        let currentOption = toValuesFromMap(_options).find(v => getText(v[2], false) === getText($, false)),
-            firstOption = currentOption || toValuesFromMap(_options).find(v => !v[2].hidden && !hasClass(v[2], n + '__option--disabled'));
-        if (firstOption && !options.hidden) {
-            selectToOption(firstOption[2], picker);
-        } else {
-            forEachMap(_options, v => {
-                letAttribute(v[3], 'selected');
-                letClass(v[2], n + '__option--selected');
-                v[2].hidden = false;
-            });
-            options.hidden = false;
-            picker.text = self.value = "";
+        // Automatically select the first option, or select none!
+        if (!selectToOptionFirst(picker)) {
+            selectToOptionsNone(picker);
         }
     }
 }
@@ -539,7 +555,7 @@ function onKeyDownTextInput(e) {
         delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
     }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
-        let currentOption = getValueInMap(getValue(self), _options), firstOption;
+        let currentOption = getValueInMap(toValue(getValue(self)), _options);
         currentOption = currentOption ? currentOption[2] : 0;
         if (!currentOption || currentOption.hidden) {
             currentOption = toValueFirstFromMap(_options);
@@ -550,12 +566,11 @@ function onKeyDownTextInput(e) {
         }
         if (KEY_ENTER === key) {
             if (!hasClass(mask, n + '--open')) {
-                forEachMap(_options, v => v[2].hidden = false);
+                selectToOptionsNone(picker);
                 picker.enter();
             } else {
                 if (strict) {
-                    if (firstOption = toValuesFromMap(_options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'))) {
-                        selectToOption(firstOption[2], picker);
+                    if (selectToOptionFirst(picker)) {
                         picker.exit(), focusTo(input), selectTo(input);
                     }
                 }
@@ -619,30 +634,13 @@ function onKeyDownOption(e) {
         {n} = state;
     n += '__option';
     let isInput = 'input' === getName(self),
-        firstOption, lastOption, nextOption, parentOption, prevOption;
+        nextOption, parentOption, prevOption;
     picker._event = e;
     if (KEY_DELETE_LEFT === key) {
         picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
         if (KEY_ESCAPE !== key) {
-            let a = getValue(self), b;
-            if (prevOption = getValueInMap(a, _options)) {
-                letAttribute(prevOption[3], 'selected');
-                letClass(prevOption[2], n + '--selected');
-            }
-            setAttribute($._[OPTION_SELF], 'selected', "");
-            setClass($, n + '--selected');
-            self.value = (b = getOptionValue($));
-            if (isInput) {
-                setText(hint, "");
-                setText(input, getText($));
-            } else {
-                setDatum(value, 'value', b);
-                setHTML(value, getHTML($));
-            }
-            if (b !== a) {
-                picker.fire('change', [e, b]);
-            }
+            selectToOption($, picker);
         }
         picker.exit(exit = KEY_TAB !== key);
     } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
@@ -676,12 +674,7 @@ function onKeyDownOption(e) {
         while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
-        if (nextOption) {
-            focusTo(nextOption);
-        } else {
-            firstOption = toValuesFromMap(_options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'));
-            firstOption && focusTo(firstOption[2]);
-        }
+        nextOption ? focusToOption(nextOption, picker, 1) : focusToOptionFirst(picker, 1);
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
         if (KEY_PAGE_UP === key && hasClass(parentOption = getParent($), n + '-group')) {
@@ -713,20 +706,13 @@ function onKeyDownOption(e) {
         while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
             prevOption = getPrev(prevOption);
         }
-        if (prevOption) {
-            focusTo(prevOption);
-        } else {
-            lastOption = toValuesFromMap(_options).findLast(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'));
-            lastOption && focusTo(lastOption[2]);
-        }
+        prevOption ? focusToOption(prevOption, picker, 1) : focusToOptionLast(picker, 1);
     } else if (KEY_BEGIN === key) {
         exit = true;
-        firstOption = toValuesFromMap(_options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'));
-        firstOption && focusTo(firstOption[2]);
+        focusToOptionFirst(picker, 1);
     } else if (KEY_END === key) {
         exit = true;
-        lastOption = toValuesFromMap(_options).findLast(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'));
-        lastOption && focusTo(lastOption[2]);
+        focusToOptionLast(picker, 1);
     } else {
         isInput && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
         picker.exit(!(exit = false));
@@ -805,6 +791,7 @@ function onPointerDownRoot(e) {
         } else {
             letReference($);
             picker.exit();
+            console.log('TODO: Remove all focus states!');
         }
     }
 }
@@ -901,30 +888,73 @@ function selectTo(node, mode) {
     }
 }
 
-function selectToOption($, picker) {
-    let {_event, _mask, _options, self, state} = picker,
+function selectToOption(option, picker) {
+    let {_event, _mask, _options, mask, self, state} = picker,
+        {hint, input, value} = _mask,
+        {n} = state;
+    letClass(mask, n + '--focus-self');
+    setClass(mask, n + '--focus');
+    setClass(mask, n + '--focus-option');
+    n += '__option--selected';
+    if (option) {
+        let a = getValue(self), b;
+        selectToOptionsNone(picker);
+        setAttribute(option._[OPTION_SELF], 'selected', "");
+        setClass(option, n);
+        self.value = (b = getOptionValue(option));
+        if ('input' === getName(self)) {
+            setText(hint, "");
+            setText(input, getText(option));
+        } else {
+            setDatum(value, 'value', b);
+            setHTML(value, getHTML(option));
+        }
+        if (b !== a) {
+            picker.fire('change', [_event, b]);
+        }
+        return option;
+    }
+}
+
+function selectToOptionFirst(picker, k) {
+    let {_options, state} = picker,
+        {n} = state, option;
+    n += '__option--disabled';
+    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !v[2].hidden && !hasClass(v[2], n))) {
+        return selectToOption(option[2], picker);
+    }
+}
+
+function selectToOptionLast(picker) {
+    return selectToOptionFirst(picker, 'Last');
+}
+
+function selectToOptions(options, picker) {}
+
+function selectToOptionsNone(picker, hook) {
+    let {_event, _mask, _options, mask, self, state} = picker,
         {hint, input, options, value} = _mask,
         {n} = state;
+    options.hidden = false;
+    letClass(mask, n + '--focus-option');
+    setClass(mask, n + '--focus');
+    setClass(mask, n + '--focus-self');
     n += '__option--selected';
     let a = getValue(self), b;
     forEachMap(_options, v => {
-        if ($ === v[2]) {
-            return;
-        }
         letAttribute(v[3], 'selected');
         letClass(v[2], n);
+        v[2].hidden = false;
     });
-    setAttribute($._[OPTION_SELF], 'selected', "");
-    setClass($, n);
-    self.value = (b = getOptionValue($));
+    self.value = (b = "");
     if ('input' === getName(self)) {
-        setText(hint, "");
-        setText(input, getText($));
+        setText(hint, self.placeholder);
+        setText(input, "");
     } else {
-        setDatum(value, 'value', b);
-        setHTML(value, getHTML($));
+        letDatum(value, 'value');
+        setHTML(value, "");
     }
-    if (b !== a) {
+    if (hook && b !== a) {
         picker.fire('change', [_event, b]);
     }
 }
@@ -1028,7 +1058,7 @@ $$.attach = function (self, state) {
         createOptionsFrom($, options || getOptions(self), maskOptions);
     }
     // Attach the current value(s)
-    if (option = getValueInMap($._value, $._options) || (isInput ? 0 : toValuesFromMap($._options).find(_option => !isDisabled(_option[3])))) {
+    if (option = getValueInMap(toValue($._value), $._options) || (isInput ? 0 : toValuesFromMap($._options).find(_option => !isDisabled(_option[3])))) {
         $.value = getOptionValue(option[2]);
     }
     // Attach extension(s)
@@ -1067,6 +1097,7 @@ $$.detach = function () {
         {input} = _mask;
     const form = getParentForm(self);
     $._active = false;
+    $._options = new OptionPickerOptions($);
     $._value = getValue(self) || null; // Update initial value to be the current value
     if (form) {
         offEvent('reset', form, onResetForm);
@@ -1121,9 +1152,10 @@ $$.enter = function (focus) {
         {_event, _mask, _options, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
-    setClass(mask, n + '--focus');
-    setClass(mask, n + '--focus-option');
-    setClass(mask, n += '--open');
+    setClass(mask, n + '--open');
+    setClass(mask, n += '--focus');
+    letClass(mask, n + '-self')
+    setClass(mask, n + '-option');
     let theRootReference = getReference(R);
     if (theRootReference && $ !== theRootReference) {
         theRootReference.exit(); // Exit other(s)
@@ -1132,13 +1164,12 @@ $$.enter = function (focus) {
     setReference(W, $);
     $.fire('enter', [_event]);
     if (focus) {
-        $.fire('focus', [_event]);
         if ('input' === getName(self)) {
             focusTo(input), selectTo(input);
-        } else if (option = getValueInMap(getValue(self), _options)) {
+        } else if (option = getValueInMap(toValue(getValue(self)), _options)) {
             focusTo(option[2]);
         }
-        $.fire('focus.option', [_event]);
+        $.fire('focus', [_event]).fire('focus.option', [_event]);
     }
     return $;
 };
@@ -1148,9 +1179,15 @@ $$.exit = function (focus) {
         {_event, _mask, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
-    letClass(mask, n + '--focus');
-    letClass(mask, n + '--focus-option');
-    letClass(mask, n += '--open');
+    if (hasClass(mask, n + '--open')) {
+        letClass(mask, n + '--open');
+        setClass(mask, n += '--focus');
+        letClass(mask, n + '-option');
+        setClass(mask, n + '-self');
+    } else {
+        letClass(mask, n += '--focus');
+        letClass(mask, n + '-self');
+    }
     $.fire('exit', [_event]);
     if (focus) {
         if ('input' === getName(self)) {
@@ -1208,31 +1245,47 @@ function OptionPickerOptions(of, options) {
     $.count = 0;
     $.map = new Map;
     $.of = of;
-    if (options) {
-        // TODO
+    if (options && toCount(options)) {
+        createOptionsFrom(of, options, of._mask.options);
     }
     return $;
 }
 
+defineProperty(OptionPickerOptions, 'name', {
+    value: 'Options'
+});
+
 const $$$ = OptionPickerOptions.prototype;
 
 $$$.get = function (key) {
-    return getValueInMap(fromValue(key), this.map);
+    return getValueInMap(toValue(key), this.map);
 };
 
 $$$.has = function (key) {
-    return hasKeyInMap(fromValue(key), this.map);
+    return hasKeyInMap(toValue(key), this.map);
 };
 
 $$$.let = function (key) {
-    let $ = this;
+    let $ = this,
+        {map} = $, r;
     if (!isSet(key)) {
-        // TODO
+        forEachMap(map, (v, k) => $.let(k));
+        return 0 === $.count;
     }
-    if (letValueInMap(fromValue(key), $.map)) {
+    if (!(r = $.get(toValue(key)))) {
+        return false;
+    }
+    offEvent('blur', r[2], onBlurOption);
+    offEvent('focus', r[2], onFocusOption);
+    offEvent('keydown', r[2], onKeyDownOption);
+    offEvent('mousedown', r[2], onPointerDownOption);
+    offEvent('touchend', r[2], onPointerUpOption);
+    offEvent('touchstart', r[2], onPointerDownOption);
+    letElement(r[2]), letElement(r[3]);
+    if (r = letValueInMap(toValue(key), map)) {
         --$.count;
     }
-    return $;
+    return r;
 };
 
 $$$.set = function (key, value) {

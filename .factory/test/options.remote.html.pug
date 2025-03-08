@@ -1,0 +1,71 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const elements = document.querySelectorAll('input[list], select');
+    |
+    | const picker_1 = new OptionPicker(elements[0], {
+    |     options: function (query) {
+    |         return fetch('https://latest.currency-api.pages.dev/v1/currencies/usd.json').then(r => r.json()).then(data => {
+    |             const options = new Map;
+    |             let k, v;
+    |             for (k in data.usd) {
+    |                 v = data.usd[k];
+    |                 options.set(k, [k.toUpperCase(), {
+    |                     selected: 'usd' === k,
+    |                     title: v
+    |                 }]);
+    |             }
+    |             return options;
+    |         });
+    |     }
+    | });
+    |
+    | const picker_2 = new OptionPicker(elements[1], {
+    |     options: function (query) {
+    |         return fetch('https://potterapi-fedeperin.vercel.app/en/spells' + (null !== query ? '?search=' + encodeURIComponent(query) : "")).then(r => r.json()).then(data => {
+    |             const options = new Map;
+    |             data.forEach(v => options.set(Math.random(),v.spell));
+    |             return options;
+    |         });
+    |     }
+    | });
+    |
+    | picker_1.on('change', function () {
+    |     console.log(this.value);
+    | });
+    |
+    | picker_1.on('load', function () {
+    |     console.log('Loaded.');
+    | });
+    |
+    | picker_2.on('change', function () {
+    |     console.log(this.value);
+    | });
+    |
+    | picker_2.on('load', function () {
+    |     console.log('Loaded.');
+    | });
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(name='test-1')
+          option(disabled selected) Loading&hellip;
+      p
+        input(list='test-2' name='test-2' type='text')
+      p
+        button(type='submit') Submit
+      datalist(id='test-2')

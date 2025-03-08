@@ -54,7 +54,9 @@ function createOptions($, options, values) {
     // Reset option(s) data
     _options.let();
     forEachMap(values, (v, k) => setValueInMap(toValue(k), v, _options));
-    state.options = values;
+    if (!isFunction(state.options)) {
+        state.options = values;
+    }
 }
 
 function createOptionsFrom($, options, maskOptions) {
@@ -134,6 +136,31 @@ function forEachMap(map, then) {
     forEachArray(map, then);
 }
 
+function getOptionSelected($) {
+    let {_options} = $, selected;
+    try {
+        forEachMap(_options, (v, k) => {
+            if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
+                selected = v[1].value || k;
+                throw "";
+            }
+        });
+    } catch (e) {}
+    if (!isSet(selected)) {
+        try {
+            forEachMap(_options, (v, k) => {
+                if (isArray(v) && v[1] && !v[1].disabled) {
+                    selected = v[1].value || k;
+                } else {
+                    selected = v;
+                }
+                throw "";
+            });
+        } catch (e) {}
+    }
+    return selected;
+}
+
 function getOptionValue(option) {
     return getDatum(option, 'value', false);
 }
@@ -176,6 +203,8 @@ function getOptions(self) {
     }
     return map;
 }
+
+function getOptionsSelected(options) {}
 
 function getReference(key) {
     return getValueInMap(key, references) || null;
@@ -437,7 +466,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         if (isInstance(call, Promise)) {
             call.then(v => {
                 createOptionsFrom($, v, options);
-                $.fire('load', [_event, v, query]);
+                $.fire('load', [_event, v, query]).fit();
             });
         } else {
             createOptionsFrom($, call, options);
@@ -1027,16 +1056,22 @@ $$.attach = function (self, state) {
     _mask[isInput ? 'text' : 'value'] = text;
     $._mask = _mask;
     $.size = state.size ?? (isInput ? 1 : self.size);
-    let {options} = state;
+    let {options} = state, selected;
     if (isFunction(options)) {
         options = options.call($, null);
         if (isInstance(options, Promise)) {
             options.then(options => {
                 createOptionsFrom($, options, maskOptions);
-                $.fire('load', [$._event, options, null]);
+                if (selected = getOptionSelected($)) {
+                    $.value = selected;
+                }
+                $.fire('load', [$._event, options, null]).fit();
             });
         } else {
             createOptionsFrom($, options, maskOptions);
+            if (selected = getOptionSelected($)) {
+                $.value = selected;
+            }
         }
     } else {
         createOptionsFrom($, options || getOptions(self), maskOptions);
@@ -1319,11 +1354,13 @@ $$$.set = function (key, value) {
         'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
         'data-group': '&' in value[1] ? value[1]['&'] : false,
         'data-value': v,
-        'tabindex': disabled ? false : -1
+        'tabindex': disabled ? false : -1,
+        'title': 'title' in value[1] ? fromValue(value[1].title) : false
     });
     optionReal = value[3] || setElement('option', fromValue(value[0]), {
         'disabled': disabled ? "" : false,
         'selected': selected ? "" : false,
+        'title': 'title' in value[1] ? fromValue(value[1].title) : false,
         'value': v
     });
     option._ = {};

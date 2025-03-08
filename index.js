@@ -1097,15 +1097,13 @@
                     currentOption = getNext(currentOption);
                 }
             }
-            if (KEY_ENTER === key) {
-                if (!hasClass(mask, n + '--open')) {
-                    selectToOptionsNone(picker);
-                    picker.enter();
-                } else {
-                    if (strict) {
-                        if (selectToOptionFirst(picker)) {
-                            picker.exit(), focusTo(input), selectTo(input);
-                        }
+            if (!hasClass(mask, n + '--open')) {
+                selectToOptionsNone(picker);
+                picker.enter();
+            } else {
+                if (strict) {
+                    if (selectToOptionFirst(picker)) {
+                        picker.exit(), focusTo(input), selectTo(input);
                     }
                 }
             }

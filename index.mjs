@@ -33,7 +33,7 @@ const references = new WeakMap;
 
 function createOptions($, options, values) {
     let items, itemsParent,
-        {self, state} = $,
+        {_options, self, state} = $,
         {n} = state;
     n += '__option';
     if ('input' === getName(self)) {
@@ -52,9 +52,9 @@ function createOptions($, options, values) {
         items[i] && letElement(items[i]);
     }
     // Reset option(s) data
-    $._options.let();
-    forEachMap(values, (v, k) => setValueInMap(k, v, $._options));
-    $.state.options = values;
+    _options.let();
+    forEachMap(values, (v, k) => setValueInMap(toValue(k), v, _options));
+    state.options = values;
 }
 
 function createOptionsFrom($, options, maskOptions) {
@@ -97,9 +97,6 @@ function focusToOption(option, picker, focusOnly) {
     if (option) {
         focusToOptionsNone(picker);
         focusOnly ? focusTo(option) : setClass(option, n + '__option--focus');
-        setClass(mask, n += '--focus');
-        letClass(mask, n + '-self');
-        setClass(mask, n += '-option');
         return option;
     }
 }
@@ -122,9 +119,6 @@ function focusToOptions(options, picker) {}
 function focusToOptionsNone(picker) {
     let {_options, mask, state} = picker,
         {n} = state;
-    letClass(mask, n + '--focus-option');
-    setClass(mask, n + '--focus');
-    setClass(mask, n + '--focus-self');
     n += '__option--focus';
     forEachMap(_options, v => letClass(v[2], n));
 }
@@ -305,14 +299,14 @@ defineProperty($$, 'options', {
     },
     set: function (options) {
         let $ = this,
-            {_mask, state} = $,
+            {_mask, _options, state} = $,
             {n} = state, option;
         n += '__option';
         if (isFloat(options) || isInteger(options) || isString(options)) {
             options = [options];
         }
         createOptionsFrom($, options, _mask.options);
-        if (option = toValuesFromMap($._options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'))) {
+        if (option = toValuesFromMap(_options).find(v => !v[2].hidden && !hasClass(v[2], n + '--disabled'))) {
             $.value = getOptionValue(option[2]);
         }
     }
@@ -332,7 +326,7 @@ defineProperty($$, 'size', {
             {options} = _mask,
             {n} = state,
             size = !isInteger(value) ? 1 : (value < 1 ? 1 : value);
-        $.state.size = size;
+        state.size = size;
         if (1 === size) {
             letDatum(mask, 'size');
             letStyle(options, 'max-height');
@@ -384,10 +378,6 @@ defineProperty($$, 'value', {
             {n} = state, v;
         if (v = getValueInMap(toValue(value), _options)) {
             selectToOption(v[2], $);
-            letClass(mask, n += '--focus');
-            letClass(mask, n + '-option');
-            letClass(mask, n + '-self');
-            letClass(mask, n + '-text');
         }
     }
 });
@@ -471,19 +461,21 @@ function onBlurOption(e) {
         {mask, state} = picker,
         {n} = state;
     picker._event = e;
-    letClass(mask, n + '--focus-option');
-    letClass($, n += '--focus');
-    letClass($, n += '-option');
+    letClass($, n + '__option--focus');
+    letClass(mask, n += '--focus');
+    letClass(mask, n + '-option');
 }
 
 function onBlurTextInput(e) {
     let $ = this,
         picker = getReference($),
-        {state} = picker,
+        {_mask, mask, state} = picker,
+        {text} = _mask,
         {n, strict} = state;
     picker._event = e;
-    letClass(mask, n + '--focus-text');
     letClass(text, n + '__text--focus');
+    letClass(mask, n += '--focus');
+    letClass(mask, n + '-text');
     if (strict) {
         // Automatically select the first option, or select none!
         if (!selectToOptionFirst(picker)) {
@@ -518,6 +510,7 @@ function onFocusOption(e) {
         {n} = state;
     selectNone();
     picker._event = e;
+    setClass($, n + '__option--focus');
     setClass(mask, n += '--focus');
     setClass(mask, n += '-option');
 }
@@ -533,13 +526,13 @@ function onFocusTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, mask, self, state} = picker,
-        {input, text} = _mask,
+        {text} = _mask,
         {n} = state;
     picker._event = e;
     setClass(text, n + '__text--focus');
     setClass(mask, n += '--focus');
     setClass(mask, n += '-text');
-    getText(input, false) ? selectTo($) : picker.enter().fit();
+    getText($, false) ? selectTo($) : picker.enter().fit();
 }
 
 function onKeyDownTextInput(e) {
@@ -791,7 +784,6 @@ function onPointerDownRoot(e) {
         } else {
             letReference($);
             picker.exit();
-            console.log('TODO: Remove all focus states!');
         }
     }
 }
@@ -889,12 +881,9 @@ function selectTo(node, mode) {
 }
 
 function selectToOption(option, picker) {
-    let {_event, _mask, _options, mask, self, state} = picker,
+    let {_event, _mask, _options, self, state} = picker,
         {hint, input, value} = _mask,
         {n} = state;
-    letClass(mask, n + '--focus-self');
-    setClass(mask, n + '--focus');
-    setClass(mask, n + '--focus-option');
     n += '__option--selected';
     if (option) {
         let a = getValue(self), b;
@@ -932,13 +921,10 @@ function selectToOptionLast(picker) {
 function selectToOptions(options, picker) {}
 
 function selectToOptionsNone(picker, hook) {
-    let {_event, _mask, _options, mask, self, state} = picker,
+    let {_event, _mask, _options, self, state} = picker,
         {hint, input, options, value} = _mask,
         {n} = state;
     options.hidden = false;
-    letClass(mask, n + '--focus-option');
-    setClass(mask, n + '--focus');
-    setClass(mask, n + '--focus-self');
     n += '__option--selected';
     let a = getValue(self), b;
     forEachMap(_options, v => {
@@ -1028,7 +1014,7 @@ $$.attach = function (self, state) {
     onEvent('resize', W, onResizeWindow);
     onEvent('scroll', W, onScrollWindow);
     onEvent('touchend', R, onPointerUpRoot);
-    onEvent('touchmove', R, onPointerMoveRoot, {passive: false});
+    onEvent('touchmove', R, onPointerMoveRoot);
     onEvent('touchstart', R, onPointerDownRoot);
     onEvent('touchstart', mask, onPointerDownMask);
     self.tabIndex = -1;
@@ -1097,7 +1083,7 @@ $$.detach = function () {
         {input} = _mask;
     const form = getParentForm(self);
     $._active = false;
-    $._options = new OptionPickerOptions($);
+    $._options = new OptionPickerOptions($, state.options = getOptions(self));
     $._value = getValue(self) || null; // Update initial value to be the current value
     if (form) {
         offEvent('reset', form, onResetForm);
@@ -1153,9 +1139,6 @@ $$.enter = function (focus) {
         {input} = _mask,
         {n} = state;
     setClass(mask, n + '--open');
-    setClass(mask, n += '--focus');
-    letClass(mask, n + '-self')
-    setClass(mask, n + '-option');
     let theRootReference = getReference(R);
     if (theRootReference && $ !== theRootReference) {
         theRootReference.exit(); // Exit other(s)
@@ -1179,15 +1162,7 @@ $$.exit = function (focus) {
         {_event, _mask, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
-    if (hasClass(mask, n + '--open')) {
-        letClass(mask, n + '--open');
-        setClass(mask, n += '--focus');
-        letClass(mask, n + '-option');
-        setClass(mask, n + '-self');
-    } else {
-        letClass(mask, n += '--focus');
-        letClass(mask, n + '-self');
-    }
+    letClass(mask, n + '--open');
     $.fire('exit', [_event]);
     if (focus) {
         if ('input' === getName(self)) {
@@ -1357,7 +1332,7 @@ $$$.set = function (key, value) {
     value[2] = option;
     value[3] = optionReal;
     ++$.count;
-    return setValueInMap(key, value, map), $;
+    return setValueInMap(toValue(key), value, map), $;
 };
 
 OptionPicker.Options = OptionPickerOptions;

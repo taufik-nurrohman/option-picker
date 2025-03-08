@@ -84,6 +84,15 @@ $name: 'option-picker';
     &:disabled {
       + .#{$name} {
         color: rgba(128, 128, 128);
+        .#{$name}__text {
+          span {
+            &:empty {
+              &::after {
+                content: '‌'; // `\u200c`
+              }
+            }
+          }
+        }
       }
       + .#{$name} {
         &,

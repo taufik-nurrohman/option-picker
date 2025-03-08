@@ -69,21 +69,6 @@
   height: 0;
   width: 0;
 }
-.option-picker__self {
-  left: -9999px;
-  position: fixed;
-  top: -9999px;
-}
-.option-picker__self:disabled + .option-picker {
-  color: rgb(128, 128, 128);
-}
-.option-picker__self:disabled + .option-picker .option-picker__text span:empty::after {
-  content: "‌";
-}
-.option-picker__self:disabled + .option-picker,
-.option-picker__self:disabled + .option-picker * {
-  cursor: not-allowed;
-}
 .option-picker__option {
   display: block;
 }
@@ -130,6 +115,21 @@
 .option-picker__options:empty {
   display: none;
 }
+.option-picker__self {
+  left: -9999px;
+  position: fixed;
+  top: -9999px;
+}
+.option-picker__self:disabled + .option-picker {
+  color: rgb(128, 128, 128);
+}
+.option-picker__self:disabled + .option-picker .option-picker__text span:empty::after {
+  content: "‌";
+}
+.option-picker__self:disabled + .option-picker,
+.option-picker__self:disabled + .option-picker * {
+  cursor: not-allowed;
+}
 .option-picker__text {
   cursor: text;
   flex: 1;
@@ -158,6 +158,9 @@
 }
 .option-picker__value {
   flex: 1;
+}
+.option-picker__value:empty::after {
+  content: "‌";
 }
 .option-picker__values {
   flex: 1;

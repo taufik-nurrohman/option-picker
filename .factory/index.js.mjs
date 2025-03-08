@@ -1240,14 +1240,21 @@ $$$.has = function (key) {
 
 $$$.let = function (key) {
     let $ = this,
-        {map} = $, r;
+        {map, of} = $,
+        {state} = of,
+        {n} = state, r;
     if (!isSet(key)) {
         forEachMap(map, (v, k) => $.let(k));
+        selectToOptionsNone(of);
         return 0 === $.count;
     }
     if (!(r = $.get(toValue(key)))) {
         return false;
     }
+    let parent = getParent(r[2]),
+        parentReal = getParent(r[3]),
+        value = getOptionValue(r[2]),
+        valueReal = of.value;
     offEvent('blur', r[2], onBlurOption);
     offEvent('focus', r[2], onFocusOption);
     offEvent('keydown', r[2], onKeyDownOption);
@@ -1258,6 +1265,11 @@ $$$.let = function (key) {
     if (r = letValueInMap(toValue(key), map)) {
         --$.count;
     }
+    // Remove empty group(s)
+    parent && hasClass(parent, n + '__option-group') && 0 === toCount(getChildren(parent)) && letElement(parent);
+    parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
+    // Reset value to the first option if removed option is the selected option
+    value === valueReal && selectToOptionFirst(of);
     return r;
 };
 

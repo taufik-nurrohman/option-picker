@@ -115,4 +115,24 @@ block content
         = ' '
         button(onclick='createOptions_3_1(picker);' type='button') Create from Map 2
       p
+        button(onclick='picker.options.set((new Date).toLocaleString());' type='button'): code picker.options.set((new Date).toLocaleString())
+        = ' '
+        button(onclick='picker.options.set(Date.now(), \'Current Date\');' type='button'): code picker.options.set(Date.now(), 'Current Date')
+        = ' '
+        button(onclick='picker.options.set(Date.now(), [\'Current Date\', {disabled: true}]);' type='button'): code picker.options.set(Date.now(), ['Current Date', {disabled: true}])
+      p
+        button(onclick='picker.options.set(\'red\', [\'Red\', {\'&\': \'Color\'}]);' type='button'): code picker.options.set('red', ['Red', {'&': 'Color'}])
+        = ' '
+        button(onclick='picker.options.set(\'green\', [\'Green\', {\'&\': \'Color\'}]);' type='button'): code picker.options.set('green', ['Green', {'&': 'Color'}])
+        = ' '
+        button(onclick='picker.options.set(\'blue\', [\'Blue\', {\'&\': \'Color\'}]);' type='button'): code picker.options.set('blue', ['Blue', {'&': 'Color'}])
+      p
+        button(onclick='picker.options.let(\'red\');' type='button'): code picker.options.let('red')
+        = ' '
+        button(onclick='picker.options.let(\'green\');' type='button'): code picker.options.let('green')
+        = ' '
+        button(onclick='picker.options.let(\'blue\');' type='button'): code picker.options.let('blue')
+      p
+        button(onclick='picker.options.let();' type='button'): code picker.options.let()
+      p
         button(type='submit') Submit

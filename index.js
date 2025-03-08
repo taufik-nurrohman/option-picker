@@ -1818,16 +1818,24 @@
     $$$.let = function (key) {
         var $ = this,
             map = $.map,
+            of = $.of,
+            state = of.state,
+            n = state.n,
             r;
         if (!isSet(key)) {
             forEachMap(map, function (v, k) {
                 return $.let(k);
             });
+            selectToOptionsNone(of);
             return 0 === $.count;
         }
         if (!(r = $.get(_toValue(key)))) {
             return false;
         }
+        var parent = getParent(r[2]),
+            parentReal = getParent(r[3]),
+            value = getOptionValue(r[2]),
+            valueReal = of.value;
         offEvent('blur', r[2], onBlurOption);
         offEvent('focus', r[2], onFocusOption);
         offEvent('keydown', r[2], onKeyDownOption);
@@ -1838,6 +1846,11 @@
         if (r = letValueInMap(_toValue(key), map)) {
             --$.count;
         }
+        // Remove empty group(s)
+        parent && hasClass(parent, n + '__option-group') && 0 === toCount(getChildren(parent)) && letElement(parent);
+        parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
+        // Reset value to the first option if removed option is the selected option
+        value === valueReal && selectToOptionFirst(of);
         return r;
     };
     $$$.set = function (key, value) {

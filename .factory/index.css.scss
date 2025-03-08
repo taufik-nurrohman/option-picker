@@ -77,31 +77,6 @@ $name: 'option-picker';
       width: 0;
     }
   }
-  &__self {
-    left: -9999px;
-    position: fixed;
-    top: -9999px;
-    &:disabled {
-      + .#{$name} {
-        color: rgba(128, 128, 128);
-        .#{$name}__text {
-          span {
-            &:empty {
-              &::after {
-                content: '‌'; // `\u200c`
-              }
-            }
-          }
-        }
-      }
-      + .#{$name} {
-        &,
-        & * {
-          cursor: not-allowed;
-        }
-      }
-    }
-  }
   &__option {
     @extend %item;
     display: block;
@@ -154,6 +129,31 @@ $name: 'option-picker';
       display: none;
     }
   }
+  &__self {
+    left: -9999px;
+    position: fixed;
+    top: -9999px;
+    &:disabled {
+      + .#{$name} {
+        color: rgba(128, 128, 128);
+        .#{$name}__text {
+          span {
+            &:empty {
+              &::after {
+                content: '‌'; // `\u200c`
+              }
+            }
+          }
+        }
+      }
+      + .#{$name} {
+        &,
+        & * {
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
   &__text {
     cursor: text;
     flex: 1;
@@ -182,6 +182,11 @@ $name: 'option-picker';
   }
   &__value {
     flex: 1;
+    &:empty {
+      &::after {
+        content: '‌'; // `\u200c`
+      }
+    }
   }
   &__values {
     @extend %items;

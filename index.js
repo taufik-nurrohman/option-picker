@@ -192,6 +192,16 @@
         }
         return "" + x;
     };
+
+    function forEachArray$1(array, then) {
+        array.forEach(then);
+    }
+
+    function forEachObject$1(object, then) {
+        for (var k in object) {
+            then(object[k], k);
+        }
+    }
     var D = document;
     var W = window;
     var B = D.body;
@@ -281,6 +291,9 @@
         var value = W.getComputedStyle(node).getPropertyValue(style);
         return value || "" === value || 0 === value ? value : null;
     };
+    var getState = function getState(node, state) {
+        return hasState(node, state) && node[state] || null;
+    };
     var getText = function getText(node, trim) {
         if (trim === void 0) {
             trim = true;
@@ -328,22 +341,28 @@
         return node.setAttribute(attribute, _fromValue(value)), node;
     };
     var setAttributes = function setAttributes(node, attributes) {
-        var value;
-        for (var attribute in attributes) {
-            value = attributes[attribute];
-            if (value || "" === value || 0 === value) {
-                setAttribute(node, attribute, value);
-            } else {
-                letAttribute(node, attribute);
-            }
-        }
-        return node;
+        return forEachObject$1(attributes, function (v, k) {
+            v || "" === v || 0 === v ? setAttribute(node, k, v) : letAttribute(node, k);
+        }), node;
     };
     var setChildLast = function setChildLast(parent, node) {
         return parent.append(node), node;
     };
     var setClass = function setClass(node, value) {
         return node.classList.add(value), node;
+    };
+    var setClasses = function setClasses(node, classes) {
+        if (isArray(classes)) {
+            return forEachArray$1(classes, function (k) {
+                return setClass(node, k);
+            }), node;
+        }
+        if (isObject(classes)) {
+            return forEachObject$1(classes, function (v, k) {
+                return v ? setClass(node, k) : letClass(node, k);
+            }), node;
+        }
+        return node.className = classes, node;
     };
     var setDatum = function setDatum(node, datum, value) {
         if (isArray(value) || isObject(value)) {
@@ -361,7 +380,7 @@
             setHTML(node, content);
         }
         if (isObject(attributes)) {
-            setAttributes(node, attributes);
+            return setAttributes(node, attributes), node;
         }
         return node;
     };
@@ -385,16 +404,9 @@
         return node.style[toCaseCamel(style)] = _fromValue(value), node;
     };
     var setStyles = function setStyles(node, styles) {
-        var value;
-        for (var style in styles) {
-            value = styles[style];
-            if (value || "" === value || 0 === value) {
-                setStyle(node, style, value);
-            } else {
-                letStyle(node, style);
-            }
-        }
-        return node;
+        return forEachObject$1(styles, function (v, k) {
+            v || "" === v || 0 === v ? setStyle(node, k, v) : letStyle(node, k);
+        }), node;
     };
     var setText = function setText(node, content, trim) {
         if (trim === void 0) {
@@ -520,7 +532,7 @@
         }
         node.addEventListener(name, then, options);
     };
-    var FILTER_COMMIT_TIME = 50;
+    var FILTER_COMMIT_TIME = 100;
     var SEARCH_CLEAR_TIME = 500;
     var KEY_ARROW_DOWN = 'ArrowDown';
     var KEY_ARROW_UP = 'ArrowUp';
@@ -543,33 +555,49 @@
     function createOptions($, options, values) {
         var items,
             itemsParent,
+            selected = [],
             _options = $._options,
             self = $.self,
             state = $.state;
         state.n;
+        var value = getValue(self);
         if ('input' === getName(self)) {
             items = (itemsParent = self.list) ? getChildren(itemsParent) : [];
         } else {
             items = getChildren(itemsParent = self);
         }
         // Remove option(s)
-        for (var i = 0, j = toCount(items); i < j; ++i) {
-            if ('optgroup' === getName(items[i])) {
-                var itemsItems = getChildren(items[i]);
-                for (var ii = 0, jj = toCount(itemsItems); ii < jj; ++ii) {
-                    itemsItems[ii] && letElement(itemsItems[ii]);
-                }
+        forEachArray(items, function (v, k) {
+            if ('optgroup' === getName(v)) {
+                forEachArray(getChildren(v), function (v, k) {
+                    return letElement(v);
+                });
+            } else {
+                letElement(v);
             }
-            items[i] && letElement(items[i]);
-        }
+        });
         // Reset option(s) data
         _options.let();
         forEachMap(values, function (v, k) {
-            return setValueInMap(_toValue(k), v, _options);
+            if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
+                selected.push(_toValue(v[1].value || k));
+            }
+            setValueInMap(_toValue(k), v, _options);
         });
         if (!isFunction(state.options)) {
             state.options = values;
         }
+        if (0 === toCount(selected)) {
+            // If there is no selected option(s), get it from the current value
+            if (hasKeyInMap(selected = _toValue(value), values)) {
+                return [selected];
+            }
+            // Or get it from the first option
+            if (selected = getOptionSelected($)) {
+                return [selected];
+            }
+        }
+        return selected;
     }
 
     function createOptionsFrom($, options, maskOptions) {
@@ -586,18 +614,18 @@
                 }
             });
         } else if (isObject(options, 0)) {
-            for (var k in options) {
-                if (isArray(options[k])) {
-                    var _options$k$, _options$k$2, _options$k$1$value;
-                    options[k][0] = (_options$k$ = options[k][0]) != null ? _options$k$ : "";
-                    options[k][1] = (_options$k$2 = options[k][1]) != null ? _options$k$2 : {};
-                    setValueInMap(_toValue((_options$k$1$value = options[k][1].value) != null ? _options$k$1$value : k), options[k], map);
+            forEachObject(options, function (v, k) {
+                if (isArray(v)) {
+                    var _v$, _v$2, _v$1$value;
+                    options[k][0] = (_v$ = v[0]) != null ? _v$ : "";
+                    options[k][1] = (_v$2 = v[1]) != null ? _v$2 : {};
+                    setValueInMap(_toValue((_v$1$value = v[1].value) != null ? _v$1$value : k), v, map);
                 } else {
-                    setValueInMap(_toValue(k), [options[k], {}], map);
+                    setValueInMap(_toValue(k), [v, {}], map);
                 }
-            }
+            });
         }
-        createOptions($, maskOptions, map);
+        return createOptions($, maskOptions, map);
     }
 
     function defineProperty(of, key, state) {
@@ -658,13 +686,19 @@
         forEachArray(map, then);
     }
 
+    function forEachObject(object, then) {
+        for (var k in object) {
+            then(object[k], k);
+        }
+    }
+
     function getOptionSelected($) {
         var _options = $._options,
             selected;
         try {
             forEachMap(_options, function (v, k) {
                 if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
-                    selected = v[1].value || k;
+                    selected = _toValue(v[1].value || k);
                     throw "";
                 }
             });
@@ -673,9 +707,9 @@
             try {
                 forEachMap(_options, function (v, k) {
                     if (isArray(v) && v[1] && !v[1].disabled) {
-                        selected = v[1].value || k;
+                        selected = _toValue(v[1].value || k);
                     } else {
-                        selected = v;
+                        selected = _toValue(v);
                     }
                     throw "";
                 });
@@ -700,14 +734,13 @@
         } else {
             items = getChildren(itemsParent = self);
         }
-        var _loop = function _loop(i) {
-            var v = items[i],
-                attributes = getAttributes(v);
+        forEachArray(items, function (v, k) {
+            var attributes = getAttributes(v);
             forEachArray(['disabled', 'selected'], function (k) {
-                if (k in attributes) {
+                if (hasState(attributes, k)) {
                     attributes[k] = "" === attributes[k] ? true : attributes[k];
                     if ('selected' === k) {
-                        selected.push(i);
+                        selected.push(1);
                     }
                 } else {
                     attributes[k] = null;
@@ -718,13 +751,10 @@
                     vv[1]['&'] = v.label;
                     setValueInMap(_toValue(kk), vv, map);
                 });
-                return 1; // continue
+            } else {
+                setValueInMap(_toValue(v.value), [getText(v) || v.value, attributes, null, v], map);
             }
-            setValueInMap(_toValue(v.value), [getText(v) || v.value, attributes, null, v], map);
-        };
-        for (var i = 0, j = toCount(items); i < j; ++i) {
-            if (_loop(i)) continue;
-        }
+        });
         // If there is no selected option(s), get it from the current value
         if (0 === toCount(selected) && (item = getValueInMap(value = _toValue(value), map))) {
             item[1].selected = true;
@@ -828,20 +858,17 @@
         },
         set: function set(options) {
             var $ = this,
-                _mask = $._mask,
-                _options = $._options,
-                state = $.state,
-                n = state.n,
-                option;
-            n += '__option';
+                _mask = $._mask;
+            $._options;
+            var state = $.state;
+            state.n;
+            var selected;
             if (isFloat(options) || isInteger(options) || isString(options)) {
                 options = [options];
             }
-            createOptionsFrom($, options, _mask.options);
-            if (option = toValuesFromMap(_options).find(function (v) {
-                    return !v[2].hidden && !hasClass(v[2], n + '--disabled');
-                })) {
-                $.value = getOptionValue(option[2]);
+            if (toCount(selected = createOptionsFrom($, options, _mask.options))) {
+                $.value = selected[0];
+                // $.values = selected;
             }
         }
     });
@@ -978,6 +1005,7 @@
         }
         $.fire('search', [_event, query]);
         var call = state.options;
+        // TODO
         if (isFunction(call)) {
             call = call.call($, query);
             if (isInstance(call, Promise)) {
@@ -1418,7 +1446,7 @@
         var $ = this,
             picker = getReference($);
         picker._event = e;
-        picker.let().fire('reset', [e]);
+        picker.reset();
     }
 
     function onResizeWindow(e) {
@@ -1613,8 +1641,7 @@
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
         setReference(mask, $);
-        var _mask = {},
-            option;
+        var _mask = {};
         _mask.arrow = arrow;
         _mask.hint = isInput ? textInputHint : null;
         _mask.input = isInput ? textInput : null;
@@ -1631,45 +1658,38 @@
             options = options.call($, null);
             if (isInstance(options, Promise)) {
                 options.then(function (options) {
-                    createOptionsFrom($, options, maskOptions);
-                    if (selected = getOptionSelected($)) {
-                        $.value = selected;
+                    if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
+                        $.value = selected[0];
+                        // $.values = selected;
                     }
                     $.fire('load', [$._event, options, null]).fit();
                 });
             } else {
-                createOptionsFrom($, options, maskOptions);
-                if (selected = getOptionSelected($)) {
-                    $.value = selected;
+                if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
+                    $.value = selected[0];
+                    // $.values = selected;
                 }
             }
         } else {
-            createOptionsFrom($, options || getOptions(self), maskOptions);
-        }
-        // Attach the current value(s)
-        if (option = getValueInMap(_toValue($._value), $._options) || (isInput ? 0 : toValuesFromMap($._options).find(function (_option) {
-                return !isDisabled(_option[3]);
-            }))) {
-            $.value = getOptionValue(option[2]);
+            if (toCount(selected = createOptionsFrom($, options || getOptions(self), maskOptions))) {
+                $.value = selected[0];
+                // $.values = selected;
+            }
         }
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
-            for (var i = 0, j = toCount(state.with); i < j; ++i) {
-                var value = state.with[i];
-                if (isString(value)) {
-                    value = OptionPicker[value];
+            forEachArray(state.with, function (v, k) {
+                if (isString(v)) {
+                    v = OptionPicker[v];
                 }
                 // `const Extension = function (self, state = {}) {}`
-                if (isFunction(value)) {
-                    value.call($, self, state);
-                    continue;
+                if (isFunction(v)) {
+                    v.call($, self, state);
+                    // `const Extension = {attach: function (self, state = {}) {}, detach: function (self, state = {}) {}}`
+                } else if (isObject(v) && isFunction(v.attach)) {
+                    v.attach.call($, self, state);
                 }
-                // `const Extension = {attach: function (self, state = {}) {}, detach: function (self, state = {}) {}}`
-                if (isObject(value) && isFunction(value.attach)) {
-                    value.attach.call($, self, state);
-                    continue;
-                }
-            }
+            });
         }
         return $;
     };
@@ -1719,16 +1739,14 @@
         offEvent('touchstart', mask, onPointerDownMask);
         // Detach extension(s)
         if (isArray(state.with)) {
-            for (var i = 0, j = toCount(state.with); i < j; ++i) {
-                var value = state.with[i];
-                if (isString(value)) {
-                    value = OptionPicker[value];
+            forEachArray(state.with, function (v, k) {
+                if (isString(v)) {
+                    v = OptionPicker[v];
                 }
-                if (isObject(value) && isFunction(value.detach)) {
-                    value.detach.call($, self, state);
-                    continue;
+                if (isObject(v) && isFunction(v.detach)) {
+                    v.detach.call($, self, state);
                 }
-            }
+            });
         }
         self.tabIndex = null;
         letClass(self, state.n + '__self');
@@ -1739,7 +1757,7 @@
         $.mask = null;
         return $;
     };
-    $$.enter = function (focus) {
+    $$.enter = function (focus, mode) {
         var $ = this,
             option,
             _event = $._event,
@@ -1760,7 +1778,7 @@
         $.fire('enter', [_event]);
         if (focus) {
             if ('input' === getName(self)) {
-                focusTo(input), selectTo(input);
+                focusTo(input), selectTo(input, mode);
             } else if (option = getValueInMap(_toValue(getValue(self)), _options)) {
                 focusTo(option[2]);
             }
@@ -1768,7 +1786,7 @@
         }
         return $;
     };
-    $$.exit = function (focus) {
+    $$.exit = function (focus, mode) {
         var $ = this,
             _event = $._event,
             _mask = $._mask,
@@ -1781,7 +1799,7 @@
         $.fire('exit', [_event]);
         if (focus) {
             if ('input' === getName(self)) {
-                focusTo(input), selectTo(input);
+                focusTo(input), selectTo(input, mode);
             } else {
                 focusTo(mask);
             }
@@ -1826,6 +1844,12 @@
         }
         return focusTo(mask), $;
     };
+    $$.reset = function (focus, mode) {
+        var $ = this;
+        $.value = $._value;
+        $.fire('reset', [$._event]);
+        return focus ? $.focus(mode) : $;
+    };
 
     function OptionPickerOptions(of, options) {
         var $ = this;
@@ -1854,7 +1878,9 @@
         var $ = this,
             map = $.map,
             of = $.of,
+            _mask = of._mask,
             state = of.state,
+            options = _mask.options,
             n = state.n,
             r;
         if (!isSet(key)) {
@@ -1862,6 +1888,7 @@
                 return $.let(k);
             });
             selectToOptionsNone(of);
+            options.hidden = true;
             return 0 === $.count;
         }
         if (!(r = $.get(_toValue(key)))) {
@@ -1885,10 +1912,16 @@
         parent && hasClass(parent, n + '__option-group') && 0 === toCount(getChildren(parent)) && letElement(parent);
         parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
         // Reset value to the first option if removed option is the selected option
-        value === valueReal && selectToOptionFirst(of);
+        if (parent && hasClass(parent, n + '__options') && 0 === toCount(getChildren(parent))) {
+            selectToOptionsNone(of);
+            options.hidden = true;
+        } else {
+            value === valueReal && selectToOptionFirst(of);
+        }
         return r;
     };
     $$$.set = function (key, value) {
+        var _getState3, _getState4, _getState5;
         var $ = this;
         if ($.has(key)) {
             return $;
@@ -1904,28 +1937,45 @@
             self = of.self,
             state = of.state,
             options = _mask.options,
-            n = state.n;
+            n = state.n,
+            classes,
+            styles;
         n += '__option';
         if ('input' === getName(self)) {
             (itemsParent = self.list) ? getChildren(itemsParent): [];
         } else {
             getChildren(itemsParent = self);
         }
+        options.hidden = false;
+        // `picker.options.set('asdf')`
         if (!isSet(value)) {
             value = [key, {}];
+            // `picker.options.set('asdf', 'asdf')`
         } else if (isFloat(value) || isInteger(value) || isString(value)) {
             value = [value, {}];
-        }
-        if ('&' in value[1]) {
+            // `picker.options.set('asdf', [ … ])`
+        } else;
+        if (hasState(value[1], '&')) {
             optionGroup = getElement('.' + n + '-group[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', options);
             if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
+                var _getState, _getState2;
                 setChildLast(options, optionGroup = setElement('span', {
                     'class': n + '-group',
-                    'data-value': value[1]['&']
+                    'data-value': value[1]['&'],
+                    'title': (_getState = getState(value[1], 'title')) != null ? _getState : false
                 }));
                 setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
-                    'label': value[1]['&']
+                    'label': value[1]['&'],
+                    'title': (_getState2 = getState(value[1], 'title')) != null ? _getState2 : false
                 }));
+                if (classes = getState(value[1], 'class')) {
+                    setClasses(optionGroup, classes);
+                    setClasses(optionGroupReal, classes);
+                }
+                if (styles = getState(value[1], 'style')) {
+                    setStyles(optionGroup, styles);
+                    setStyles(optionGroupReal, styles);
+                }
             }
         } else {
             optionGroup = optionGroupReal = false;
@@ -1940,17 +1990,25 @@
         v = _fromValue(v || key);
         option = value[2] || setElement('span', _fromValue(value[0]), {
             'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
-            'data-group': '&' in value[1] ? value[1]['&'] : false,
+            'data-group': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false,
             'data-value': v,
             'tabindex': disabled ? false : -1,
-            'title': 'title' in value[1] ? _fromValue(value[1].title) : false
+            'title': (_getState4 = getState(value[1], 'title')) != null ? _getState4 : false
         });
         optionReal = value[3] || setElement('option', _fromValue(value[0]), {
             'disabled': disabled ? "" : false,
             'selected': selected ? "" : false,
-            'title': 'title' in value[1] ? _fromValue(value[1].title) : false,
+            'title': (_getState5 = getState(value[1], 'title')) != null ? _getState5 : false,
             'value': v
         });
+        if (classes = getState(value[1], 'class')) {
+            setClasses(option, classes);
+            setClasses(optionReal, classes);
+        }
+        if (styles = getState(value[1], 'style')) {
+            setStyles(option, styles);
+            setStyles(optionReal, styles);
+        }
         option._ = {};
         option._[OPTION_SELF] = optionReal;
         if (!disabled && !value[2]) {
@@ -1967,7 +2025,8 @@
         value[2] = option;
         value[3] = optionReal;
         ++$.count;
-        return setValueInMap(_toValue(key), value, map), $;
+        setValueInMap(_toValue(key), value, map);
+        return of.value = of.value, $;
     };
     OptionPicker.Options = OptionPickerOptions;
     return OptionPicker;

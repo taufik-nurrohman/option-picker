@@ -1580,6 +1580,14 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
       <h4><code>picker.detach()</code></h4>
       <p>Disables the application methods (except for the <code>attach()</code> method) and executes the <code>detach()</code> method of the extensions, if they are present.</p>
       <pre><code>picker.detach();</code></pre>
+      <h4><code>picker.enter(focus, mode = true)</code></h4>
+      <p>Shows the option picker’s options.</p>
+      <pre><code>picker.enter(); // Show the option picker’s options
+picker.enter(true); // Show the option picker’s options and focus to the option picker’s input or mask</code></pre>
+      <h4><code>picker.exit(focus, mode = true)</code></h4>
+      <p>Hides the option picker’s options.</p>
+      <pre><code>picker.exit(); // Hide the option picker’s options
+picker.exit(true); // Hide the option picker’s options and focus to the option picker’s input or mask</code></pre>
       <h4><code>picker.fire(event, data, then)</code></h4>
       <p>Fires an event.</p>
       <pre><code>picker.fire('change', []);</code></pre>
@@ -1602,6 +1610,10 @@ picker.off('change', onChange); // Remove `onChange` event from the `change` eve
 }
 
 picker.on('change', onChange);</code></pre>
+      <h4><code>picker.reset(focus, mode = true)</code></h4>
+      <p>Resets the option picker’s value or values to its initial value or values.</p>
+      <pre><code>picker.reset(); // Reset the option picker’s value or values
+picker.reset(true); // Reset the option picker’s value or values and focus to the option picker’s input or mask</code></pre>
       <h3>Static Methods</h3>
       <p>Static methods are methods available directly on the <code>OptionPicker</code> object.</p>
       <h4><code>OptionPicker.from(self, state)</code></h4>

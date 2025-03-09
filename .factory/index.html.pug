@@ -1585,6 +1585,16 @@ block content
     p Disables the application methods (except for the #[code attach()] method) and executes the #[code detach()] method of the extensions, if they are present.
     pre: code
       | picker.detach();
+    h4: code picker.enter(focus, mode = true)
+    p Shows the option picker’s options.
+    pre: code
+      | picker.enter(); // Show the option picker’s options
+      | picker.enter(true); // Show the option picker’s options and focus to the option picker’s input or mask
+    h4: code picker.exit(focus, mode = true)
+    p Hides the option picker’s options.
+    pre: code
+      | picker.exit(); // Hide the option picker’s options
+      | picker.exit(true); // Hide the option picker’s options and focus to the option picker’s input or mask
     h4: code picker.fire(event, data, then)
     p Fires an event.
     pre: code
@@ -1612,6 +1622,11 @@ block content
       | }
       |
       | picker.on('change', onChange);
+    h4: code picker.reset(focus, mode = true)
+    p Resets the option picker’s value or values to its initial value or values.
+    pre: code
+      | picker.reset(); // Reset the option picker’s value or values
+      | picker.reset(true); // Reset the option picker’s value or values and focus to the option picker’s input or mask
     h3 Static Methods
     p Static methods are methods available directly on the #[code OptionPicker] object.
     h4: code OptionPicker.from(self, state)

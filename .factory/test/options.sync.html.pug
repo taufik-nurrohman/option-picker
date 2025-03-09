@@ -1,0 +1,75 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const pickerInput = new OptionPicker(document.querySelector('input[list]'), {
+    |     options: function (query) {
+    |         return fetch('https://potterapi-fedeperin.vercel.app/en/spells?max=10' + (null !== query ? '&search=' + encodeURIComponent(query) : "")).then(r => r.json()).then(data => {
+    |             const options = new Map;
+    |             data.forEach(v => options.set(v.spell));
+    |             return options;
+    |         });
+    |     }
+    | });
+    |
+    | const pickerSelect = new OptionPicker(document.querySelector('select'), {
+    |     options: function (query) {
+    |         return fetch('https://latest.currency-api.pages.dev/v1/currencies/usd.json').then(r => r.json()).then(data => {
+    |             const options = new Map;
+    |             let k, v;
+    |             for (k in data.usd) {
+    |                 v = data.usd[k];
+    |                 options.set(k, [k.toUpperCase(), {
+    |                     selected: 'usd' === k,
+    |                     title: v
+    |                 }]);
+    |             }
+    |             return options;
+    |         });
+    |     }
+    | });
+    |
+    | pickerInput.on('change', function () {
+    |     console.log('change: ' + JSON.stringify(this.value));
+    | });
+    |
+    | pickerInput.on('load', function () {
+    |     console.log('load: true');
+    | });
+    |
+    | pickerInput.on('search', function (e, query) {
+    |     console.log('search: ' + JSON.stringify(query));
+    | });
+    |
+    | pickerSelect.on('change', function () {
+    |     console.log('change: ' + JSON.stringify(this.value));
+    | });
+    |
+    | pickerSelect.on('load', function () {
+    |     console.log('load: true');
+    | });
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p: a(href='https://github.com/fawazahmed0/exchange-api' rel='nofollow' target='_blank') fawazahmed0/exchange-api
+      p
+        select(name='test-1')
+          option(disabled selected) Loading&hellip;
+      p: a(href='https://github.com/fedeperin/potterapi' rel='nofollow' target='_blank') fedeperin/potterapi
+      p
+        input(list='test-2' name='test-2' type='text')
+      p
+        button(type='submit') Submit
+      datalist(id='test-2')

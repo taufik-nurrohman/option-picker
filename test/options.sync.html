@@ -15,17 +15,27 @@
   <body>
     <main>
       <form method="get" target="_blank">
+        <p><a href="https://github.com/fawazahmed0/exchange-api" rel="nofollow" target="_blank">fawazahmed0/exchange-api</a></p>
         <p><select name="test-1">
             <option disabled selected>Loading&hellip;</option>
           </select></p>
+        <p><a href="https://github.com/fedeperin/potterapi" rel="nofollow" target="_blank">fedeperin/potterapi</a></p>
         <p><input list="test-2" name="test-2" type="text"></p>
         <p><button type="submit">Submit</button></p><datalist id="test-2"></datalist>
       </form>
     </main>
     <script src="../index.js"></script>
     <script>
-      const elements = document.querySelectorAll('input[list], select');
-      const picker_1 = new OptionPicker(elements[0], {
+      const pickerInput = new OptionPicker(document.querySelector('input[list]'), {
+          options: function (query) {
+              return fetch('https://potterapi-fedeperin.vercel.app/en/spells?max=10' + (null !== query ? '&search=' + encodeURIComponent(query) : "")).then(r => r.json()).then(data => {
+                  const options = new Map;
+                  data.forEach(v => options.set(v.spell));
+                  return options;
+              });
+          }
+      });
+      const pickerSelect = new OptionPicker(document.querySelector('select'), {
           options: function (query) {
               return fetch('https://latest.currency-api.pages.dev/v1/currencies/usd.json').then(r => r.json()).then(data => {
                   const options = new Map;
@@ -41,26 +51,20 @@
               });
           }
       });
-      const picker_2 = new OptionPicker(elements[1], {
-          options: function (query) {
-              return fetch('https://potterapi-fedeperin.vercel.app/en/spells' + (null !== query ? '?search=' + encodeURIComponent(query) : "")).then(r => r.json()).then(data => {
-                  const options = new Map;
-                  data.forEach(v => options.set(Math.random(), v.spell));
-                  return options;
-              });
-          }
+      pickerInput.on('change', function () {
+          console.log('change: ' + JSON.stringify(this.value));
       });
-      picker_1.on('change', function () {
-          console.log(this.value);
+      pickerInput.on('load', function () {
+          console.log('load: true');
       });
-      picker_1.on('load', function () {
-          console.log('Loaded.');
+      pickerInput.on('search', function (e, query) {
+          console.log('search: ' + JSON.stringify(query));
       });
-      picker_2.on('change', function () {
-          console.log(this.value);
+      pickerSelect.on('change', function () {
+          console.log('change: ' + JSON.stringify(this.value));
       });
-      picker_2.on('load', function () {
-          console.log('Loaded.');
+      pickerSelect.on('load', function () {
+          console.log('load: true');
       });
     </script>
   </body>

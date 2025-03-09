@@ -109,6 +109,15 @@
   visibility: hidden;
   white-space: nowrap;
 }
+.option-picker__options[aria-busy] {
+  display: block;
+}
+.option-picker__options[aria-busy]::after {
+  background: transparent url("data:image/gif;base64,R0lGODlhEgAEAKEAAH9/fwAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJDwACACwAAAAAEgAEAAACB5SPqcvtrwoAIfkECQ8AAgAsAAAAAAQABAAAAgSEjwkFACH5BAkPAAIALAAAAAALAAQAAAIMjCMJC4fKXBKsnVkLACH5BAkPAAIALAAAAAASAAQAAAIRjCN5mOCwkojt0Xnkg1l1sRUAIfkECQ8AAgAsAAAAABIABAAAAhGEIRkbKRwOUsxBaStdeDdfAAAh+QQJDwACACwHAAAACwAEAAACDIQhGRuHylwSrJ1ZCwAh+QQFDwACACwOAAAABAAEAAACBISPCQUAOw==") no-repeat 50% 50%;
+  content: "";
+  display: block;
+  min-height: 1em;
+}
 .option-picker__options[hidden] {
   display: none;
 }

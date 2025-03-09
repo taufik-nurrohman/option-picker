@@ -684,6 +684,7 @@
 
     function getOptionSelected($) {
         var _options = $._options,
+            self = $.self,
             selected;
         try {
             forEachMap(_options, function (v, k) {
@@ -693,7 +694,8 @@
                 }
             });
         } catch (e) {}
-        if (!isSet(selected)) {
+        if (!isSet(selected) && !isInput(self)) {
+            // Select the first option
             try {
                 forEachMap(_options, function (v, k) {
                     if (isArray(v) && v[1] && !v[1].disabled) {
@@ -1053,7 +1055,7 @@
         letClass(mask, n += '--focus');
         letClass(mask, n + '-text');
         if (strict) {
-            // Automatically select the first option, or select none!
+            // TODO: Select the current option, or automatically select the first option, or select none!
             if (!selectToOptionFirst(picker)) {
                 selectToOptionsNone(picker, 0, 1);
             }
@@ -1152,9 +1154,13 @@
                 }
             }
             if (!hasClass(mask, n + '--open')) {
-                selectToOptionsNone(picker.enter());
+                // console.log(currentOption);
+                // currentOption && selectToOption(currentOption, picker);
+                // selectToOptionsNone(picker.enter());
+                picker.enter();
             } else {
                 if (strict) {
+                    // TODO: Select the current option, or automatically select the first option!
                     if (selectToOptionFirst(picker)) {
                         picker.exit(), focusTo(input), selectTo(input);
                     }
@@ -1542,14 +1548,13 @@
             options = _mask.options,
             value = _mask.value,
             n = state.n;
-        options.hidden = false;
         n += '__option--selected';
+        options.hidden = false;
         var a = getValue(self),
             b;
         forEachMap(_options, function (v) {
             letAttribute(v[3], 'selected');
             letClass(v[2], n);
-            v[2].hidden = false;
         });
         if (fireValue) {
             self.value = b = "";
@@ -1792,11 +1797,15 @@
         var $ = this,
             _event = $._event,
             _mask = $._mask,
+            _options = $._options,
             mask = $.mask,
             self = $.self,
             state = $.state,
             input = _mask.input,
             n = state.n;
+        forEachMap(_options, function (v) {
+            return v[2].hidden = false;
+        });
         letClass(mask, n + '--open');
         $.fire('exit', [_event]);
         if (focus) {

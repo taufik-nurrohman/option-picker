@@ -150,7 +150,7 @@ function forEachObject(object, then) {
 }
 
 function getOptionSelected($) {
-    let {_options} = $, selected;
+    let {_options, self} = $, selected;
     try {
         forEachMap(_options, (v, k) => {
             if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
@@ -159,7 +159,8 @@ function getOptionSelected($) {
             }
         });
     } catch (e) {}
-    if (!isSet(selected)) {
+    if (!isSet(selected) && !isInput(self)) {
+        // Select the first option
         try {
             forEachMap(_options, (v, k) => {
                 if (isArray(v) && v[1] && !v[1].disabled) {
@@ -527,7 +528,7 @@ function onBlurTextInput(e) {
     letClass(mask, n += '--focus');
     letClass(mask, n + '-text');
     if (strict) {
-        // Automatically select the first option, or select none!
+        // TODO: Select the current option, or automatically select the first option, or select none!
         if (!selectToOptionFirst(picker)) {
             selectToOptionsNone(picker, 0, 1);
         }
@@ -608,9 +609,13 @@ function onKeyDownTextInput(e) {
             }
         }
         if (!hasClass(mask, n + '--open')) {
-            selectToOptionsNone(picker.enter());
+            // console.log(currentOption);
+            // currentOption && selectToOption(currentOption, picker);
+            // selectToOptionsNone(picker.enter());
+            picker.enter();
         } else {
             if (strict) {
+                // TODO: Select the current option, or automatically select the first option!
                 if (selectToOptionFirst(picker)) {
                     picker.exit(), focusTo(input), selectTo(input);
                 }
@@ -970,13 +975,12 @@ function selectToOptionsNone(picker, fireHook, fireValue) {
     let {_event, _mask, _options, self, state} = picker,
         {hint, input, options, value} = _mask,
         {n} = state;
-    options.hidden = false;
     n += '__option--selected';
+    options.hidden = false;
     let a = getValue(self), b;
     forEachMap(_options, v => {
         letAttribute(v[3], 'selected');
         letClass(v[2], n);
-        v[2].hidden = false;
     });
     if (fireValue) {
         self.value = (b = "");
@@ -1208,9 +1212,10 @@ $$.enter = function (focus, mode) {
 
 $$.exit = function (focus, mode) {
     let $ = this,
-        {_event, _mask, mask, self, state} = $,
+        {_event, _mask, _options, mask, self, state} = $,
         {input} = _mask,
         {n} = state;
+    forEachMap(_options, v => v[2].hidden = false);
     letClass(mask, n + '--open');
     $.fire('exit', [_event]);
     if (focus) {

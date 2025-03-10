@@ -7,8 +7,16 @@
     <title>Option Picker</title>
     <link href="../index.min.css" rel="stylesheet">
     <style>
+      .option-picker {
+        min-width: 10em;
+      }
       .option-picker__options {
         background: #fff;
+      }
+      .option-picker[aria-busy] .option-picker__text,
+      .option-picker[aria-busy] .option-picker__value {
+        background: transparent url('data:image/gif;base64,R0lGODlhEgAEAKEAAH9/fwAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJDwACACwAAAAAEgAEAAACB5SPqcvtrwoAIfkECQ8AAgAsAAAAAAQABAAAAgSEjwkFACH5BAkPAAIALAAAAAALAAQAAAIMjCMJC4fKXBKsnVkLACH5BAkPAAIALAAAAAASAAQAAAIRjCN5mOCwkojt0Xnkg1l1sRUAIfkECQ8AAgAsAAAAABIABAAAAhGEIRkbKRwOUsxBaStdeDdfAAAh+QQJDwACACwHAAAACwAEAAACDIQhGRuHylwSrJ1ZCwAh+QQFDwACACwOAAAABAAEAAACBISPCQUAOw==') no-repeat calc(100% - 0.5em) 50%;
+        padding-right: 2.5em;
       }
     </style>
   </head>
@@ -30,7 +38,7 @@
           options: function (query) {
               return fetch('https://potterapi-fedeperin.vercel.app/en/spells?max=10' + (null !== query ? '&search=' + encodeURIComponent(query) : "")).then(r => r.json()).then(data => {
                   const options = new Map;
-                  data.forEach(v => options.set(v.spell));
+                  data.forEach(v => options.set(v.spell, v.spell));
                   return options;
               });
           }

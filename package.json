@@ -5,6 +5,7 @@
   "dependencies": {
     "@taufik-nurrohman/document": "*",
     "@taufik-nurrohman/event": "*",
+    "@taufik-nurrohman/f": "*",
     "@taufik-nurrohman/from": "*",
     "@taufik-nurrohman/has": "*",
     "@taufik-nurrohman/hook": "*",

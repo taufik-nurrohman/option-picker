@@ -9,7 +9,7 @@ block script
   script
     | const pickerInput = new OptionPicker(document.querySelector('input[list]'), {
     |     options: function (query) {
-    |         return fetch('https://potterapi-fedeperin.vercel.app/en/spells?max=10' + (null !== query ? '&search=' + encodeURIComponent(query) : "")).then(r => r.json()).then(data => {
+    |         return fetch('https://potterapi-fedeperin.vercel.app/en/spells' + (null !== query ? '?search=' + encodeURIComponent(query) : '?max=10')).then(r => r.json()).then(data => {
     |             const options = new Map;
     |             data.forEach(v => options.set(v.spell, v.spell));
     |             return options;

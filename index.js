@@ -2077,7 +2077,6 @@
                 _active = of._active,
                 _event = of._event,
                 _mask = of._mask,
-                _options = of._options,
                 self = of.self,
                 state = of.state,
                 options = _mask.options,
@@ -2092,7 +2091,7 @@
                 });
                 selectToOptionsNone(of, 0, _fireValue);
                 options.hidden = true;
-                of.fire('let.options', [_event, _options]).fire('change', [_event, null]);
+                of.fire('let.options', [_event, $]).fire('change', [_event, null]);
                 return 0 === $.count;
             }
             if (!(r = getValueInMap(key = _toValue(key), _o))) {
@@ -2109,7 +2108,7 @@
             offEvent('touchend', r[2], onPointerUpOption);
             offEvent('touchstart', r[2], onPointerDownOption);
             letElement(r[2]), letElement(r[3]);
-            if (r = letValueInMap(_toValue(key), _o)) {
+            if (r = letValueInMap(key, _o)) {
                 --$.count;
             }
             // Remove empty group(s)
@@ -2149,12 +2148,12 @@
                 of = $.of,
                 _event = of._event,
                 self = of.self,
-                r;
-            var a = getValue(self);
-            if (_fireHook && (r = $.delete(key = _toValue(key)))) {
-                if (a !== getValue(self)) {
-                    of.fire('change', [_event, key]);
-                }
+                r,
+                value = getValue(self);
+            // The previous value
+            r = $.delete(key = _toValue(key));
+            if (_fireHook && value !== getValue(self)) {
+                of.fire('change', [_event, key]);
             }
             return r;
         },

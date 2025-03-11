@@ -1201,7 +1201,7 @@ setObjectMethods(OptionPickerOptions, {
     delete: function (key, _fireValue = 1) {
         let $ = this,
             {_o, of} = $,
-            {_active, _event, _mask, _options, self, state} = of,
+            {_active, _event, _mask, self, state} = of,
             {options} = _mask,
             {n} = state, r;
         if (!_active) {
@@ -1211,7 +1211,7 @@ setObjectMethods(OptionPickerOptions, {
             forEachMap(_o, (v, k) => $.let(k, 0));
             selectToOptionsNone(of, 0, _fireValue);
             options.hidden = true;
-            of.fire('let.options', [_event, _options]).fire('change', [_event, null]);
+            of.fire('let.options', [_event, $]).fire('change', [_event, null]);
             return 0 === $.count;
         }
         if (!(r = getValueInMap(key = toValue(key), _o))) {
@@ -1228,7 +1228,7 @@ setObjectMethods(OptionPickerOptions, {
         offEvent('touchend', r[2], onPointerUpOption);
         offEvent('touchstart', r[2], onPointerDownOption);
         letElement(r[2]), letElement(r[3]);
-        if (r = letValueInMap(toValue(key), _o)) {
+        if (r = letValueInMap(key, _o)) {
             --$.count;
         }
         // Remove empty group(s)
@@ -1261,12 +1261,11 @@ setObjectMethods(OptionPickerOptions, {
     let: function (key, _fireHook = 1) {
         let $ = this,
             {of} = $,
-            {_event, self} = of, r;
-        let a = getValue(self), b;
-        if (_fireHook && (r = $.delete(key = toValue(key)))) {
-            if (a !== getValue(self)) {
-                of.fire('change', [_event, key]);
-            }
+            {_event, self} = of, r,
+            value = getValue(self); // The previous value
+        r = $.delete(key = toValue(key));
+        if (_fireHook && value !== getValue(self)) {
+            of.fire('change', [_event, key]);
         }
         return r;
     },

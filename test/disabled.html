@@ -34,7 +34,7 @@
             <option>Option 3</option>
           </select></p>
         <p><input list="test-4" name="test-4" placeholder="Test&hellip;"></p>
-        <p><button onclick="disable();" type="button">Disable All</button> <button onclick="enable();" type="button">Enable All</button> <button type="submit">Submit</button></p>
+        <p><button onclick="disableAll();" type="button">Disable All</button> <button onclick="enableAll();" type="button">Enable All</button> <button type="submit">Submit</button></p>
       </form>
     </main><datalist id="test-4">
       <option>Option 1</option>
@@ -46,14 +46,14 @@
       const sources = document.querySelectorAll('input[list], select');
       sources.forEach(source => new OptionPicker(source));
 
-      function disable() {
+      function disableAll() {
           sources.forEach(source => {
               source.disabled = true;
               OptionPicker.of(source).detach().attach(); // Refresh!
           });
       }
 
-      function enable() {
+      function enableAll() {
           sources.forEach(source => {
               source.disabled = false;
               OptionPicker.of(source).detach().attach(); // Refresh!

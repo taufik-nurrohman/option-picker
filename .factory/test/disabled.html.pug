@@ -8,16 +8,17 @@ block state
 block script
   script
     | const sources = document.querySelectorAll('input[list], select');
+    |
     | sources.forEach(source => new OptionPicker(source));
     |
-    | function disable() {
+    | function disableAll() {
     |     sources.forEach(source => {
     |         source.disabled = true;
     |         OptionPicker.of(source).detach().attach(); // Refresh!
     |     });
     | }
     |
-    | function enable() {
+    | function enableAll() {
     |     sources.forEach(source => {
     |         source.disabled = false;
     |         OptionPicker.of(source).detach().attach(); // Refresh!
@@ -54,9 +55,9 @@ block content
       p
         input(list='test-4' name='test-4' placeholder!='Test&hellip;')
       p
-        button(onclick='disable();' type='button') Disable All
+        button(onclick='disableAll();' type='button') Disable All
         = ' '
-        button(onclick='enable();' type='button') Enable All
+        button(onclick='enableAll();' type='button') Enable All
         = ' '
         button(type='submit') Submit
   datalist(id='test-4')

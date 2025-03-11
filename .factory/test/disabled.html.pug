@@ -53,13 +53,13 @@ block content
           option Option 3
       p
         input(list='test-4' name='test-4' placeholder!='Test&hellip;')
-        datalist(id='test-4')
-          option Option 1
-          option Option 2
-          option Option 3
       p
         button(onclick='disable();' type='button') Disable All
         = ' '
         button(onclick='enable();' type='button') Enable All
         = ' '
         button(type='submit') Submit
+  datalist(id='test-4')
+    option Option 1
+    option Option 2
+    option Option 3

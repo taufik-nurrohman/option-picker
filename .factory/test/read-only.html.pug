@@ -1,0 +1,38 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('input'));
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p: input(list='options' name='test' readonly type='text' value='Option 1')
+      p
+        label
+          input(checked onchange='picker.self.readOnly = this.checked; picker.detach().attach();' type='checkbox')
+          = ' '
+          span Read-Only
+      p
+        button(type='submit') Submit
+        = ' '
+        button(onclick='picker.options.set(\'Option 4\'), picker.focus();' type='button') Add &ldquo;Option 4&rdquo; Option
+        = ' '
+        button(onclick='picker.options.let(\'Option 4\'), picker.focus();' type='button') Remove &ldquo;Option 4&rdquo; Option
+        = ' '
+        button(onclick='picker.enter(true);' type='button') Show Options
+  datalist(id='options')
+    option Option 1
+    option Option 2
+    option(value='3') Option 3

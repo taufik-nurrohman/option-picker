@@ -33,14 +33,14 @@
             <option>Option 2</option>
             <option>Option 3</option>
           </select></p>
-        <p><input list="test-4" name="test-4" placeholder="Test&hellip;"><datalist id="test-4">
-            <option>Option 1</option>
-            <option>Option 2</option>
-            <option>Option 3</option>
-          </datalist></p>
+        <p><input list="test-4" name="test-4" placeholder="Test&hellip;"></p>
         <p><button onclick="disable();" type="button">Disable All</button> <button onclick="enable();" type="button">Enable All</button> <button type="submit">Submit</button></p>
       </form>
-    </main>
+    </main><datalist id="test-4">
+      <option>Option 1</option>
+      <option>Option 2</option>
+      <option>Option 3</option>
+    </datalist>
     <script src="../index.min.js"></script>
     <script>
       const sources = document.querySelectorAll('input[list], select');

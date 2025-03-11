@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        width: 100%;
+      }
+      .option-picker.option-picker--focus {
+        border-color: #f00;
+      }
+      .option-picker.option-picker--focus-option {
+        background: #0f0;
+      }
+      .option-picker.option-picker--focus-text {
+        background: #ff0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><input list="options" placeholder="Option goes here&hellip;" type="text"></p>
+    </main><datalist id="options">
+      <option>Option 1</option>
+      <option>Option 2</option>
+      <option value="3">Option 3</option>
+    </datalist>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker = new OptionPicker(document.querySelector('input'));
+    </script>
+  </body>
+</html>

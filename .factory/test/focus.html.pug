@@ -1,0 +1,33 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('input'));
+
+block style
+  style
+    | .option-picker {
+    |   width: 100%;
+    | }
+    | .option-picker.option-picker--focus {
+    |   border-color: #f00;
+    | }
+    | .option-picker.option-picker--focus-option {
+    |   background: #0f0;
+    | }
+    | .option-picker.option-picker--focus-text {
+    |   background: #ff0;
+    | }
+
+block content
+  main
+    p: input(list='options' placeholder!='Option goes here&hellip;' type='text')
+  datalist(id='options')
+    option Option 1
+    option Option 2
+    option(value='3') Option 3

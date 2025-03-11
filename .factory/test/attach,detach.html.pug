@@ -1,0 +1,31 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('select'));
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(name='test')
+          option Option 1
+          option Option 2
+          option(value='3') Option 3
+      p
+        button(onclick='this.disabled = true; this.nextElementSibling.disabled = false; picker.detach(); return false;' type='button') Detach
+        = ' '
+        button(disabled onclick='this.disabled = true; this.previousElementSibling.disabled = false; picker.attach(); return false;' type='button') Attach
+        = ' '
+        button(type='submit') Submit

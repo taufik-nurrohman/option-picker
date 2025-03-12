@@ -197,7 +197,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         {_event, _mask, mask, self, state} = $,
         {options, value} = _mask,
         {strict} = state,
-        hasSize = getDatum(mask, 'size');
+        hasSize = getDatum(mask, 'size'), option;
     let {count} = _options;
     if (selectOnly) {
         forEachMap(_options, v => {
@@ -223,11 +223,19 @@ const filter = debounce(($, input, _options, selectOnly) => {
             }
         });
         options.hidden = !count;
-        // Focus visually to the first option!
         if (strict) {
-            focusToOptionFirst($);
+            selectToOptionsNone($);
+            // Silently set the value to the first option
+            if (count && (option = toValuesFromMap(_options).find(v => !getAttribute(v[2], 'aria-disabled') && !v[2].hidden))) {
+                setAttribute(option[2], 'aria-selected', 'true');
+                setAttribute(option[3], 'selected', "");
+                setValue(self, getOptionValue(option[2]));
+            } else {
+                setValue(self, "");
+            }
+        } else {
+            setValue(self, query);
         }
-        setValue(self, strict ? "" : query);
     }
     $.fire('search', [_event, query]);
     let call = state.options;
@@ -272,20 +280,17 @@ function onBlurTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, mask, state} = picker,
-        {text} = _mask,
+        {input, text} = _mask,
         {n, strict} = state, option;
     picker._event = e;
     letClass(text, n + '__text--focus');
     letClass(mask, n += '--focus');
     letClass(mask, n + '-text');
     if (strict) {
-        if (option = getOptionSelected(picker)) {
+        if (option = getOptionSelected(picker, 1)) {
             selectToOption(option, picker);
         } else {
-            // Automatically select the first option, or select none!
-            if (!selectToOptionFirst(picker)) {
-                selectToOptionsNone(picker, 1);
-            }
+            selectToOptionsNone(picker, 1);
         }
     }
 }
@@ -376,7 +381,7 @@ function onKeyDownTextInput(e) {
             currentOption && focusTo(currentOption);
         }
     } else if (KEY_TAB === key) {
-        strict && selectToOptionFirst(picker) && picker.exit();
+        picker.exit();
     } else {
         delay(() => {
             if ("" === searchQuery || searchQuery !== getText($) + "") {

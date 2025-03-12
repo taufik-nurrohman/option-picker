@@ -858,11 +858,11 @@
 
     function focusToOption(option, picker, focusOnly) {
         picker.mask;
-        var state = picker.state,
-            n = state.n;
+        var state = picker.state;
+        state.n;
         if (option) {
             focusToOptionsNone(picker);
-            focusOnly ? focusTo(option) : setClass(option, n + '__option--focus');
+            focusTo(option);
             return option;
         }
     }
@@ -873,7 +873,7 @@
         if (option = toValuesFromMap(_options)['find' + (k || "")](function (v) {
                 return !getAttribute(v[2], 'aria-disabled') && !v[2].hidden;
             })) {
-            return focusToOption(option[2], picker, focusOnly);
+            return focusToOption(option[2], picker);
         }
     }
 
@@ -975,7 +975,8 @@
             options = _mask.options;
         _mask.value;
         var strict = state.strict,
-            hasSize = getDatum(mask, 'size');
+            hasSize = getDatum(mask, 'size'),
+            option;
         var count = _options.count;
         if (selectOnly) {
             forEachMap(_options, function (v) {
@@ -1001,11 +1002,21 @@
                 }
             });
             options.hidden = !count;
-            // Focus visually to the first option!
             if (strict) {
-                focusToOptionFirst($);
+                selectToOptionsNone($);
+                // Silently set the value to the first option
+                if (count && (option = toValuesFromMap(_options).find(function (v) {
+                        return !getAttribute(v[2], 'aria-disabled') && !v[2].hidden;
+                    }))) {
+                    setAttribute(option[2], 'aria-selected', 'true');
+                    setAttribute(option[3], 'selected', "");
+                    setValue(self, getOptionValue(option[2]));
+                } else {
+                    setValue(self, "");
+                }
+            } else {
+                setValue(self, query);
             }
-            setValue(self, strict ? "" : query);
         }
         $.fire('search', [_event, query]);
         var call = state.options;
@@ -1052,8 +1063,9 @@
             picker = getReference($),
             _mask = picker._mask,
             mask = picker.mask,
-            state = picker.state,
-            text = _mask.text,
+            state = picker.state;
+        _mask.input;
+        var text = _mask.text,
             n = state.n,
             strict = state.strict,
             option;
@@ -1062,13 +1074,10 @@
         letClass(mask, n += '--focus');
         letClass(mask, n + '-text');
         if (strict) {
-            if (option = getOptionSelected(picker)) {
+            if (option = getOptionSelected(picker, 1)) {
                 selectToOption(option, picker);
             } else {
-                // Automatically select the first option, or select none!
-                if (!selectToOptionFirst(picker)) {
-                    selectToOptionsNone(picker, 1);
-                }
+                selectToOptionsNone(picker, 1);
             }
         }
     }
@@ -1175,7 +1184,7 @@
                 currentOption && focusTo(currentOption);
             }
         } else if (KEY_TAB === key) {
-            strict && selectToOptionFirst(picker) && picker.exit();
+            picker.exit();
         } else {
             delay(function () {
                 if ("" === searchQuery || searchQuery !== getText($) + "") {
@@ -1281,7 +1290,7 @@
             while (nextOption && (getAttribute(nextOption, 'aria-disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
-            nextOption ? focusToOption(nextOption, picker, 1) : focusToOptionFirst(picker, 1);
+            nextOption ? focusToOption(nextOption, picker) : focusToOptionFirst(picker);
         } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
             exit = true;
             if (KEY_PAGE_UP === key && 'group' === getAttribute(parentOption = getParent($), 'role')) {
@@ -1313,10 +1322,10 @@
             while (prevOption && (getAttribute(prevOption, 'aria-disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
-            prevOption ? focusToOption(prevOption, picker, 1) : focusToOptionLast(picker, 1);
+            prevOption ? focusToOption(prevOption, picker) : focusToOptionLast(picker, 1);
         } else if (KEY_BEGIN === key) {
             exit = true;
-            focusToOptionFirst(picker, 1);
+            focusToOptionFirst(picker);
         } else if (KEY_END === key) {
             exit = true;
             focusToOptionLast(picker, 1);

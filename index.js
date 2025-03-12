@@ -1065,7 +1065,8 @@
             mask = picker.mask,
             state = picker.state;
         _mask.input;
-        var text = _mask.text,
+        var options = _mask.options,
+            text = _mask.text,
             n = state.n,
             strict = state.strict,
             option;
@@ -1074,7 +1075,7 @@
         letClass(mask, n += '--focus');
         letClass(mask, n + '-text');
         if (strict) {
-            if (option = getOptionSelected(picker, 1)) {
+            if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
             } else {
                 selectToOptionsNone(picker, 1);

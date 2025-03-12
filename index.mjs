@@ -280,14 +280,14 @@ function onBlurTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, mask, state} = picker,
-        {input, text} = _mask,
+        {input, options, text} = _mask,
         {n, strict} = state, option;
     picker._event = e;
     letClass(text, n + '__text--focus');
     letClass(mask, n += '--focus');
     letClass(mask, n + '-text');
     if (strict) {
-        if (option = getOptionSelected(picker, 1)) {
+        if (!options.hidden && (option = getOptionSelected(picker, 1))) {
             selectToOption(option, picker);
         } else {
             selectToOptionsNone(picker, 1);

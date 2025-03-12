@@ -439,6 +439,18 @@
         content = trim ? content.trim() : content;
         return "" !== content ? content : null;
     };
+    var getID = function getID(node, batch) {
+        if (batch === void 0) {
+            batch = 'e:';
+        }
+        if (node.id) {
+            return node.id;
+        }
+        if (!isSet(theID[batch])) {
+            theID[batch] = 0;
+        }
+        return node.id = batch + (theID[batch] += 1);
+    };
     var getName = function getName(node) {
         return toCaseLower(node && node.nodeName || "") || null;
     };
@@ -644,6 +656,7 @@
         }
         return node.value = _fromValue(value), node;
     };
+    var theID = {};
     var debounce = function debounce(then, time) {
         var timer;
         return function () {
@@ -1497,10 +1510,12 @@
             var a = getValue(self),
                 b;
             selectToOptionsNone(picker);
+            setAttribute(option, 'aria-selected', 'true');
             setAttribute(option._[OPTION_SELF], 'selected', "");
             setClass(option, n);
             setValue(self, b = getOptionValue(option));
             if (isInput(self)) {
+                setAttribute(input, 'aria-activedescendant', getID(option));
                 setText(hint, "");
                 setText(input, getText(option));
             } else {
@@ -1541,12 +1556,14 @@
             v;
         n += '__option--selected';
         forEachMap(_options, function (v) {
+            letAttribute(v[2], 'aria-selected');
             letAttribute(v[3], 'selected');
             letClass(v[2], n);
         });
         if (fireValue) {
             setValue(self, v = "");
             if (isInput(self)) {
+                letAttribute(input, 'aria-activedescendant');
                 setText(hint, self.placeholder);
                 setText(input, "");
             } else {
@@ -1735,12 +1752,16 @@
             });
             var form = getParentForm(self);
             var mask = setElement('div', {
+                'aria-expanded': 'false',
+                'aria-haspopup': 'listbox',
                 'class': n,
+                'role': 'combobox',
                 'tabindex': isDisabled(self) || isInputSelf ? false : 0
             });
             $.mask = mask;
             var maskOptions = setElement('div', {
-                'class': n + '__options'
+                'class': n + '__options',
+                'role': 'listbox'
             });
             var maskValues = setElement('div', {
                 'class': n + '__values'
@@ -1749,8 +1770,13 @@
                 'class': n + '__' + (isInputSelf ? 'text' : 'value')
             });
             var textInput = setElement('span', {
+                'aria-autocomplete': 'list',
+                'aria-disabled': isDisabled(self) ? 'true' : false,
+                'aria-multiline': 'false',
+                'aria-readonly': isReadOnly(self) ? 'true' : false,
                 'autocapitalize': 'off',
                 'contenteditable': isDisabled(self) || isReadOnly(self) || !isInputSelf ? false : "",
+                'role': 'searchbox',
                 'spellcheck': !isInputSelf ? false : 'false',
                 'tabindex': isReadOnly(self) && isInputSelf ? 0 : false
             });
@@ -1844,6 +1870,18 @@
             }
             // After the initial value has been set, restore the previous `this._active` value
             $._active = _active;
+            // Force `id` attribute(s)
+            arrow.id = getID(arrow);
+            form.id = getID(form);
+            mask.id = getID(mask);
+            maskOptions.id = getID(maskOptions);
+            maskValues.id = getID(maskValues);
+            self.id = getID(self);
+            text.id = getID(text);
+            textInput.id = getID(textInput);
+            textInputHint.id = getID(textInputHint);
+            setAttribute(mask, 'aria-owns', getID(maskOptions));
+            setAttribute(textInput, 'aria-controls', getID(maskOptions));
             // Attach extension(s)
             if (isSet(state) && isArray(state.with)) {
                 forEachArray(state.with, function (v, k) {
@@ -1940,6 +1978,7 @@
             if (!_active) {
                 return $;
             }
+            setAttribute(mask, 'aria-expanded', 'true');
             setClass(mask, n + '--open');
             var theRootReference = getReference(R);
             if (theRootReference && $ !== theRootReference) {
@@ -1976,6 +2015,7 @@
                 return v[2].hidden = false;
             });
             letClass(mask, n + '--open');
+            setAttribute(mask, 'aria-expanded', 'false');
             $.fire('exit', [_event]);
             if (focus) {
                 if (isInput(self)) {
@@ -2168,6 +2208,8 @@
             } else {
                 getChildren(itemsParent = self);
             }
+            // Force `id` attribute(s)
+            itemsParent.id = getID(itemsParent);
             options.hidden = false;
             // `picker.options.set('asdf')`
             if (!isSet(value)) {
@@ -2184,6 +2226,7 @@
                     setChildLast(options, optionGroup = setElement('span', {
                         'class': n + '-group',
                         'data-value': value[1]['&'],
+                        'role': 'group',
                         'title': (_getState = getState(value[1], 'title')) != null ? _getState : false
                     }));
                     setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
@@ -2198,6 +2241,9 @@
                         setStyles(optionGroup, styles);
                         setStyles(optionGroupReal, styles);
                     }
+                    // Force `id` attribute(s)
+                    optionGroup.id = getID(optionGroup);
+                    optionGroupReal.id = getID(optionGroupReal);
                 }
             } else {
                 optionGroup = optionGroupReal = false;
@@ -2211,9 +2257,12 @@
             }
             v = _fromValue(v || key);
             option = value[2] || setElement('span', _fromValue(value[0]), {
+                'aria-disabled': disabled ? 'true' : false,
+                'aria-selected': selected ? 'true' : false,
                 'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
                 'data-group': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false,
                 'data-value': v,
+                'role': 'option',
                 'tabindex': disabled ? false : -1,
                 'title': (_getState4 = getState(value[1], 'title')) != null ? _getState4 : false
             });
@@ -2231,6 +2280,9 @@
                 setStyles(option, styles);
                 setStyles(optionReal, styles);
             }
+            // Force `id` attribute(s)
+            option.id = getID(option);
+            optionReal.id = getID(optionReal);
             option._ = {};
             option._[OPTION_SELF] = optionReal;
             if (!disabled && !value[2]) {

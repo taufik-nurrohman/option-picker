@@ -1,4 +1,4 @@
-import {D, R, W, focusTo, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getName, getNext, getParent, getParentForm, getPrev, getState, getStyle, getText, getValue, hasClass, hasState, isDisabled, isReadOnly, letAttribute, letClass, letDatum, letElement, letStyle, selectNone, selectTo, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
+import {D, R, W, focusTo, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getState, getStyle, getText, getValue, hasClass, hasState, isDisabled, isReadOnly, letAttribute, letClass, letDatum, letElement, letStyle, selectNone, selectTo, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toKeysFromMap, toKeyFirstFromMap, toKeyLastFromMap, toValuesFromMap, toValueFirstFromMap, toValueLastFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
@@ -678,10 +678,12 @@ function selectToOption(option, picker) {
     if (option) {
         let a = getValue(self), b;
         selectToOptionsNone(picker);
+        setAttribute(option, 'aria-selected', 'true');
         setAttribute(option._[OPTION_SELF], 'selected', "");
         setClass(option, n);
         setValue(self, b = getOptionValue(option));
         if (isInput(self)) {
+            setAttribute(input, 'aria-activedescendant', getID(option));
             setText(hint, "");
             setText(input, getText(option));
         } else {
@@ -716,12 +718,14 @@ function selectToOptionsNone(picker, fireValue) {
         {n} = state, v;
     n += '__option--selected';
     forEachMap(_options, v => {
+        letAttribute(v[2], 'aria-selected');
         letAttribute(v[3], 'selected');
         letClass(v[2], n);
     });
     if (fireValue) {
         setValue(self, v = "");
         if (isInput(self)) {
+            letAttribute(input, 'aria-activedescendant');
             setText(hint, self.placeholder);
             setText(input, "");
         } else {
@@ -897,12 +901,16 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         });
         const form = getParentForm(self);
         const mask = setElement('div', {
+            'aria-expanded': 'false',
+            'aria-haspopup': 'listbox',
             'class': n,
+            'role': 'combobox',
             'tabindex': isDisabled(self) || isInputSelf ? false : 0
         });
         $.mask = mask;
         const maskOptions = setElement('div', {
-            'class': n + '__options'
+            'class': n + '__options',
+            'role': 'listbox'
         });
         const maskValues = setElement('div', {
             'class': n + '__values'
@@ -911,8 +919,13 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'class': n + '__' + (isInputSelf ? 'text' : 'value')
         });
         const textInput = setElement('span', {
+            'aria-autocomplete': 'list',
+            'aria-disabled': isDisabled(self) ? 'true' : false,
+            'aria-multiline': 'false',
+            'aria-readonly': isReadOnly(self) ? 'true' : false,
             'autocapitalize': 'off',
             'contenteditable': isDisabled(self) || isReadOnly(self) || !isInputSelf ? false : "",
+            'role': 'searchbox',
             'spellcheck': !isInputSelf ? false : 'false',
             'tabindex': isReadOnly(self) && isInputSelf ? 0 : false
         });
@@ -998,6 +1011,18 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         }
         // After the initial value has been set, restore the previous `this._active` value
         $._active = _active;
+        // Force `id` attribute(s)
+        arrow.id = getID(arrow);
+        form.id = getID(form);
+        mask.id = getID(mask);
+        maskOptions.id = getID(maskOptions);
+        maskValues.id = getID(maskValues);
+        self.id = getID(self);
+        text.id = getID(text);
+        textInput.id = getID(textInput);
+        textInputHint.id = getID(textInputHint);
+        setAttribute(mask, 'aria-owns', getID(maskOptions));
+        setAttribute(textInput, 'aria-controls', getID(maskOptions));
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
             forEachArray(state.with, (v, k) => {
@@ -1083,6 +1108,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         if (!_active) {
             return $;
         }
+        setAttribute(mask, 'aria-expanded', 'true');
         setClass(mask, n + '--open');
         let theRootReference = getReference(R);
         if (theRootReference && $ !== theRootReference) {
@@ -1111,6 +1137,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         }
         forEachMap(_options, v => v[2].hidden = false);
         letClass(mask, n + '--open');
+        setAttribute(mask, 'aria-expanded', 'false');
         $.fire('exit', [_event]);
         if (focus) {
             if (isInput(self)) {
@@ -1274,6 +1301,8 @@ setObjectMethods(OptionPickerOptions, {
         } else {
             items = getChildren(itemsParent = self);
         }
+        // Force `id` attribute(s)
+        itemsParent.id = getID(itemsParent);
         options.hidden = false;
         // `picker.options.set('asdf')`
         if (!isSet(value)) {
@@ -1289,6 +1318,7 @@ setObjectMethods(OptionPickerOptions, {
                 setChildLast(options, optionGroup = setElement('span', {
                     'class': n + '-group',
                     'data-value': value[1]['&'],
+                    'role': 'group',
                     'title': getState(value[1], 'title') ?? false
                 }));
                 setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
@@ -1303,6 +1333,9 @@ setObjectMethods(OptionPickerOptions, {
                     setStyles(optionGroup, styles);
                     setStyles(optionGroupReal, styles);
                 }
+                // Force `id` attribute(s)
+                optionGroup.id = getID(optionGroup);
+                optionGroupReal.id = getID(optionGroupReal);
             }
         } else {
             optionGroup = optionGroupReal = false;
@@ -1313,9 +1346,12 @@ setObjectMethods(OptionPickerOptions, {
         }
         v = fromValue(v || key);
         option = value[2] || setElement('span', fromValue(value[0]), {
+            'aria-disabled': disabled ? 'true' : false,
+            'aria-selected': selected ? 'true' : false,
             'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
             'data-group': getState(value[1], '&') ?? false,
             'data-value': v,
+            'role': 'option',
             'tabindex': disabled ? false : -1,
             'title': getState(value[1], 'title') ?? false
         });
@@ -1333,6 +1369,9 @@ setObjectMethods(OptionPickerOptions, {
             setStyles(option, styles);
             setStyles(optionReal, styles);
         }
+        // Force `id` attribute(s)
+        option.id = getID(option);
+        optionReal.id = getID(optionReal);
         option._ = {};
         option._[OPTION_SELF] = optionReal;
         if (!disabled && !value[2]) {

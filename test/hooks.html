@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form method="get" target="_blank">
+        <p><select name="test">
+            <option>Option 1</option>
+            <option selected>Option 2</option>
+            <option>Option 3</option>
+          </select></p>
+        <p><button onclick="picker.options = ['#1', '#2'];" type="button">Set Options</button> <button onclick="picker.options.set('#3');" type="button">Set Option</button> <button onclick="picker.options.let('#3');" type="button">Let Option</button> <button onclick="picker.options.let();" type="button">Let Options</button></p>
+        <p><button type="submit">Submit</button> <button type="reset">Reset</button></p>
+      </form>
+    </main>
+    <script src="../index.js"></script>
+    <script>
+      const picker = new OptionPicker(document.querySelector('select'));
+      ['blur', 'change', 'click', 'enter', 'exit', 'fit', 'focus', 'focus.option', 'focus.self', 'focus.text', 'has.option', 'let.option', 'let.options', 'load', 'not.option', 'reset', 'search', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'].forEach(v => picker.on(v, (function () {
+          return function (e, ...lot) {
+              console.log([v, lot, e]);
+          }
+      })(v)));
+    </script>
+  </body>
+</html>

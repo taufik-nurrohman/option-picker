@@ -1,0 +1,43 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('select'));
+    |
+    | ['blur', 'change', 'click', 'enter', 'exit', 'fit', 'focus', 'focus.option', 'focus.self', 'focus.text', 'has.option', 'let.option', 'let.options', 'load', 'not.option', 'reset', 'search', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'].forEach(v => picker.on(v, (function () {
+    |     return function (e, ...lot) {
+    |         console.log([v, lot, e]);
+    |     }
+    | })(v)));
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(name='test')
+          option Option 1
+          option(selected) Option 2
+          option Option 3
+      p
+        button(onclick='picker.options = [\'#1\', \'#2\'];' type='button') Set Options
+        = ' '
+        button(onclick='picker.options.set(\'#3\');' type='button') Set Option
+        = ' '
+        button(onclick='picker.options.let(\'#3\');' type='button') Let Option
+        = ' '
+        button(onclick='picker.options.let();' type='button') Let Options
+      p
+        button(type='submit') Submit
+        = ' '
+        button(type='reset') Reset

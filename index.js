@@ -142,7 +142,7 @@
         return 'number' === typeof x;
     };
     var isNumeric = function isNumeric(x) {
-        return /^[+-]?(?:\d*.)?\d+$/.test(x + "");
+        return /^[+-]?(?:\d*\.)?\d+$/.test(x + "");
     };
     var isObject = function isObject(x, isPlain) {
         if (isPlain === void 0) {
@@ -794,11 +794,12 @@
         // Reset the option(s) data, but leave the typed query in place
         _options.delete(null, 0);
         forEachMap(values, function (v, k) {
-            var _v$1$value;
+            var _v$1$value2;
             if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
-                selected.push(_toValue(v[1].value || k));
+                var _v$1$value;
+                selected.push(_toValue((_v$1$value = v[1].value) != null ? _v$1$value : k));
             }
-            setValueInMap(_toValue(isArray(v) && v[1] ? (_v$1$value = v[1].value) != null ? _v$1$value : k : k), v, _options);
+            setValueInMap(_toValue(isArray(v) && v[1] ? (_v$1$value2 = v[1].value) != null ? _v$1$value2 : k : k), v, _options);
         });
         if (!isFunction(state.options)) {
             state.options = values;
@@ -832,10 +833,10 @@
         } else if (isObject(options, 0)) {
             forEachObject(options, function (v, k) {
                 if (isArray(v)) {
-                    var _v$, _v$2, _v$1$value2;
+                    var _v$, _v$2, _v$1$value3;
                     options[k][0] = (_v$ = v[0]) != null ? _v$ : "";
                     options[k][1] = (_v$2 = v[1]) != null ? _v$2 : {};
-                    setValueInMap(_toValue((_v$1$value2 = v[1].value) != null ? _v$1$value2 : k), v, map);
+                    setValueInMap(_toValue((_v$1$value3 = v[1].value) != null ? _v$1$value3 : k), v, map);
                 } else {
                     setValueInMap(_toValue(k), [v, {}], map);
                 }
@@ -977,7 +978,7 @@
             forEachMap(_options, function (v) {
                 var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
                 if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v[2], n)) {
-                    selectToOption(v[2], $, 1);
+                    selectToOption(v[2], $);
                     if (hasSize) {
                         scrollTo(v[2]);
                     }
@@ -1059,11 +1060,11 @@
         letClass(mask, n + '-text');
         if (strict) {
             if (option = getOptionSelected(picker)) {
-                selectToOption(option, picker, 1);
+                selectToOption(option, picker);
             } else {
                 // Automatically select the first option, or select none!
-                if (!selectToOptionFirst(picker, 1)) {
-                    selectToOptionsNone(picker, 0, 1);
+                if (!selectToOptionFirst(picker)) {
+                    selectToOptionsNone(picker, 1);
                 }
             }
         }
@@ -1167,12 +1168,12 @@
                 currentOption && focusTo(currentOption);
             } else if (strict && KEY_ENTER === key) {
                 // Automatically select the first option!
-                selectToOptionFirst(picker, 1) && picker.exit(exit);
+                selectToOptionFirst(picker) && picker.exit(exit);
             } else {
                 currentOption && focusTo(currentOption);
             }
         } else if (KEY_TAB === key) {
-            strict && selectToOptionFirst(picker, 1) && picker.exit();
+            strict && selectToOptionFirst(picker) && picker.exit();
         } else {
             delay(function () {
                 if ("" === searchQuery || searchQuery !== getText($) + "") {
@@ -1247,7 +1248,7 @@
             picker.exit(exit = true);
         } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
             if (KEY_ESCAPE !== key) {
-                selectToOption($, picker, 1);
+                selectToOption($, picker);
             }
             picker.exit(exit = KEY_TAB !== key);
         } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
@@ -1375,7 +1376,7 @@
         picker._event = e;
         // Select it immediately, then close the option(s) list when the event occurs with a mouse
         if ('mousedown' === e.type) {
-            selectToOption($, picker, 1);
+            selectToOption($, picker);
             if (!getDatum(mask, 'size')) {
                 picker.exit(true);
             }
@@ -1446,7 +1447,7 @@
         // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
         // (this event) is fired. If it has a difference, then it scrolls ;)
         if (getScroll(options)[1] === optionsScrollTop) {
-            selectToOption($, picker, 1), picker.exit(true);
+            selectToOption($, picker), picker.exit(true);
         }
     }
 
@@ -1481,7 +1482,7 @@
         return picker.fire('submit', [e]);
     }
 
-    function selectToOption(option, picker, fireHook) {
+    function selectToOption(option, picker) {
         var _event = picker._event,
             _mask = picker._mask;
         picker._options;
@@ -1506,14 +1507,14 @@
                 setDatum(value, 'value', b);
                 setHTML(value, getHTML(option));
             }
-            if (fireHook && b !== a) {
+            if (a !== b) {
                 picker.fire('change', [_event, _toValue(b)]);
             }
             return option;
         }
     }
 
-    function selectToOptionFirst(picker, fireHook, k) {
+    function selectToOptionFirst(picker, k) {
         var _options = picker._options,
             state = picker.state,
             n = state.n,
@@ -1522,13 +1523,13 @@
         if (option = toValuesFromMap(_options)['find' + ("")](function (v) {
                 return !v[2].hidden && !hasClass(v[2], n);
             })) {
-            return selectToOption(option[2], picker, fireHook);
+            return selectToOption(option[2], picker);
         }
     }
 
-    function selectToOptionsNone(picker, fireHook, fireValue) {
-        var _event = picker._event,
-            _mask = picker._mask,
+    function selectToOptionsNone(picker, fireValue) {
+        picker._event;
+        var _mask = picker._mask,
             _options = picker._options,
             self = picker.self,
             state = picker.state,
@@ -1536,25 +1537,21 @@
             input = _mask.input;
         _mask.options;
         var value = _mask.value,
-            n = state.n;
+            n = state.n,
+            v;
         n += '__option--selected';
-        var a = getValue(self),
-            b;
         forEachMap(_options, function (v) {
             letAttribute(v[3], 'selected');
             letClass(v[2], n);
         });
         if (fireValue) {
-            setValue(self, b = "");
+            setValue(self, v = "");
             if (isInput(self)) {
                 setText(hint, self.placeholder);
                 setText(input, "");
             } else {
                 letDatum(value, 'value');
-                setHTML(value, "");
-            }
-            if (fireHook && b !== a) {
-                picker.fire('change', [_event, _toValue(b)]);
+                setHTML(value, v);
             }
         }
     }
@@ -1572,14 +1569,13 @@
         return $.attach(self, _fromStates({}, OptionPicker.state, state || {}));
     }
 
-    function OptionPickerOptions(of, options, _start) {
+    function OptionPickerOptions(of, options) {
         var $ = this;
         // Return new instance if `OptionPickerOptions` was called without the `new` operator
         if (!isInstance($, OptionPickerOptions)) {
-            return new OptionPickerOptions(of, options, _start);
+            return new OptionPickerOptions(of, options);
         }
         $._o = new Map();
-        $._start = _start || 0;
         $.count = 0;
         $.of = of;
         if (options && toCount(options)) {
@@ -1708,7 +1704,7 @@
                     return $;
                 }
                 if (v = getValueInMap(_toValue(value), _options._o)) {
-                    selectToOption(v[2], $, 1);
+                    selectToOption(v[2], $);
                 }
                 return $.fire('set.value', [_event, value]);
             }
@@ -1727,7 +1723,7 @@
             state = state || $.state;
             $._active = !isDisabled(self) && !isReadOnly(self);
             $._event = null;
-            $._options = new OptionPickerOptions($, [], 1);
+            $._options = new OptionPickerOptions($, []);
             $._value = getValue(self) || null;
             $.self = self;
             $.state = state;
@@ -1863,7 +1859,6 @@
                     }
                 });
             }
-            $._options._start = 0;
             return $;
         },
         blur: function blur() {
@@ -1883,7 +1878,7 @@
                 input = _mask.input;
             var form = getParentForm(self);
             $._active = false;
-            $._options = new OptionPickerOptions($, state.options = getOptions(self), 1);
+            $._options = new OptionPickerOptions($, state.options = getOptions(self));
             $._value = getValue(self) || null; // Update initial value to be the current value
             if (form) {
                 offEvent('reset', form, onResetForm);
@@ -1928,7 +1923,6 @@
                 of: self
             };
             $.mask = null;
-            $._options._start = 0;
             return $;
         },
         enter: function enter(focus, mode) {
@@ -2087,11 +2081,11 @@
             }
             if (!isSet(key)) {
                 forEachMap(_o, function (v, k) {
-                    return $.let(k, 0);
+                    return $.let(k);
                 });
-                selectToOptionsNone(of, 0, _fireValue);
+                selectToOptionsNone(of, _fireValue);
                 options.hidden = true;
-                of.fire('let.options', [_event, $]).fire('change', [_event, null]);
+                of.fire('let.options', [_event, $]);
                 return 0 === $.count;
             }
             if (!(r = getValueInMap(key = _toValue(key), _o))) {
@@ -2116,7 +2110,7 @@
             parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
             // Clear value if there are no option(s)
             if (0 === toCount(getChildren(options))) {
-                selectToOptionsNone(of, 0, !isInput(self));
+                selectToOptionsNone(of, !isInput(self));
                 options.hidden = true;
                 // Reset value to the first option if removed option is the selected option
             } else {
@@ -2140,32 +2134,17 @@
         has: function has(key) {
             return hasKeyInMap(_toValue(key), this._o);
         },
-        let: function _let(key, _fireHook) {
-            if (_fireHook === void 0) {
-                _fireHook = 1;
-            }
-            var $ = this,
-                of = $.of,
-                _event = of._event,
-                self = of.self,
-                r,
-                value = getValue(self);
-            // The previous value
-            r = $.delete(key = _toValue(key));
-            if (_fireHook && value !== getValue(self)) {
-                of.fire('change', [_event, key]);
-            }
-            return r;
+        let: function _let(key) {
+            return this.delete(key);
         },
         set: function set(key, value) {
             var _getState3, _getState4, _getState5;
             var $ = this,
                 _o = $._o,
-                _start = $._start,
                 of = $.of,
                 _active = of._active,
                 _event = of._event;
-            if (!_active && !_start) {
+            if (!_active) {
                 return false;
             }
             if ($.has(key = _toValue(key))) {
@@ -2269,7 +2248,7 @@
             value[3] = optionReal;
             ++$.count;
             setValueInMap(key, value, _o);
-            return of.fire('set.option', [_event, key]).value = of.value, true;
+            return of.fire('set.option', [_event, key]), true;
         }
     });
     // In order for an object to be iterable, it must have a `Symbol.iterator` key

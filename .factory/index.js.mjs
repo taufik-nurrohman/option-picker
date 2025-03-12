@@ -46,7 +46,7 @@ function createOptions($, options, values) {
     _options.delete(null, 0);
     forEachMap(values, (v, k) => {
         if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
-            selected.push(toValue(v[1].value || k));
+            selected.push(toValue(v[1].value ?? k));
         }
         setValueInMap(toValue(isArray(v) && v[1] ? (v[1].value ?? k) : k), v, _options);
     });
@@ -207,7 +207,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         forEachMap(_options, v => {
             let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
             if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v[2], n)) {
-                selectToOption(v[2], $, 1);
+                selectToOption(v[2], $);
                 if (hasSize) {
                     scrollTo(v[2], options);
                 }
@@ -284,11 +284,11 @@ function onBlurTextInput(e) {
     letClass(mask, n + '-text');
     if (strict) {
         if (option = getOptionSelected(picker)) {
-            selectToOption(option, picker, 1);
+            selectToOption(option, picker);
         } else {
             // Automatically select the first option, or select none!
-            if (!selectToOptionFirst(picker, 1)) {
-                selectToOptionsNone(picker, 0, 1);
+            if (!selectToOptionFirst(picker)) {
+                selectToOptionsNone(picker, 1);
             }
         }
     }
@@ -375,12 +375,12 @@ function onKeyDownTextInput(e) {
             currentOption && focusTo(currentOption);
         } else if (strict && KEY_ENTER === key) {
             // Automatically select the first option!
-            selectToOptionFirst(picker, 1) && picker.exit(exit);
+            selectToOptionFirst(picker) && picker.exit(exit);
         } else {
             currentOption && focusTo(currentOption);
         }
     } else if (KEY_TAB === key) {
-        strict && selectToOptionFirst(picker, 1) && picker.exit();
+        strict && selectToOptionFirst(picker) && picker.exit();
     } else {
         delay(() => {
             if ("" === searchQuery || searchQuery !== getText($) + "") {
@@ -445,7 +445,7 @@ function onKeyDownOption(e) {
         picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
         if (KEY_ESCAPE !== key) {
-            selectToOption($, picker, 1);
+            selectToOption($, picker);
         }
         picker.exit(exit = KEY_TAB !== key);
     } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
@@ -564,7 +564,7 @@ function onPointerDownOption(e) {
     picker._event = e;
     // Select it immediately, then close the option(s) list when the event occurs with a mouse
     if ('mousedown' === e.type) {
-        selectToOption($, picker, 1);
+        selectToOption($, picker);
         if (!getDatum(mask, 'size')) {
             picker.exit(true);
         }
@@ -635,7 +635,7 @@ function onPointerUpOption(e) {
     // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
     // (this event) is fired. If it has a difference, then it scrolls ;)
     if (getScroll(options)[1] === optionsScrollTop) {
-        selectToOption($, picker, 1), picker.exit(true);
+        selectToOption($, picker), picker.exit(true);
     }
 }
 
@@ -670,7 +670,7 @@ function onSubmitForm(e) {
     return picker.fire('submit', [e]);
 }
 
-function selectToOption(option, picker, fireHook) {
+function selectToOption(option, picker) {
     let {_event, _mask, _options, self, state} = picker,
         {hint, input, value} = _mask,
         {n} = state;
@@ -688,49 +688,45 @@ function selectToOption(option, picker, fireHook) {
             setDatum(value, 'value', b);
             setHTML(value, getHTML(option));
         }
-        if (fireHook && b !== a) {
+        if (a !== b) {
             picker.fire('change', [_event, toValue(b)]);
         }
         return option;
     }
 }
 
-function selectToOptionFirst(picker, fireHook, k) {
+function selectToOptionFirst(picker, k) {
     let {_options, state} = picker,
         {n} = state, option;
     n += '__option--disabled';
     if (option = toValuesFromMap(_options)['find' + (k || "")](v => !v[2].hidden && !hasClass(v[2], n))) {
-        return selectToOption(option[2], picker, fireHook);
+        return selectToOption(option[2], picker);
     }
 }
 
-function selectToOptionLast(picker, fireHook) {
-    return selectToOptionFirst(picker, fireHook, 'Last');
+function selectToOptionLast(picker) {
+    return selectToOptionFirst(picker, 'Last');
 }
 
 function selectToOptions(options, picker) {}
 
-function selectToOptionsNone(picker, fireHook, fireValue) {
+function selectToOptionsNone(picker, fireValue) {
     let {_event, _mask, _options, self, state} = picker,
         {hint, input, options, value} = _mask,
-        {n} = state;
+        {n} = state, v;
     n += '__option--selected';
-    let a = getValue(self), b;
     forEachMap(_options, v => {
         letAttribute(v[3], 'selected');
         letClass(v[2], n);
     });
     if (fireValue) {
-        setValue(self, b = "");
+        setValue(self, v = "");
         if (isInput(self)) {
             setText(hint, self.placeholder);
             setText(input, "");
         } else {
             letDatum(value, 'value');
-            setHTML(value, "");
-        }
-        if (fireHook && b !== a) {
-            picker.fire('change', [_event, toValue(b)]);
+            setHTML(value, v);
         }
     }
 }
@@ -748,14 +744,13 @@ function OptionPicker(self, state) {
     return $.attach(self, fromStates({}, OptionPicker.state, (state || {})));
 }
 
-function OptionPickerOptions(of, options, _start) {
+function OptionPickerOptions(of, options) {
     const $ = this;
     // Return new instance if `OptionPickerOptions` was called without the `new` operator
     if (!isInstance($, OptionPickerOptions)) {
-        return new OptionPickerOptions(of, options, _start);
+        return new OptionPickerOptions(of, options);
     }
     $._o = new Map;
-    $._start = _start || 0;
     $.count = 0;
     $.of = of;
     if (options && toCount(options)) {
@@ -870,7 +865,7 @@ setObjectAttributes(OptionPicker, {
                 return $;
             }
             if (v = getValueInMap(toValue(value), _options._o)) {
-                selectToOption(v[2], $, 1);
+                selectToOption(v[2], $);
             }
             return $.fire('set.value', [_event, value]);
         }
@@ -1018,7 +1013,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 }
             });
         }
-        $._options._start = 0;
         return $;
     },
     blur: function () {
@@ -1079,7 +1073,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             of: self
         };
         $.mask = null;
-        $._options._start = 0;
         return $;
     },
     enter: function (focus, mode) {
@@ -1208,10 +1201,10 @@ setObjectMethods(OptionPickerOptions, {
             return false;
         }
         if (!isSet(key)) {
-            forEachMap(_o, (v, k) => $.let(k, 0));
-            selectToOptionsNone(of, 0, _fireValue);
+            forEachMap(_o, (v, k) => $.let(k));
+            selectToOptionsNone(of, _fireValue);
             options.hidden = true;
-            of.fire('let.options', [_event, $]).fire('change', [_event, null]);
+            of.fire('let.options', [_event, $]);
             return 0 === $.count;
         }
         if (!(r = getValueInMap(key = toValue(key), _o))) {
@@ -1236,7 +1229,7 @@ setObjectMethods(OptionPickerOptions, {
         parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
         // Clear value if there are no option(s)
         if (0 === toCount(getChildren(options))) {
-            selectToOptionsNone(of, 0, !isInput(self));
+            selectToOptionsNone(of, !isInput(self));
             options.hidden = true;
         // Reset value to the first option if removed option is the selected option
         } else {
@@ -1258,22 +1251,14 @@ setObjectMethods(OptionPickerOptions, {
     has: function (key) {
         return hasKeyInMap(toValue(key), this._o);
     },
-    let: function (key, _fireHook = 1) {
-        let $ = this,
-            {of} = $,
-            {_event, self} = of, r,
-            value = getValue(self); // The previous value
-        r = $.delete(key = toValue(key));
-        if (_fireHook && value !== getValue(self)) {
-            of.fire('change', [_event, key]);
-        }
-        return r;
+    let: function (key) {
+        return this.delete(key);
     },
     set: function (key, value) {
         let $ = this,
-            {_o, _start, of} = $,
+            {_o, of} = $,
             {_active, _event} = of;
-        if (!_active && !_start) {
+        if (!_active) {
             return false;
         }
         if ($.has(key = toValue(key))) {
@@ -1365,7 +1350,7 @@ setObjectMethods(OptionPickerOptions, {
         value[3] = optionReal;
         ++$.count;
         setValueInMap(key, value, _o);
-        return (of.fire('set.option', [_event, key]).value = of.value), true;
+        return of.fire('set.option', [_event, key]), true;
     }
 });
 

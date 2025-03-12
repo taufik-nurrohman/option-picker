@@ -7,16 +7,42 @@ block state
 
 block script
   script
+    | const log = document.querySelector('code');
     | const picker = new OptionPicker(document.querySelector('select'));
     |
-    | ['blur', 'change', 'click', 'enter', 'exit', 'fit', 'focus', 'focus.option', 'focus.self', 'focus.text', 'has.option', 'let.option', 'let.options', 'load', 'not.option', 'reset', 'search', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'].forEach(v => picker.on(v, (function () {
+    | // <https://stackoverflow.com/a/16348977/1163000>
+    | function stringToColor(s) {
+    |     let hash = 0, r = '#';
+    |     for (let i = 0, j = s.length; i < j; ++i) {
+    |         hash = s.charCodeAt(i) + ((hash << 5) - hash);
+    |     }
+    |     for (let i = 0; i < 3; ++i) {
+    |         r += ('00' + ((hash >> (i * 8)) & 0xFF).toString(16)).substr(-2);
+    |     }
+    |     return r;
+    | }
+    |
+    | ['blur', 'blur.self', 'change', 'click', 'enter', 'exit', 'fit', 'focus', 'focus.option', 'focus.self', 'focus.text', 'has.option', 'let.option', 'let.options', 'load', 'not.option', 'reset', 'search', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'].forEach(v => picker.on(v, (function () {
     |     return function (e, ...lot) {
-    |         console.log([v, lot, e]);
+    |         let note = document.createElement('span');
+    |         note.style.color = stringToColor(v);
+    |         note.style.display = 'block';
+    |         note.textContent = '↑↑↑ [' + v + ']: ' + JSON.stringify(lot) + ' ' + (e ? '@' + e.type : "");
+    |         log.prepend(note);
     |     }
     | })(v)));
 
 block style
   style
+    | code {
+    |   background: #000;
+    |   color: #fff;
+    |   display: block;
+    |   font-size: 150%;
+    |   line-height: 1.25em;
+    |   padding: 0.25em;
+    |   text-shadow: 0 0 0 #fff;
+    | }
     | .option-picker__options {
     |   background: #fff;
     | }
@@ -41,3 +67,4 @@ block content
         button(type='submit') Submit
         = ' '
         button(type='reset') Reset
+    pre: code

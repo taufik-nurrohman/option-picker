@@ -500,9 +500,6 @@
     var hasAttribute = function hasAttribute(node, attribute) {
         return node.hasAttribute(attribute);
     };
-    var hasClass = function hasClass(node, value) {
-        return node.classList.contains(value);
-    };
     var hasState = function hasState(node, state) {
         return state in node;
     };
@@ -804,15 +801,16 @@
         } else {
             getChildren(itemsParent = self);
         }
-        // Reset the option(s) data, but leave the typed query in place
-        _options.delete(null, 0);
+        // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
+        _options.delete(null, 0, 0);
         forEachMap(values, function (v, k) {
             var _v$1$value2;
             if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
                 var _v$1$value;
                 selected.push(_toValue((_v$1$value = v[1].value) != null ? _v$1$value : k));
             }
-            setValueInMap(_toValue(isArray(v) && v[1] ? (_v$1$value2 = v[1].value) != null ? _v$1$value2 : k : k), v, _options);
+            // Set the option data, but do not fire the `set.option` hook
+            _options.set(_toValue(isArray(v) && v[1] ? (_v$1$value2 = v[1].value) != null ? _v$1$value2 : k : k), v, 0);
         });
         if (!isFunction(state.options)) {
             state.options = values;
@@ -871,12 +869,9 @@
 
     function focusToOptionFirst(picker, focusOnly, k) {
         var _options = picker._options,
-            state = picker.state,
-            n = state.n,
             option;
-        n += '__option--disabled';
         if (option = toValuesFromMap(_options)['find' + (k || "")](function (v) {
-                return !v[2].hidden && !hasClass(v[2], n);
+                return !getAttribute(v[2], 'aria-disabled') && !v[2].hidden;
             })) {
             return focusToOption(option[2], picker, focusOnly);
         }
@@ -900,12 +895,9 @@
     function getOptionSelected($, strict) {
         var _options = $._options,
             self = $.self,
-            state = $.state,
-            n = state.n,
             selected;
-        n += '__option';
         forEachMap(_options, function (v, k) {
-            if (isArray(v) && v[2] && !hasClass(v[2], n + '--disabled') && hasClass(v[2], n + '--selected')) {
+            if (isArray(v) && v[2] && !getAttribute(v[2], 'aria-disabled') && getAttribute(v[2], 'aria-selected')) {
                 return selected = v[2], 0;
             }
         });
@@ -982,15 +974,13 @@
             state = $.state,
             options = _mask.options;
         _mask.value;
-        var n = state.n,
-            strict = state.strict,
+        var strict = state.strict,
             hasSize = getDatum(mask, 'size');
-        n += '__option--disabled';
         var count = _options.count;
         if (selectOnly) {
             forEachMap(_options, function (v) {
                 var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-                if ("" !== q && q === text.slice(0, toCount(q)) && !hasClass(v[2], n)) {
+                if ("" !== q && q === text.slice(0, toCount(q)) && !getAttribute(v[2], 'aria-disabled')) {
                     selectToOption(v[2], $);
                     if (hasSize) {
                         scrollTo(v[2]);
@@ -1040,9 +1030,9 @@
             picker = getReference($),
             state = picker.state,
             n = state.n;
-        picker._event = e;
         letClass($, n += '--focus');
         letClass($, n += '-self');
+        picker.fire('blur', [e]).fire('blur.self', [e])._event = e;
     }
 
     function onBlurOption(e) {
@@ -1100,9 +1090,9 @@
             picker = getReference($),
             state = picker.state,
             n = state.n;
-        picker._event = e;
         setClass($, n += '--focus');
         setClass($, n += '-self');
+        picker.fire('focus', [e]).fire('focus.self', [e])._event = e;
     }
 
     function onFocusOption(e) {
@@ -1154,8 +1144,7 @@
             state = picker.state,
             hint = _mask.hint;
         _mask.input;
-        var n = state.n,
-            strict = state.strict;
+        var strict = state.strict;
         picker._event = e;
         delay(function () {
             return setText(hint, getText($, false) ? "" : self.placeholder);
@@ -1171,12 +1160,12 @@
             if (!currentOption || currentOption.hidden) {
                 currentOption = toValueFirstFromMap(_options);
                 currentOption = currentOption ? currentOption[2] : 0;
-                while (currentOption && (hasClass(currentOption, n + '__option--disabled') || currentOption.hidden)) {
+                while (currentOption && (getAttribute(currentOption, 'aria-disabled') || currentOption.hidden)) {
                     currentOption = getNext(currentOption);
                 }
             }
             exit = true;
-            if (!hasClass(mask, n + '--open')) {
+            if (!getAttribute(mask, 'aria-expanded')) {
                 picker.enter(exit);
                 currentOption && focusTo(currentOption);
             } else if (strict && KEY_ENTER === key) {
@@ -1226,7 +1215,7 @@
             picker.exit(exit = true);
         } else if (KEY_TAB === key) {
             searchTerm = "";
-            picker.exit(!(exit = false));
+            picker.exit(exit = false);
         } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
             picker.enter(exit = true).fit();
         } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
@@ -1249,12 +1238,9 @@
         picker._options;
         picker.mask;
         var self = picker.self,
-            state = picker.state,
             hint = _mask.hint;
         _mask.input;
         _mask.value;
-        var n = state.n;
-        n += '__option';
         var nextOption, parentOption, prevOption;
         picker._event = e;
         if (KEY_DELETE_LEFT === key) {
@@ -1266,65 +1252,65 @@
             picker.exit(exit = KEY_TAB !== key);
         } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
             exit = true;
-            if (KEY_PAGE_DOWN === key && hasClass(parentOption = getParent($), n + '-group')) {
+            if (KEY_PAGE_DOWN === key && 'group' === getAttribute(parentOption = getParent($), 'role')) {
                 nextOption = getNext(parentOption);
             } else {
                 nextOption = getNext($);
             }
             // Skip disabled and hidden option(s)…
-            while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
+            while (nextOption && (getAttribute(nextOption, 'aria-disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
             if (nextOption) {
                 // Next option is a group?
-                if (hasClass(nextOption, n + '-group')) {
+                if ('group' === getAttribute(nextOption, 'role')) {
                     nextOption = getChildFirst(nextOption);
                 }
                 // Is the last option?
             } else {
                 // Is in a group?
-                if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
+                if ((parentOption = getParent($)) && 'group' === getAttribute(parentOption, 'role')) {
                     nextOption = getNext(parentOption);
                 }
                 // Next option is a group?
-                if (nextOption && hasClass(nextOption, n + '-group')) {
+                if (nextOption && 'group' === getAttribute(nextOption, 'role')) {
                     nextOption = getChildFirst(nextOption);
                 }
             }
             // Skip disabled and hidden option(s)…
-            while (nextOption && (hasClass(nextOption, n + '--disabled') || nextOption.hidden)) {
+            while (nextOption && (getAttribute(nextOption, 'aria-disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
             nextOption ? focusToOption(nextOption, picker, 1) : focusToOptionFirst(picker, 1);
         } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
             exit = true;
-            if (KEY_PAGE_UP === key && hasClass(parentOption = getParent($), n + '-group')) {
+            if (KEY_PAGE_UP === key && 'group' === getAttribute(parentOption = getParent($), 'role')) {
                 prevOption = getPrev(parentOption);
             } else {
                 prevOption = getPrev($);
             }
             // Skip disabled and hidden option(s)…
-            while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
+            while (prevOption && (getAttribute(prevOption, 'aria-disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
             if (prevOption) {
                 // Previous option is a group?
-                if (hasClass(prevOption, n + '-group')) {
+                if ('group' === getAttribute(prevOption, 'role')) {
                     prevOption = getChildLast(prevOption);
                 }
                 // Is the first option?
             } else {
                 // Is in a group?
-                if ((parentOption = getParent($)) && hasClass(parentOption, n + '-group')) {
+                if ((parentOption = getParent($)) && 'group' === getAttribute(parentOption, 'role')) {
                     prevOption = getPrev(parentOption);
                 }
                 // Previous option is a group?
-                if (prevOption && hasClass(prevOption, n + '-group')) {
+                if (prevOption && 'group' === getAttribute(prevOption, 'role')) {
                     prevOption = getChildLast(prevOption);
                 }
             }
             // Skip disabled and hidden option(s)…
-            while (prevOption && (hasClass(prevOption, n + '--disabled') || prevOption.hidden)) {
+            while (prevOption && (getAttribute(prevOption, 'aria-disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
             prevOption ? focusToOption(prevOption, picker, 1) : focusToOptionLast(picker, 1);
@@ -1357,26 +1343,27 @@
     }
 
     function onPointerDownMask(e) {
+        // This will prevent us from being able to focus natively on the mask because current `e.type` is `mousedown` or
+        // `touchstart`, so we will have to fire the `focus` and `focus.self` hook(s) manually as if it were actually going
+        // to focus natively.
+        offEventDefault(e);
         var $ = this,
             picker = getReference($),
             _options = picker._options,
             self = picker.self,
-            state = picker.state,
-            n = state.n,
             target = e.target;
-        offEventDefault(e);
+        picker._event = e;
         if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
             return;
         }
-        picker._event = e;
-        if (hasClass(target, n + '__options') || getParent(target, '.' + n + '__options')) {
+        if ('listbox' === getAttribute(target, 'role') || getParent(target, '[role=listbox]')) {
             // The user is likely browsing the available option(s) by dragging the scroll bar
             return;
         }
         forEachMap(_options, function (v) {
             return v[2].hidden = false;
         });
-        picker[hasClass($, n + '--open') ? 'exit' : 'enter'](true).fit();
+        picker.fire('focus', [e]).fire('focus.self', [e])[getAttribute($, 'aria-expanded') ? 'exit' : 'enter'](true).fit();
     }
     var optionsScrollTop = 0;
 
@@ -1492,7 +1479,7 @@
         var $ = this,
             picker = getReference($);
         picker._event = e;
-        return picker.fire('submit', [e]);
+        return picker.fire('submit', [e, picker.value]);
     }
 
     function selectToOption(option, picker) {
@@ -1500,19 +1487,15 @@
             _mask = picker._mask;
         picker._options;
         var self = picker.self,
-            state = picker.state,
             hint = _mask.hint,
             input = _mask.input,
-            value = _mask.value,
-            n = state.n;
-        n += '__option--selected';
+            value = _mask.value;
         if (option) {
             var a = getValue(self),
                 b;
             selectToOptionsNone(picker);
             setAttribute(option, 'aria-selected', 'true');
             setAttribute(option._[OPTION_SELF], 'selected', "");
-            setClass(option, n);
             setValue(self, b = getOptionValue(option));
             if (isInput(self)) {
                 setAttribute(input, 'aria-activedescendant', getID(option));
@@ -1530,13 +1513,11 @@
     }
 
     function selectToOptionFirst(picker, k) {
-        var _options = picker._options,
-            state = picker.state,
-            n = state.n,
-            option;
-        n += '__option--disabled';
+        var _options = picker._options;
+        picker.state;
+        var option;
         if (option = toValuesFromMap(_options)['find' + ("")](function (v) {
-                return !v[2].hidden && !hasClass(v[2], n);
+                return !getAttribute(v[2], 'aria-disabled') && !v[2].hidden;
             })) {
             return selectToOption(option[2], picker);
         }
@@ -1547,18 +1528,14 @@
         var _mask = picker._mask,
             _options = picker._options,
             self = picker.self,
-            state = picker.state,
             hint = _mask.hint,
             input = _mask.input;
         _mask.options;
         var value = _mask.value,
-            n = state.n,
             v;
-        n += '__option--selected';
         forEachMap(_options, function (v) {
             letAttribute(v[2], 'aria-selected');
             letAttribute(v[3], 'selected');
-            letClass(v[2], n);
         });
         if (fireValue) {
             setValue(self, v = "");
@@ -1625,19 +1602,32 @@
             set: function set(options) {
                 var $ = this,
                     _event = $._event,
-                    _mask = $._mask;
-                $._options;
-                var state = $.state;
-                state.n;
-                var selected;
+                    _mask = $._mask,
+                    _options = $._options,
+                    self = $.self,
+                    selected;
                 if (isFloat(options) || isInteger(options) || isString(options)) {
                     options = [options];
                 }
+                var value = $.value; // The previous value
                 if (toCount(selected = createOptionsFrom($, options, _mask.options))) {
-                    $.value = selected[0];
+                    // Sets the value of `self.value` so that change(s) in value are not detected when we set the value of
+                    // `$.value` after this
+                    setValue(self, selected[0]);
+                    // Setting the value of `$.value` will not trigger the `change` hook because the `$.value` value has
+                    // already been made equal to the `self.value` value
+                    $.value = $._value = selected[0];
                     // $.values = selected;
+                    // Fire the `change` hook manually
+                    if (value !== $.value) {
+                        $.fire('change', [_event, $.value]);
+                    }
                 }
-                return $.fire('set.options', [_event, options]);
+                var values = [];
+                forEachMap(_options, function (v, k) {
+                    return values.push(k);
+                });
+                return $.fire('set.options', [_event, values]);
             }
         },
         size: {
@@ -1754,6 +1744,7 @@
             var mask = setElement('div', {
                 'aria-expanded': 'false',
                 'aria-haspopup': 'listbox',
+                'aria-multiselectable': self.multiple ? 'true' : false,
                 'class': n,
                 'role': 'combobox',
                 'tabindex': isDisabled(self) || isInputSelf ? false : 0
@@ -1764,7 +1755,8 @@
                 'role': 'listbox'
             });
             var maskValues = setElement('div', {
-                'class': n + '__values'
+                'class': n + '__values',
+                'role': 'group'
             });
             var text = setElement('span', {
                 'class': n + '__' + (isInputSelf ? 'text' : 'value')
@@ -1773,6 +1765,7 @@
                 'aria-autocomplete': 'list',
                 'aria-disabled': isDisabled(self) ? 'true' : false,
                 'aria-multiline': 'false',
+                'aria-placeholder': isInputSelf ? self.placeholder : false,
                 'aria-readonly': isReadOnly(self) ? 'true' : false,
                 'autocapitalize': 'off',
                 'contenteditable': isDisabled(self) || isReadOnly(self) || !isInputSelf ? false : "",
@@ -1802,6 +1795,7 @@
             setClass(self, n + '__self');
             setNext(self, mask);
             if (form) {
+                form.id = getID(form);
                 onEvent('reset', form, onResetForm);
                 onEvent('submit', form, onSubmitForm);
                 setReference(form, $);
@@ -1854,7 +1848,11 @@
                             $.value = getOptionValue(selected);
                             // $.values = selected;
                         }
-                        $.fire('load', [$._event, null, options]).fit();
+                        var values = [];
+                        forEachMap($._options, function (v, k) {
+                            return values.push(k);
+                        });
+                        $.fire('load', [$._event, null, values]).fit();
                     });
                 } else {
                     if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
@@ -1872,7 +1870,6 @@
             $._active = _active;
             // Force `id` attribute(s)
             arrow.id = getID(arrow);
-            form.id = getID(form);
             mask.id = getID(mask);
             maskOptions.id = getID(maskOptions);
             maskValues.id = getID(maskValues);
@@ -1880,7 +1877,9 @@
             text.id = getID(text);
             textInput.id = getID(textInput);
             textInputHint.id = getID(textInputHint);
-            setAttribute(mask, 'aria-owns', getID(maskOptions));
+            setAttribute(mask, 'aria-controls', getID(maskOptions));
+            setAttribute(mask, 'aria-labelledby', getID(text));
+            setAttribute(self, 'aria-hidden', 'true');
             setAttribute(textInput, 'aria-controls', getID(maskOptions));
             // Attach extension(s)
             if (isSet(state) && isArray(state.with)) {
@@ -1900,11 +1899,13 @@
             return $;
         },
         blur: function blur() {
-            selectNone();
             var $ = this,
                 _mask = $._mask,
                 mask = $.mask,
                 input = _mask.input;
+            if (input) {
+                selectNone();
+            }
             return (input || mask).blur(), $.exit();
         },
         detach: function detach() {
@@ -1955,6 +1956,7 @@
                 });
             }
             self.tabIndex = null;
+            letAttribute(self, 'aria-hidden');
             letClass(self, state.n + '__self');
             letElement(mask);
             $._mask = {
@@ -1972,14 +1974,11 @@
                 _options = $._options,
                 mask = $.mask,
                 self = $.self,
-                state = $.state,
-                input = _mask.input,
-                n = state.n;
+                input = _mask.input;
             if (!_active) {
                 return $;
             }
             setAttribute(mask, 'aria-expanded', 'true');
-            setClass(mask, n + '--open');
             var theRootReference = getReference(R);
             if (theRootReference && $ !== theRootReference) {
                 theRootReference.exit(); // Exit other(s)
@@ -1993,7 +1992,6 @@
                 } else if (option = getValueInMap(_toValue(getValue(self)), _options._o)) {
                     focusTo(option[2]);
                 }
-                $.fire('focus', [_event]).fire('focus.option', [_event]);
             }
             return $;
         },
@@ -2005,16 +2003,13 @@
                 _options = $._options,
                 mask = $.mask,
                 self = $.self,
-                state = $.state,
-                input = _mask.input,
-                n = state.n;
+                input = _mask.input;
             if (!_active) {
                 return $;
             }
             forEachMap(_options, function (v) {
                 return v[2].hidden = false;
             });
-            letClass(mask, n + '--open');
             setAttribute(mask, 'aria-expanded', 'false');
             $.fire('exit', [_event]);
             if (focus) {
@@ -2023,7 +2018,6 @@
                 } else {
                     focusTo(mask);
                 }
-                $.fire('focus', [_event]).fire('focus.self', [_event]);
             }
             return $;
         },
@@ -2034,7 +2028,7 @@
                 _mask = $._mask,
                 mask = $.mask,
                 options = _mask.options;
-            if (!_active || getDatum(mask, 'size')) {
+            if (!_active || !getAttribute(mask, 'aria-expanded') || getDatum(mask, 'size')) {
                 return $;
             }
             var borderMaskBottom = getStyle(mask, 'border-bottom-width'),
@@ -2093,17 +2087,18 @@
             get: function get() {
                 var $ = this,
                     of = $.of,
-                    mask = of.mask,
-                    state = of.state,
-                    n = state.n;
-                return hasClass(mask, n + '--open');
+                    mask = of.mask;
+                return getAttribute(mask, 'aria-expanded');
             }
         }
     });
     setObjectMethods(OptionPickerOptions, {
-        delete: function _delete(key, _fireValue) {
+        delete: function _delete(key, _fireValue, _fireHook) {
             if (_fireValue === void 0) {
                 _fireValue = 1;
+            }
+            if (_fireHook === void 0) {
+                _fireHook = 1;
             }
             var $ = this,
                 _o = $._o,
@@ -2113,23 +2108,22 @@
                 _mask = of._mask,
                 self = of.self,
                 state = of.state,
-                options = _mask.options,
-                n = state.n,
-                r;
+                options = _mask.options;
+            state.n;
+            var r;
             if (!_active) {
                 return false;
             }
             if (!isSet(key)) {
                 forEachMap(_o, function (v, k) {
-                    return $.let(k);
+                    return $.let(k, 0);
                 });
                 selectToOptionsNone(of, _fireValue);
                 options.hidden = true;
-                of.fire('let.options', [_event, $]);
-                return 0 === $.count;
+                return _fireHook && of.fire('let.options', [_event, []]) && 0 === $.count;
             }
             if (!(r = getValueInMap(key = _toValue(key), _o))) {
-                return of.fire('not.option', [_event, key]), false;
+                return _fireHook && of.fire('not.option', [_event, key]), false;
             }
             var parent = getParent(r[2]),
                 parentReal = getParent(r[3]),
@@ -2146,7 +2140,7 @@
                 --$.count;
             }
             // Remove empty group(s)
-            parent && hasClass(parent, n + '__option-group') && 0 === toCount(getChildren(parent)) && letElement(parent);
+            parent && 'group' === getAttribute(parent, 'role') && 0 === toCount(getChildren(parent)) && letElement(parent);
             parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
             // Clear value if there are no option(s)
             if (0 === toCount(getChildren(options))) {
@@ -2154,19 +2148,18 @@
                 options.hidden = true;
                 // Reset value to the first option if removed option is the selected option
             } else {
+                // setValue(self, "");
                 value === valueReal && selectToOptionFirst(of);
             }
-            return of.fire('let.option', [_event, key]), r;
+            return _fireHook && of.fire('let.option', [_event, key]), r;
         },
         get: function get(key) {
             var $ = this,
-                _o = $._o,
-                of = $.of,
-                state = of.state,
-                n = state.n,
-                value = getValueInMap(_toValue(key), _o),
+                _o = $._o;
+            $.of;
+            var value = getValueInMap(_toValue(key), _o),
                 parent;
-            if (value && (parent = getParent(value[2])) && hasClass(parent, n + '__option-group')) {
+            if (value && (parent = getParent(value[2])) && 'group' === getAttribute(parent, 'role')) {
                 return [getElementIndex(value[2]), getElementIndex(parent)];
             }
             return value ? getElementIndex(value[2]) : -1;
@@ -2174,11 +2167,17 @@
         has: function has(key) {
             return hasKeyInMap(_toValue(key), this._o);
         },
-        let: function _let(key) {
-            return this.delete(key);
+        let: function _let(key, _fireHook) {
+            if (_fireHook === void 0) {
+                _fireHook = 1;
+            }
+            return this.delete(key, 1, _fireHook);
         },
-        set: function set(key, value) {
+        set: function set(key, value, _fireHook) {
             var _getState3, _getState4, _getState5;
+            if (_fireHook === void 0) {
+                _fireHook = 1;
+            }
             var $ = this,
                 _o = $._o,
                 of = $.of,
@@ -2188,7 +2187,7 @@
                 return false;
             }
             if ($.has(key = _toValue(key))) {
-                return of.fire('has.option', [_event, key]), false;
+                return _fireHook && of.fire('has.option', [_event, key]), false;
             }
             var _mask = of._mask,
                 self = of.self,
@@ -2259,7 +2258,7 @@
             option = value[2] || setElement('span', _fromValue(value[0]), {
                 'aria-disabled': disabled ? 'true' : false,
                 'aria-selected': selected ? 'true' : false,
-                'class': n + (disabled ? ' ' + n + '--disabled' : "") + (selected ? ' ' + n + '--selected' : ""),
+                'class': n,
                 'data-group': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false,
                 'data-value': v,
                 'role': 'option',
@@ -2300,7 +2299,7 @@
             value[3] = optionReal;
             ++$.count;
             setValueInMap(key, value, _o);
-            return of.fire('set.option', [_event, key]), true;
+            return _fireHook && of.fire('set.option', [_event, key]), true;
         }
     });
     // In order for an object to be iterable, it must have a `Symbol.iterator` key

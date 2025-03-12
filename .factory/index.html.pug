@@ -48,7 +48,12 @@ block style
     | .option-picker__option:hover {
     |   outline: 0;
     | }
-    | .option-picker__option:where(:not(.option-picker__option--disabled)):hover {
+    | .option-picker__option[aria-selected='true'] {
+    |   background: #000;
+    |   color: #fff;
+    |   outline: 0;
+    | }
+    | .option-picker__option:where(:not([aria-disabled='true'])):hover {
     |   background: #00f;
     |   color: #fff;
     | }
@@ -69,11 +74,6 @@ block style
     | .option-picker__option-group .option-picker__option {
     |   padding-left: 1em;
     | }
-    | .option-picker__option--selected {
-    |   background: #000;
-    |   color: #fff;
-    |   outline: 0;
-    | }
     | .option-picker__options {
     |   background: #fff;
     |   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
@@ -82,11 +82,11 @@ block style
     |   min-width: calc(100% + 4px);
     |   padding: 0;
     | }
-    | .option-picker__options:not(:hover) .option-picker__option:where(:not(.option-picker__option--disabled)):focus {
+    | .option-picker__options:not(:hover) .option-picker__option:where(:not([aria-disabled='true'])):focus {
     |   background: #00f;
     |   color: #fff;
     | }
-    | .option-picker__options:hover .option-picker__option:where(:not(.option-picker__option--disabled):not(.option-picker__option--selected):not(:hover)):focus {
+    | .option-picker__options:hover .option-picker__option:where(:not([aria-disabled='true']):not([aria-selected='true']):not(:hover)):focus {
     |   background: #eee;
     | }
     | .option-picker__values {
@@ -1442,6 +1442,7 @@ block content
       li: a(href='test/focus-auto.html' target='_blank') Focus Automatically
       li: a(href='test/focus.html' target='_blank') Focus States
       li: a(href='test/group.html' target='_blank') Grouped Options
+      li: a(href='test/hooks.html' target='_blank') Hooks
       li: a(href='test/self.html' target='_blank') Multiple Instances
       li: a(href='test/input.html' target='_blank') Options from #[code &lt;datalist&gt;]
       li: a(href='test/strict.html' target='_blank') Options from #[code &lt;datalist&gt;] (Strict)

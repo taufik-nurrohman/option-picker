@@ -1,4 +1,4 @@
-import {D, R, W, focusTo, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getState, getStyle, getText, getValue, hasClass, hasState, isDisabled, isReadOnly, letAttribute, letClass, letDatum, letElement, letStyle, selectNone, selectTo, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
+import {D, R, W, focusTo, getAria, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasClass, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letStyle, selectNone, selectTo, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toKeysFromMap, toKeyFirstFromMap, toKeyLastFromMap, toValuesFromMap, toValueFirstFromMap, toValueLastFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
@@ -104,9 +104,9 @@ function focusToOption(option, picker, focusOnly) {
 }
 
 function focusToOptionFirst(picker, focusOnly, k) {
-    let {_options} = picker, option;
-    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !getAttribute(v[2], 'aria-disabled') && !v[2].hidden)) {
-        return focusToOption(option[2], picker, focusOnly);
+    let option;
+    if (option = goToOptionFirst(picker, k)) {
+        return focusToOption(option, picker, focusOnly);
     }
 }
 
@@ -117,7 +117,7 @@ function focusToOptionLast(picker, focusOnly) {
 function focusToOptions(options, picker) {}
 
 function focusToOptionsNone(picker) {
-    let {_options, mask, state} = picker,
+    let {_options, state} = picker,
         {n} = state;
     n += '__option--focus';
     forEachMap(_options, v => letClass(v[2], n));
@@ -126,7 +126,7 @@ function focusToOptionsNone(picker) {
 function getOptionSelected($, strict) {
     let {_options, self} = $, selected;
     forEachMap(_options, (v, k) => {
-        if (isArray(v) && v[2] && !getAttribute(v[2], 'aria-disabled') && getAttribute(v[2], 'aria-selected')) {
+        if (isArray(v) && v[2] && !getAria(v[2], 'disabled') && getAria(v[2], 'selected')) {
             return (selected = v[2]), 0;
         }
     });
@@ -183,11 +183,22 @@ function getOptions(self) {
 
 function getOptionsSelected(options) {}
 
+function goToOptionFirst(picker, k) {
+    let {_options} = picker, option;
+    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !getAria(v[2], 'disabled') && !v[2].hidden)) {
+        return option[2];
+    }
+}
+
+function goToOptionLast(picker, k) {
+    return goToOptionFirst(picker, 'Last');
+}
+
 function isInput(self) {
     return 'input' === getName(self);
 }
 
-function scrollTo(node, view) {
+function scrollTo(node) {
     node.scrollIntoView({block: 'nearest'});
 }
 
@@ -202,10 +213,10 @@ const filter = debounce(($, input, _options, selectOnly) => {
     if (selectOnly) {
         forEachMap(_options, v => {
             let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-            if ("" !== q && q === text.slice(0, toCount(q)) && !getAttribute(v[2], 'aria-disabled')) {
+            if ("" !== q && q === text.slice(0, toCount(q)) && !getAria(v[2], 'disabled')) {
                 selectToOption(v[2], $);
                 if (hasSize) {
-                    scrollTo(v[2], options);
+                    scrollTo(v[2]);
                 }
                 return 0;
             }
@@ -225,11 +236,11 @@ const filter = debounce(($, input, _options, selectOnly) => {
         options.hidden = !count;
         if (strict) {
             selectToOptionsNone($);
-            // Silently set the value to the first option
-            if (count && (option = toValuesFromMap(_options).find(v => !getAttribute(v[2], 'aria-disabled') && !v[2].hidden))) {
-                setAttribute(option[2], 'aria-selected', 'true');
-                setAttribute(option[3], 'selected', "");
-                setValue(self, getOptionValue(option[2]));
+            // Silently select the first option without affecting the currently typed query and focus/select state
+            if (count && (option = goToOptionFirst($))) {
+                setAria(option, 'selected', true);
+                setAttribute(option._[OPTION_SELF], 'selected', "");
+                setValue(self, getOptionValue(option));
             } else {
                 setValue(self, "");
             }
@@ -241,12 +252,12 @@ const filter = debounce(($, input, _options, selectOnly) => {
     let call = state.options;
     // Only fetch when no other option(s) are available to query
     if (0 === count && isFunction(call)) {
-        setAttribute(mask, 'aria-busy', 'true');
+        setAria(mask, 'busy', true);
         call = call.call($, query);
         if (isInstance(call, Promise)) {
             call.then(v => {
                 createOptionsFrom($, v, options);
-                letAttribute(mask, 'aria-busy');
+                letAria(mask, 'busy');
                 $.fire('load', [_event, query, v]).fit();
             });
         } else {
@@ -366,12 +377,12 @@ function onKeyDownTextInput(e) {
         if (!currentOption || currentOption.hidden) {
             currentOption = toValueFirstFromMap(_options);
             currentOption = currentOption ? currentOption[2] : 0;
-            while (currentOption && (getAttribute(currentOption, 'aria-disabled') || currentOption.hidden)) {
+            while (currentOption && (getAria(currentOption, 'disabled') || currentOption.hidden)) {
                 currentOption = getNext(currentOption);
             }
         }
         exit = true;
-        if (!getAttribute(mask, 'aria-expanded')) {
+        if (!getAria(mask, 'expanded')) {
             picker.enter(exit);
             currentOption && focusTo(currentOption);
         } else if (strict && KEY_ENTER === key) {
@@ -449,65 +460,65 @@ function onKeyDownOption(e) {
         picker.exit(exit = KEY_TAB !== key);
     } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
         exit = true;
-        if (KEY_PAGE_DOWN === key && 'group' === getAttribute(parentOption = getParent($), 'role')) {
+        if (KEY_PAGE_DOWN === key && 'group' === getRole(parentOption = getParent($))) {
             nextOption = getNext(parentOption);
         } else {
             nextOption = getNext($);
         }
         // Skip disabled and hidden option(s)…
-        while (nextOption && (getAttribute(nextOption, 'aria-disabled') || nextOption.hidden)) {
+        while (nextOption && (getAria(nextOption, 'disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
         if (nextOption) {
             // Next option is a group?
-            if ('group' === getAttribute(nextOption, 'role')) {
+            if ('group' === getRole(nextOption)) {
                 nextOption = getChildFirst(nextOption);
             }
         // Is the last option?
         } else {
             // Is in a group?
-            if ((parentOption = getParent($)) && 'group' === getAttribute(parentOption, 'role')) {
+            if ((parentOption = getParent($)) && 'group' === getRole(parentOption)) {
                 nextOption = getNext(parentOption);
             }
             // Next option is a group?
-            if (nextOption && 'group' === getAttribute(nextOption, 'role')) {
+            if (nextOption && 'group' === getRole(nextOption)) {
                 nextOption = getChildFirst(nextOption);
             }
         }
         // Skip disabled and hidden option(s)…
-        while (nextOption && (getAttribute(nextOption, 'aria-disabled') || nextOption.hidden)) {
+        while (nextOption && (getAria(nextOption, 'disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
         nextOption ? focusToOption(nextOption, picker, 1) : focusToOptionFirst(picker, 1);
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
-        if (KEY_PAGE_UP === key && 'group' === getAttribute(parentOption = getParent($), 'role')) {
+        if (KEY_PAGE_UP === key && 'group' === getRole(parentOption = getParent($))) {
             prevOption = getPrev(parentOption);
         } else {
             prevOption = getPrev($);
         }
         // Skip disabled and hidden option(s)…
-        while (prevOption && (getAttribute(prevOption, 'aria-disabled') || prevOption.hidden)) {
+        while (prevOption && (getAria(prevOption, 'disabled') || prevOption.hidden)) {
             prevOption = getPrev(prevOption);
         }
         if (prevOption) {
             // Previous option is a group?
-            if ('group' === getAttribute(prevOption, 'role')) {
+            if ('group' === getRole(prevOption)) {
                 prevOption = getChildLast(prevOption);
             }
         // Is the first option?
         } else {
             // Is in a group?
-            if ((parentOption = getParent($)) && 'group' === getAttribute(parentOption, 'role')) {
+            if ((parentOption = getParent($)) && 'group' === getRole(parentOption)) {
                 prevOption = getPrev(parentOption);
             }
             // Previous option is a group?
-            if (prevOption && 'group' === getAttribute(prevOption, 'role')) {
+            if (prevOption && 'group' === getRole(prevOption)) {
                 prevOption = getChildLast(prevOption);
             }
         }
         // Skip disabled and hidden option(s)…
-        while (prevOption && (getAttribute(prevOption, 'aria-disabled') || prevOption.hidden)) {
+        while (prevOption && (getAria(prevOption, 'disabled') || prevOption.hidden)) {
             prevOption = getPrev(prevOption);
         }
         prevOption ? focusToOption(prevOption, picker, 1) : focusToOptionLast(picker, 1);
@@ -547,12 +558,12 @@ function onPointerDownMask(e) {
     if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
         return;
     }
-    if ('listbox' === getAttribute(target, 'role') || getParent(target, '[role=listbox]')) {
+    if ('listbox' === getRole(target) || getParent(target, '[role=listbox]')) {
         // The user is likely browsing the available option(s) by dragging the scroll bar
         return;
     }
     forEachMap(_options, v => v[2].hidden = false);
-    picker.fire('focus', [e]).fire('focus.self', [e])[getAttribute($, 'aria-expanded') ? 'exit' : 'enter'](true).fit();
+    picker.fire('focus', [e]).fire('focus.self', [e])[getAria($, 'expanded') ? 'exit' : 'enter'](true).fit();
 }
 
 let optionsScrollTop = 0;
@@ -677,11 +688,11 @@ function selectToOption(option, picker) {
     if (option) {
         let a = getValue(self), b;
         selectToOptionsNone(picker);
-        setAttribute(option, 'aria-selected', 'true');
+        setAria(option, 'selected', true);
         setAttribute(option._[OPTION_SELF], 'selected', "");
         setValue(self, b = getOptionValue(option));
         if (isInput(self)) {
-            setAttribute(input, 'aria-activedescendant', getID(option));
+            setAria(input, 'activedescendant', getID(option));
             setText(hint, "");
             setText(input, getText(option));
         } else {
@@ -696,9 +707,9 @@ function selectToOption(option, picker) {
 }
 
 function selectToOptionFirst(picker, k) {
-    let {_options, state} = picker, option;
-    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !getAttribute(v[2], 'aria-disabled') && !v[2].hidden)) {
-        return selectToOption(option[2], picker);
+    let option;
+    if (option = goToOptionFirst(picker, k)) {
+        return selectToOption(option, picker);
     }
 }
 
@@ -712,13 +723,13 @@ function selectToOptionsNone(picker, fireValue) {
     let {_event, _mask, _options, self} = picker,
         {hint, input, options, value} = _mask, v;
     forEachMap(_options, v => {
-        letAttribute(v[2], 'aria-selected');
+        letAria(v[2], 'selected');
         letAttribute(v[3], 'selected');
     });
     if (fireValue) {
         setValue(self, v = "");
         if (isInput(self)) {
-            letAttribute(input, 'aria-activedescendant');
+            letAria(input, 'activedescendant');
             setText(hint, self.placeholder);
             setText(input, "");
         } else {
@@ -818,9 +829,8 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_event, _mask, _options, mask, state} = $,
+                {_event, _mask, mask, state} = $,
                 {options} = _mask,
-                {n} = state,
                 size = !isInteger(value) ? 1 : (value < 1 ? 1 : value);
             state.size = size;
             if (1 === size) {
@@ -828,7 +838,7 @@ setObjectAttributes(OptionPicker, {
                 letStyle(options, 'max-height');
                 letReference(R);
             } else {
-                let option = toValuesFromMap(_options).find(_option => !_option[2].hidden);
+                let option = goToOptionFirst($);
                 if (option) {
                     let optionsGap = getStyle(options, 'gap', false),
                         optionsPaddingBottom = getStyle(options, 'padding-bottom', false),
@@ -904,9 +914,11 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         });
         const form = getParentForm(self);
         const mask = setElement('div', {
-            'aria-expanded': 'false',
-            'aria-haspopup': 'listbox',
-            'aria-multiselectable': self.multiple ? 'true' : false,
+            'aria': {
+                'expanded': 'false',
+                'haspopup': 'listbox',
+                'multiselectable': self.multiple ? 'true' : false
+            },
             'class': n,
             'role': 'combobox',
             'tabindex': isDisabled(self) || isInputSelf ? false : 0
@@ -924,11 +936,13 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'class': n + '__' + (isInputSelf ? 'text' : 'value')
         });
         const textInput = setElement('span', {
-            'aria-autocomplete': 'list',
-            'aria-disabled': isDisabled(self) ? 'true' : false,
-            'aria-multiline': 'false',
-            'aria-placeholder': isInputSelf ? self.placeholder : false,
-            'aria-readonly': isReadOnly(self) ? 'true' : false,
+            'aria': {
+                'autocomplete': 'list',
+                'disabled': isDisabled(self) ? 'true' : false,
+                'multiline': 'false',
+                'placeholder': isInputSelf ? self.placeholder : false,
+                'readonly': isReadOnly(self) ? 'true' : false,
+            },
             'autocapitalize': 'off',
             'contenteditable': isDisabled(self) || isReadOnly(self) || !isInputSelf ? false : "",
             'role': 'searchbox',
@@ -957,9 +971,9 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setClass(self, n + '__self');
         setNext(self, mask);
         if (form) {
-            form.id = getID(form);
             onEvent('reset', form, onResetForm);
             onEvent('submit', form, onSubmitForm);
+            setID(form);
             setReference(form, $);
         }
         onEvent('focus', self, onFocusSelf);
@@ -990,11 +1004,11 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         // Force the `this._active` value to `true` to set the initial value
         $._active = true;
         if (isFunction(options)) {
-            setAttribute(mask, 'aria-busy', 'true');
+            setAria(mask, 'busy', 'true');
             options = options.call($, null);
             if (isInstance(options, Promise)) {
                 options.then(options => {
-                    letAttribute(mask, 'aria-busy');
+                    letAria(mask, 'busy');
                     if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
                         $.value = selected[0];
                         // $.values = selected;
@@ -1021,18 +1035,16 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         // After the initial value has been set, restore the previous `this._active` value
         $._active = _active;
         // Force `id` attribute(s)
-        arrow.id = getID(arrow);
-        mask.id = getID(mask);
-        maskOptions.id = getID(maskOptions);
-        maskValues.id = getID(maskValues);
-        self.id = getID(self);
-        text.id = getID(text);
-        textInput.id = getID(textInput);
-        textInputHint.id = getID(textInputHint);
-        setAttribute(mask, 'aria-controls', getID(maskOptions));
-        setAttribute(mask, 'aria-labelledby', getID(text));
-        setAttribute(self, 'aria-hidden', 'true');
-        setAttribute(textInput, 'aria-controls', getID(maskOptions));
+        setAria(mask, 'controls', getID(setID(maskOptions)));
+        setAria(mask, 'labelledby', getID(setID(text)));
+        setAria(self, 'hidden', true);
+        setAria(textInput, 'controls', getID(maskOptions));
+        setID(arrow);
+        setID(mask);
+        setID(maskValues);
+        setID(self);
+        setID(textInput);
+        setID(textInputHint);
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
             forEachArray(state.with, (v, k) => {
@@ -1104,7 +1116,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             });
         }
         self.tabIndex = null;
-        letAttribute(self, 'aria-hidden');
+        letAria(self, 'hidden');
         letClass(self, state.n + '__self');
         letElement(mask);
         $._mask = {
@@ -1120,7 +1132,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         if (!_active) {
             return $;
         }
-        setAttribute(mask, 'aria-expanded', 'true');
+        setAria(mask, 'expanded', true);
         let theRootReference = getReference(R);
         if (theRootReference && $ !== theRootReference) {
             theRootReference.exit(); // Exit other(s)
@@ -1132,7 +1144,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             if (isInput(self)) {
                 focusTo(input), selectTo(input, mode);
             } else if (option = getValueInMap(toValue(getValue(self)), _options._o)) {
-                focusTo(option[2]);
+                focusTo(option[2]), delay(() => scrollTo(option[2]), 1)();
             }
         }
         return $;
@@ -1145,7 +1157,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             return $;
         }
         forEachMap(_options, v => v[2].hidden = false);
-        setAttribute(mask, 'aria-expanded', 'false');
+        setAria(mask, 'expanded', false);
         $.fire('exit', [_event]);
         if (focus) {
             if (isInput(self)) {
@@ -1160,9 +1172,10 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         let $ = this,
             {_active, _event, _mask, mask} = $,
             {options} = _mask;
-        if (!_active || !getAttribute(mask, 'aria-expanded') || getDatum(mask, 'size')) {
+        if (!_active || !getAria(mask, 'expanded') || getDatum(mask, 'size')) {
             return $;
         }
+        setStyle(options, 'max-height', 0);
         let borderMaskBottom = getStyle(mask, 'border-bottom-width', false),
             borderMaskTop = getStyle(mask, 'border-top-width', false),
             rectMask = getRect(mask),
@@ -1208,7 +1221,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
 
 setObjectAttributes(OptionPickerOptions, {
     name: {
-        value: 'Options'
+        value: name + 'Options'
     }
 }, 1);
 
@@ -1218,7 +1231,7 @@ setObjectAttributes(OptionPickerOptions, {
             let $ = this,
                 {of} = $,
                 {mask} = of;
-            return getAttribute(mask, 'aria-expanded');
+            return getAria(mask, 'expanded');
         }
     }
 });
@@ -1227,9 +1240,8 @@ setObjectMethods(OptionPickerOptions, {
     delete: function (key, _fireValue = 1, _fireHook = 1) {
         let $ = this,
             {_o, of} = $,
-            {_active, _event, _mask, self, state} = of,
-            {options} = _mask,
-            {n} = state, r;
+            {_active, _event, _mask, self} = of,
+            {options} = _mask, r;
         if (!_active) {
             return false;
         }
@@ -1257,7 +1269,7 @@ setObjectMethods(OptionPickerOptions, {
             --$.count;
         }
         // Remove empty group(s)
-        parent && 'group' === getAttribute(parent, 'role') && 0 === toCount(getChildren(parent)) && letElement(parent);
+        parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
         parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
         // Clear value if there are no option(s)
         if (0 === toCount(getChildren(options))) {
@@ -1274,7 +1286,7 @@ setObjectMethods(OptionPickerOptions, {
         let $ = this,
             {_o, of} = $,
             value = getValueInMap(toValue(key), _o), parent;
-        if (value && (parent = getParent(value[2])) && 'group' === getAttribute(parent, 'role')) {
+        if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
             return [getElementIndex(value[2]), getElementIndex(parent)];
         }
         return value ? getElementIndex(value[2]) : -1;
@@ -1305,9 +1317,9 @@ setObjectMethods(OptionPickerOptions, {
         } else {
             items = getChildren(itemsParent = self);
         }
-        // Force `id` attribute(s)
-        itemsParent.id = getID(itemsParent);
         options.hidden = false;
+        // Force `id` attribute(s)
+        setID(itemsParent);
         // `picker.options.set('asdf')`
         if (!isSet(value)) {
             value = [key, {}];
@@ -1321,7 +1333,9 @@ setObjectMethods(OptionPickerOptions, {
             if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
                 setChildLast(options, optionGroup = setElement('span', {
                     'class': n + '-group',
-                    'data-value': value[1]['&'],
+                    'data': {
+                        'value': value[1]['&']
+                    },
                     'role': 'group',
                     'title': getState(value[1], 'title') ?? false
                 }));
@@ -1333,13 +1347,16 @@ setObjectMethods(OptionPickerOptions, {
                     setClasses(optionGroup, classes);
                     setClasses(optionGroupReal, classes);
                 }
-                if (styles = getState(value[1], 'style')) {
+                if (isObject(styles = getState(value[1], 'style'))) {
                     setStyles(optionGroup, styles);
                     setStyles(optionGroupReal, styles);
+                } else if (styles) {
+                    setAttribute(optionGroup, 'style', styles);
+                    setAttribute(optionGroupReal, 'style', styles);
                 }
                 // Force `id` attribute(s)
-                optionGroup.id = getID(optionGroup);
-                optionGroupReal.id = getID(optionGroupReal);
+                setID(optionGroup);
+                setID(optionGroupReal);
             }
         } else {
             optionGroup = optionGroupReal = false;
@@ -1350,11 +1367,15 @@ setObjectMethods(OptionPickerOptions, {
         }
         v = fromValue(v || key);
         option = value[2] || setElement('span', fromValue(value[0]), {
-            'aria-disabled': disabled ? 'true' : false,
-            'aria-selected': selected ? 'true' : false,
+            'aria': {
+                'disabled': disabled ? 'true' : false,
+                'selected': selected ? 'true' : false
+            },
             'class': n,
-            'data-group': getState(value[1], '&') ?? false,
-            'data-value': v,
+            'data': {
+                'group': getState(value[1], '&') ?? false,
+                'value': v
+            },
             'role': 'option',
             'tabindex': disabled ? false : -1,
             'title': getState(value[1], 'title') ?? false
@@ -1369,13 +1390,16 @@ setObjectMethods(OptionPickerOptions, {
             setClasses(option, classes);
             setClasses(optionReal, classes);
         }
-        if (styles = getState(value[1], 'style')) {
+        if (isObject(styles = getState(value[1], 'style'))) {
             setStyles(option, styles);
             setStyles(optionReal, styles);
+        } else if (styles) {
+            setAttribute(option, 'style', styles);
+            setAttribute(optionReal, 'style', styles);
         }
         // Force `id` attribute(s)
-        option.id = getID(option);
-        optionReal.id = getID(optionReal);
+        setID(option);
+        setID(optionReal);
         option._ = {};
         option._[OPTION_SELF] = optionReal;
         if (!disabled && !value[2]) {

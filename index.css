@@ -38,7 +38,6 @@
   position: relative;
   vertical-align: middle;
 }
-.option-picker--focus .option-picker__text,
 .option-picker--focus .option-picker__value {
   outline: 1px solid;
   outline-offset: -2px;
@@ -131,6 +130,7 @@
   cursor: not-allowed;
 }
 .option-picker__text {
+  border-color: transparent;
   cursor: text;
   flex: 1;
 }

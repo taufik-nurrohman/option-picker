@@ -36,7 +36,6 @@ $name: 'option-picker';
   position: relative;
   vertical-align: middle;
   &--focus {
-    .#{$name}__text,
     .#{$name}__value {
       outline: 1px solid;
       outline-offset: -2px;
@@ -149,6 +148,7 @@ $name: 'option-picker';
     }
   }
   &__text {
+    border-color: transparent;
     cursor: text;
     flex: 1;
     span {

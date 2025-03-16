@@ -7,7 +7,9 @@ block state
 
 block script
   script
-    | const picker = new OptionPicker(document.querySelector('select'));
+    | const picker = new OptionPicker(document.querySelector('select'), {
+    |     options: ['Option 1', 'Option 2', ['Option 3', {value: 3}]]
+    | });
     |
     | picker.on('change', function () {
     |     console.log(this.value);
@@ -97,9 +99,6 @@ block content
     form(method='get' target='_blank')
       p
         select(name='test')
-          option Option 1
-          option Option 2
-          option(value='3') Option 3
       p
         button(onclick='createOptions_1(picker);' type='button') Create from Array
         = ' '

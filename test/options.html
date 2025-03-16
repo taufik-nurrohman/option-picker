@@ -15,11 +15,7 @@
   <body>
     <main>
       <form method="get" target="_blank">
-        <p><select name="test">
-            <option>Option 1</option>
-            <option>Option 2</option>
-            <option value="3">Option 3</option>
-          </select></p>
+        <p><select name="test"></select></p>
         <p><button onclick="createOptions_1(picker);" type="button">Create from Array</button> <button onclick="createOptions_1_1(picker);" type="button">Create from Array 2</button> <button onclick="createOptions_2(picker);" type="button">Create from Object</button> <button onclick="createOptions_2_1(picker);" type="button">Create from Object 2</button> <button onclick="createOptions_2_2(picker);" type="button">Create from Object 3</button> <button onclick="createOptions_3(picker);" type="button">Create from Map</button> <button onclick="createOptions_3_1(picker);" type="button">Create from Map 2</button></p>
         <p><button onclick="picker.options.set((new Date).toLocaleString());" type="button"><code>picker.options.set((new Date).toLocaleString())</code></button> <button onclick="picker.options.set(Date.now(), 'Current Date');" type="button"><code>picker.options.set(Date.now(), 'Current Date')</code></button> <button onclick="picker.options.set(Date.now(), ['Current Date', {disabled: true}]);" type="button"><code>picker.options.set(Date.now(), ['Current Date', {disabled: true}])</code></button></p>
         <p><button onclick="picker.options.set('red', ['Red', {'&amp;': 'Color'}]);" type="button"><code>picker.options.set('red', ['Red', {'&': 'Color'}])</code></button> <button onclick="picker.options.set('green', ['Green', {'&amp;': 'Color'}]);" type="button"><code>picker.options.set('green', ['Green', {'&': 'Color'}])</code></button> <button onclick="picker.options.set('blue', ['Blue', {'&amp;': 'Color'}]);" type="button"><code>picker.options.set('blue', ['Blue', {'&': 'Color'}])</code></button></p>
@@ -30,7 +26,11 @@
     </main>
     <script src="../index.min.js"></script>
     <script>
-      const picker = new OptionPicker(document.querySelector('select'));
+      const picker = new OptionPicker(document.querySelector('select'), {
+          options: ['Option 1', 'Option 2', ['Option 3', {
+              value: 3
+          }]]
+      });
       picker.on('change', function () {
           console.log(this.value);
       });

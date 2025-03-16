@@ -1105,8 +1105,7 @@
         _mask.value;
         var strict = state.strict,
             hasSize = getDatum(mask, 'size'),
-            option,
-            v;
+            option;
         var count = _options.count;
         if (selectOnly) {
             forEachMap(_options, function (v) {
@@ -1131,19 +1130,23 @@
                 }
             });
             options.hidden = !count;
+            var a = getValue(self),
+                b;
             if (strict) {
                 selectToOptionsNone($);
                 // Silently select the first option without affecting the currently typed query and focus/select state
                 if (count && (option = goToOptionFirst($))) {
                     setAria(option, 'selected', true);
                     setAttribute(option._[OPTION_SELF], 'selected', "");
-                    setValue(self, v = getOptionValue(option));
+                    setValue(self, b = getOptionValue(option));
                 } else {
-                    setValue(self, v = "");
+                    setValue(self, b = "");
                 }
-                $.fire('change', ["" === v ? null : v]); // TODO
             } else {
-                setValue(self, query);
+                setValue(self, b = query);
+            }
+            if (a !== b) {
+                $.fire('change', ["" === b ? null : b]);
             }
         }
         $.fire('search', [_event, query]);
@@ -1349,10 +1352,15 @@
         if (KEY_DELETE_LEFT === key) {
             picker.exit(exit = true);
         } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
-            if (KEY_ESCAPE !== key) {
-                selectToOption($, picker);
+            if (picker.multiple) {
+                // TODO
+                console.log('multiple');
+            } else {
+                if (KEY_ESCAPE !== key) {
+                    selectToOption($, picker);
+                }
+                picker.exit(exit = KEY_TAB !== key);
             }
-            picker.exit(exit = KEY_TAB !== key);
         } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
             exit = true;
             if (KEY_PAGE_DOWN === key && 'group' === getRole(parentOption = getParent($))) {
@@ -1473,14 +1481,17 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
-            mask = picker.mask,
-            options = _mask.options;
+            mask = picker.mask;
+        picker.state;
+        var options = _mask.options;
         picker._event = e;
         // Select it immediately, then close the option(s) list when the event occurs with a mouse
         if ('mousedown' === e.type) {
-            selectToOption($, picker);
-            if (!getDatum(mask, 'size')) {
-                picker.exit(true);
+            if (picker.multiple) {
+                // TODO
+                console.log('multiple');
+            } else {
+                selectToOption($, picker) && !getDatum(mask, 'size') && picker.exit(true);
             }
             // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
             // user may be about to scroll the option(s) list
@@ -1509,8 +1520,7 @@
             if (getDatum(mask, 'size')) {
                 picker.blur();
             } else {
-                letReference($);
-                picker.exit();
+                letReference($), picker.exit();
             }
         }
     }
@@ -1549,7 +1559,12 @@
         // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
         // (this event) is fired. If it has a difference, then it scrolls ;)
         if (getScroll(options)[1] === optionsScrollTop) {
-            selectToOption($, picker), picker.exit(true);
+            if (picker.multiple) {
+                // TODO
+                console.log('multiple');
+            } else {
+                selectToOption($, picker), picker.exit(true);
+            }
         }
     }
 
@@ -1682,6 +1697,7 @@
     };
     OptionPicker.of = getReference;
     OptionPicker.state = {
+        'multiple': null,
         'n': 'option-picker',
         'options': null,
         'size': null,
@@ -1695,6 +1711,26 @@
         }
     }, 1);
     setObjectAttributes(OptionPicker, {
+        multiple: {
+            get: function get() {
+                var $ = this,
+                    self = $.self;
+                return !isInput(self) && self.multiple;
+            },
+            set: function set(value) {
+                var $ = this,
+                    _event = $._event,
+                    mask = $.mask,
+                    self = $.self;
+                if (value) {
+                    setAria(mask, 'multiselectable', self.multiple = true);
+                } else {
+                    letAria(mask, 'multiselectable');
+                    self.multiple = false;
+                }
+                return $.fire((value ? 's' : 'l') + 'et.multiple', [_event, !!value]);
+            }
+        },
         options: {
             get: function get() {
                 return this._options;
@@ -1822,17 +1858,18 @@
     });
     OptionPicker._ = setObjectMethods(OptionPicker, {
         attach: function attach(self, state) {
-            var _state$size;
+            var _state$multiple, _state$size;
             var $ = this;
             self = self || $.self;
             state = state || $.state;
             $._active = !isDisabled(self) && !isReadOnly(self);
             $._event = null;
-            $._options = new OptionPickerOptions($, []);
+            $._options = new OptionPickerOptions($);
             $._value = getValue(self) || null;
             $.self = self;
             $.state = state;
             var isInputSelf = isInput(self),
+                isMultipleSelect = (_state$multiple = state.multiple) != null ? _state$multiple : !isInputSelf && self.multiple,
                 _state = state,
                 n = _state.n;
             var arrow = setElement('span', {
@@ -1843,7 +1880,7 @@
                 'aria': {
                     'expanded': 'false',
                     'haspopup': 'listbox',
-                    'multiselectable': self.multiple ? 'true' : false
+                    'multiselectable': isMultipleSelect ? 'true' : false
                 },
                 'class': n,
                 'role': 'combobox',
@@ -1980,6 +2017,7 @@
             setID(self);
             setID(textInput);
             setID(textInputHint);
+            $.multiple = isMultipleSelect;
             $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             // Attach extension(s)
             if (isSet(state) && isArray(state.with)) {
@@ -2017,7 +2055,7 @@
                 input = _mask.input;
             var form = getParentForm(self);
             $._active = false;
-            $._options = new OptionPickerOptions($, state.options = getOptions(self));
+            $._options = new OptionPickerOptions($);
             $._value = getValue(self) || null; // Update initial value to be the current value
             if (form) {
                 offEvent('reset', form, onResetForm);

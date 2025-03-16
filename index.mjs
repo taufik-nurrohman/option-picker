@@ -225,19 +225,22 @@ const filter = debounce(($, input, _options, selectOnly) => {
             }
         });
         options.hidden = !count;
+        let a = getValue(self), b;
         if (strict) {
             selectToOptionsNone($);
             // Silently select the first option without affecting the currently typed query and focus/select state
             if (count && (option = goToOptionFirst($))) {
                 setAria(option, 'selected', true);
                 setAttribute(option._[OPTION_SELF], 'selected', "");
-                setValue(self, v = getOptionValue(option));
+                setValue(self, b = getOptionValue(option));
             } else {
-                setValue(self, v = "");
+                setValue(self, b = "");
             }
-            $.fire('change', ["" === v ? null : v]); // TODO
         } else {
-            setValue(self, query);
+            setValue(self, b = query);
+        }
+        if (a !== b) {
+            $.fire('change', ["" === b ? null : b]);
         }
     }
     $.fire('search', [_event, query]);
@@ -420,10 +423,15 @@ function onKeyDownOption(e) {
     if (KEY_DELETE_LEFT === key) {
         picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
-        if (KEY_ESCAPE !== key) {
-            selectToOption($, picker);
+        if (picker.multiple) {
+            // TODO
+            console.log('multiple');
+        } else {
+            if (KEY_ESCAPE !== key) {
+                selectToOption($, picker);
+            }
+            picker.exit(exit = KEY_TAB !== key);
         }
-        picker.exit(exit = KEY_TAB !== key);
     } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
         exit = true;
         if (KEY_PAGE_DOWN === key && 'group' === getRole(parentOption = getParent($))) {
@@ -538,14 +546,16 @@ let optionsScrollTop = 0;
 function onPointerDownOption(e) {
     let $ = this,
         picker = getReference($),
-        {_mask, mask} = picker,
+        {_mask, mask, state} = picker,
         {options} = _mask;
     picker._event = e;
     // Select it immediately, then close the option(s) list when the event occurs with a mouse
     if ('mousedown' === e.type) {
-        selectToOption($, picker);
-        if (!getDatum(mask, 'size')) {
-            picker.exit(true);
+        if (picker.multiple) {
+            // TODO
+            console.log('multiple');
+        } else {
+            selectToOption($, picker) && !getDatum(mask, 'size') && picker.exit(true);
         }
     // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
     // user may be about to scroll the option(s) list
@@ -574,8 +584,7 @@ function onPointerDownRoot(e) {
         if (getDatum(mask, 'size')) {
             picker.blur();
         } else {
-            letReference($);
-            picker.exit();
+            letReference($), picker.exit();
         }
     }
 }
@@ -614,7 +623,12 @@ function onPointerUpOption(e) {
     // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
     // (this event) is fired. If it has a difference, then it scrolls ;)
     if (getScroll(options)[1] === optionsScrollTop) {
-        selectToOption($, picker), picker.exit(true);
+        if (picker.multiple) {
+            // TODO
+            console.log('multiple');
+        } else {
+            selectToOption($, picker), picker.exit(true);
+        }
     }
 }
 
@@ -743,6 +757,7 @@ OptionPicker.from = function (self, state) {
 OptionPicker.of = getReference;
 
 OptionPicker.state = {
+    'multiple': null,
     'n': 'option-picker',
     'options': null,
     'size': null,
@@ -759,6 +774,24 @@ setObjectAttributes(OptionPicker, {
 }, 1);
 
 setObjectAttributes(OptionPicker, {
+    multiple: {
+        get: function () {
+            let $ = this,
+                {self} = $;
+            return !isInput(self) && self.multiple;
+        },
+        set: function (value) {
+            let $ = this,
+                {_event, mask, self} = $;
+            if (value) {
+                setAria(mask, 'multiselectable', self.multiple = true);
+            } else {
+                letAria(mask, 'multiselectable');
+                self.multiple = false;
+            }
+            return $.fire((value ? 's' : 'l') + 'et.multiple', [_event, !!value]);
+        }
+    },
     options: {
         get: function () {
             return this._options;
@@ -873,11 +906,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         state = state || $.state;
         $._active = !isDisabled(self) && !isReadOnly(self);
         $._event = null;
-        $._options = new OptionPickerOptions($, [], 1);
+        $._options = new OptionPickerOptions($);
         $._value = getValue(self) || null;
         $.self = self;
         $.state = state;
         let isInputSelf = isInput(self),
+            isMultipleSelect = state.multiple ?? (!isInputSelf && self.multiple),
             {n} = state;
         const arrow = setElement('span', {
             'class': n + '__arrow'
@@ -887,7 +921,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'aria': {
                 'expanded': 'false',
                 'haspopup': 'listbox',
-                'multiselectable': self.multiple ? 'true' : false
+                'multiselectable': isMultipleSelect ? 'true' : false
             },
             'class': n,
             'role': 'combobox',
@@ -1014,6 +1048,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setID(self);
         setID(textInput);
         setID(textInputHint);
+        $.multiple = isMultipleSelect;
         $.size = state.size ?? (isInputSelf ? 1 : self.size);
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
@@ -1047,7 +1082,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             {input} = _mask;
         const form = getParentForm(self);
         $._active = false;
-        $._options = new OptionPickerOptions($, state.options = getOptions(self), 1);
+        $._options = new OptionPickerOptions($);
         $._value = getValue(self) || null; // Update initial value to be the current value
         if (form) {
             offEvent('reset', form, onResetForm);

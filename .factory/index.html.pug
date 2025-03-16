@@ -1482,6 +1482,8 @@ block content
     p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
     h3: code state
     p The configuration data.
+    h3: code state.multiple
+    p #[em TODO].
     h3: code state.options
     p A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.
     p #[strong Array] is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an #[code &lt;option&gt;] element without a #[code value] attribute.
@@ -1666,6 +1668,8 @@ block content
     p Returns the option picker’s mask.
     pre: code
       | picker.mask.classList.add(picker.state.n + '--dark');
+    h4: code picker.multiple
+    p Allows multiple selection of options.
     h4: code picker.options
     p Gets the current options list data, or sets (overwrites) the current options list with new data.
     pre: code

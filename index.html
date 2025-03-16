@@ -1489,6 +1489,8 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <p>Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the <kbd>Tab</kbd> key will automatically select the first active option.</p>
       <h3><code>state</code></h3>
       <p>The configuration data.</p>
+      <h3><code>state.multiple</code></h3>
+      <p><em>TODO</em>.</p>
       <h3><code>state.options</code></h3>
       <p>A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.</p>
       <p><strong>Array</strong> is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an <code>&lt;option&gt;</code> element without a <code>value</code> attribute.</p>
@@ -1646,6 +1648,8 @@ picker.reset(true); // Reset the option picker’s value or values and focus to 
       <h4><code>picker.mask</code></h4>
       <p>Returns the option picker’s mask.</p>
       <pre><code>picker.mask.classList.add(picker.state.n + '--dark');</code></pre>
+      <h4><code>picker.multiple</code></h4>
+      <p>Allows multiple selection of options.</p>
       <h4><code>picker.options</code></h4>
       <p>Gets the current options list data, or sets (overwrites) the current options list with new data.</p>
       <pre><code>console.log(picker.options);</code></pre>

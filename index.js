@@ -843,10 +843,9 @@
             if (!isSet(hooks[event])) {
                 return $;
             }
-            hooks[event].forEach(function (then) {
-                return then.apply(that || $, data);
-            });
-            return $;
+            return forEachArray(hooks[event], function (v) {
+                v.apply(that || $, data);
+            }), $;
         };
         $$.off = function (event, then) {
             var $ = this,
@@ -856,7 +855,7 @@
             }
             if (isSet(hooks[event])) {
                 if (isSet(then)) {
-                    var j = hooks[event].length;
+                    var j = toCount(hooks[event]);
                     // Clean-up empty hook(s)
                     if (0 === j) {
                         delete hooks[event];

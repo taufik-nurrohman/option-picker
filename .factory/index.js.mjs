@@ -493,7 +493,7 @@ function onKeyDownOption(e) {
         exit = true;
         focusToOptionLast();
     } else {
-        isInput(self) && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
+        isInput(self) && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setStyle(hint, 'color', 'transparent');
         picker.exit(!(exit = false));
     }
     exit && (offEventDefault(e), offEventPropagation(e));
@@ -658,7 +658,7 @@ function selectToOption(option, picker) {
         setValue(self, b = getOptionValue(option));
         if (isInput(self)) {
             setAria(input, 'activedescendant', getID(option));
-            setText(hint, "");
+            setStyle(hint, 'color', 'transparent');
             setText(input, getText(option));
         } else {
             setDatum(value, 'value', b);

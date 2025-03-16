@@ -374,9 +374,6 @@
     var W = window;
     var B = D.body;
     var R = D.documentElement;
-    var focusTo = function focusTo(node) {
-        return node.focus();
-    };
     var getAria = function getAria(node, aria, parseValue) {
         if (parseValue === void 0) {
             parseValue = true;
@@ -413,7 +410,7 @@
         return parent['last' + (anyNode ? "" : 'Element') + 'Child'] || null;
     };
     var getChildren = function getChildren(parent, index, anyNode) {
-        var children = _toArray(parent['child' + ('ren')]);
+        var children = _toArray(parent['child' + (anyNode ? 'Nodes' : 'ren')]);
         return isNumber(index) ? children[index] || null : children;
     };
     var getDatum = function getDatum(node, datum, parseValue) {
@@ -508,6 +505,9 @@
         content = trim ? content.trim() : content;
         return "" !== content ? content : null;
     };
+    var getType = function getType(node) {
+        return node && node.nodeType || null;
+    };
     var getValue = function getValue(node, parseValue) {
         var value = (node.value || "").replace(/\r?\n|\r/g, '\n');
         value = value;
@@ -553,27 +553,6 @@
     };
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
-    };
-    var selectNone = function selectNone(node) {
-        var selection = D.getSelection();
-        {
-            // selection.removeAllRanges();
-            if (selection.rangeCount) {
-                selection.removeRange(selection.getRangeAt(0));
-            }
-        }
-    };
-    var selectTo = function selectTo(node, mode) {
-        var selection = D.getSelection();
-        selectNone();
-        var range = D.createRange();
-        range.selectNodeContents(node);
-        selection.addRange(range);
-        if (1 === mode) {
-            selection.collapseToEnd();
-        } else if (-1 === mode) {
-            selection.collapseToStart();
-        } else;
     };
     var setAria = function setAria(node, aria, value) {
         return setAttribute(node, 'aria-' + aria, true === value ? 'true' : value);
@@ -726,6 +705,75 @@
                 return then.apply(_this2, _arguments2);
             }, time);
         };
+    };
+    var _getSelection = function _getSelection() {
+        return D.getSelection();
+    };
+    var _setRange = function _setRange() {
+        return D.createRange();
+    };
+    // The `node` parameter is currently not in use
+    var letSelection = function letSelection(node, selection) {
+        selection = selection || _getSelection();
+        return selection.empty(), selection;
+    };
+    // <https://stackoverflow.com/a/13950376/1163000>
+    var restoreSelection = function restoreSelection(node, store, selection) {
+        var index = 0,
+            range = _setRange();
+        range.setStart(node, 0);
+        range.collapse(true);
+        var exit,
+            hasStart,
+            nodeCurrent,
+            nodeStack = [node];
+        while (!exit && (nodeCurrent = nodeStack.pop())) {
+            if (3 === getType(nodeCurrent)) {
+                var indexNext = index + toCount(nodeCurrent);
+                if (!hasStart && store[0] >= index && store[0] <= indexNext) {
+                    range.setStart(nodeCurrent, store[0] - index);
+                    hasStart = true;
+                }
+                if (hasStart && store[1] >= index && store[1] <= indexNext) {
+                    exit = true;
+                    range.setEnd(nodeCurrent, store[1] - index);
+                }
+                index = indexNext;
+            } else {
+                forEachArray(getChildren(nodeCurrent, null, 1), function (v) {
+                    return nodeStack.push(v);
+                });
+            }
+        }
+        return setSelection(node, range, letSelection(node, selection));
+    };
+    var selectTo = function selectTo(node, mode, selection) {
+        selection = selection || _getSelection();
+        letSelection(node, selection);
+        var range = _setRange();
+        range.selectNodeContents(node);
+        selection = setSelection(node, range, selection);
+        if (1 === mode) {
+            selection.collapseToEnd();
+        } else if (-1 === mode) {
+            selection.collapseToStart();
+        } else;
+    };
+    var selectToNone = function selectToNone(selection) {
+        selection = selection || _getSelection();
+        // selection.removeAllRanges();
+        if (selection.rangeCount) {
+            selection.removeRange(selection.getRangeAt(0));
+        }
+        return selection;
+    };
+    // The `node` parameter is currently not in use
+    var setSelection = function setSelection(node, range, selection) {
+        selection = selection || _getSelection();
+        if (isArray(range)) {
+            return restoreSelection(node, range, selection);
+        }
+        return selection.addRange(range), selection;
     };
     var getRect = function getRect(node) {
         var h, rect, w, x, y, X, Y;
@@ -909,36 +957,25 @@
         return createOptions($, maskOptions, map);
     }
 
-    function focusToOption(option, picker, focusOnly) {
-        picker.mask;
-        var state = picker.state;
-        state.n;
+    function focusTo(node) {
+        return node.focus(), node;
+    }
+
+    function focusToOption(option) {
         if (option) {
-            focusToOptionsNone(picker);
-            focusTo(option);
-            return option;
+            return focusTo(option), option;
         }
     }
 
-    function focusToOptionFirst(picker, focusOnly, k) {
+    function focusToOptionFirst(k) {
         var option;
-        if (option = goToOptionFirst(picker, k)) {
-            return focusToOption(option, picker);
+        if (option = goToOptionFirst(k)) {
+            return focusToOption(option);
         }
     }
 
-    function focusToOptionLast(picker, focusOnly) {
-        return focusToOptionFirst(picker, focusOnly, 'Last');
-    }
-
-    function focusToOptionsNone(picker) {
-        var _options = picker._options,
-            state = picker.state,
-            n = state.n;
-        n += '__option--focus';
-        forEachMap(_options, function (v) {
-            return letClass(v[2], n);
-        });
+    function focusToOptionLast() {
+        return focusToOptionFirst('Last');
     }
 
     function getOptionSelected($, strict) {
@@ -1007,7 +1044,7 @@
     function goToOptionFirst(picker, k) {
         var _options = picker._options,
             option;
-        if (option = toValuesFromMap(_options)['find' + (k || "")](function (v) {
+        if (option = toValuesFromMap(_options)['find' + ("")](function (v) {
                 return !getAria(v[2], 'disabled') && !v[2].hidden;
             })) {
             return option[2];
@@ -1050,7 +1087,6 @@
                 --count;
             });
         } else {
-            focusToOptionsNone($);
             forEachMap(_options, function (v) {
                 var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
                 if ("" === q || hasValue(q, text)) {
@@ -1085,7 +1121,7 @@
                 call.then(function (v) {
                     createOptionsFrom($, v, options);
                     letAria(mask, 'busy');
-                    $.fire('load', [_event, query, v]).fit();
+                    $.fire('load', [_event, query, v])[$.options.open ? 'enter' : 'exit']().fit();
                 });
             } else {
                 createOptionsFrom($, call, options);
@@ -1095,42 +1131,24 @@
 
     function onBlurMask(e) {
         var $ = this,
-            picker = getReference($),
-            state = picker.state,
-            n = state.n;
-        letClass($, n += '--focus');
-        letClass($, n += '-self');
+            picker = getReference($);
         picker.fire('blur', [e]).fire('blur.self', [e])._event = e;
     }
 
     function onBlurOption(e) {
         var $ = this,
-            picker = getReference($),
-            mask = picker.mask,
-            state = picker.state,
-            n = state.n;
+            picker = getReference($);
         picker._event = e;
-        letClass($, n + '__option--focus');
-        letClass(mask, n += '--focus');
-        letClass(mask, n + '-option');
     }
 
     function onBlurTextInput(e) {
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
-            mask = picker.mask,
-            state = picker.state;
-        _mask.input;
-        var options = _mask.options,
-            text = _mask.text,
-            n = state.n,
+            state = picker.state,
+            options = _mask.options,
             strict = state.strict,
             option;
-        picker._event = e;
-        letClass(text, n + '__text--focus');
-        letClass(mask, n += '--focus');
-        letClass(mask, n + '-text');
         if (strict) {
             if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
@@ -1138,41 +1156,32 @@
                 selectToOptionsNone(picker, 1);
             }
         }
+        picker.fire('blur', [e])._event = e;
     }
 
     function onCutTextInput(e) {
         var $ = this,
             picker = getReference($),
-            _mask = picker._mask,
-            self = picker.self,
-            hint = _mask.hint;
-        picker._event = e;
+            _mask = picker._mask;
+        picker.self;
+        var hint = _mask.hint;
         delay(function () {
-            return setText(hint, getText($, false) ? "" : self.placeholder);
+            return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
         }, 1)();
+        picker.fire('cut', [e])._event = e;
     }
 
     function onFocusMask(e) {
         var $ = this,
-            picker = getReference($),
-            state = picker.state,
-            n = state.n;
-        setClass($, n += '--focus');
-        setClass($, n += '-self');
+            picker = getReference($);
         picker.fire('focus', [e]).fire('focus.self', [e])._event = e;
     }
 
     function onFocusOption(e) {
         var $ = this,
-            picker = getReference($),
-            mask = picker.mask,
-            state = picker.state,
-            n = state.n;
-        selectNone();
+            picker = getReference($);
         picker._event = e;
-        setClass($, n + '__option--focus');
-        setClass(mask, n += '--focus');
-        setClass(mask, n += '-option');
+        selectToNone();
     }
 
     function onFocusSelf(e) {
@@ -1184,18 +1193,9 @@
 
     function onFocusTextInput(e) {
         var $ = this,
-            picker = getReference($),
-            _mask = picker._mask,
-            mask = picker.mask;
-        picker.self;
-        var state = picker.state,
-            text = _mask.text,
-            n = state.n;
+            picker = getReference($);
         picker._event = e;
-        setClass(text, n + '__text--focus');
-        setClass(mask, n += '--focus');
-        setClass(mask, n += '-text');
-        getText($, false) ? selectTo($) : picker.enter().fit();
+        getText($, 0) ? selectTo($) : picker.enter().fit();
     }
     var searchQuery = "";
 
@@ -1214,7 +1214,7 @@
         var strict = state.strict;
         picker._event = e;
         delay(function () {
-            return setText(hint, getText($, false) ? "" : self.placeholder);
+            return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
         }, 1)();
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
             delay(function () {
@@ -1348,7 +1348,7 @@
             while (nextOption && (getAria(nextOption, 'disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
-            nextOption ? focusToOption(nextOption, picker) : focusToOptionFirst(picker);
+            nextOption ? focusToOption(nextOption) : focusToOptionFirst();
         } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
             exit = true;
             if (KEY_PAGE_UP === key && 'group' === getRole(parentOption = getParent($))) {
@@ -1380,13 +1380,13 @@
             while (prevOption && (getAria(prevOption, 'disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
-            prevOption ? focusToOption(prevOption, picker) : focusToOptionLast(picker, 1);
+            prevOption ? focusToOption(prevOption) : focusToOptionLast();
         } else if (KEY_BEGIN === key) {
             exit = true;
-            focusToOptionFirst(picker);
+            focusToOptionFirst();
         } else if (KEY_END === key) {
             exit = true;
-            focusToOptionLast(picker, 1);
+            focusToOptionLast();
         } else {
             isInput(self) && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setText(hint, "");
             picker.exit(!(exit = false));
@@ -1395,18 +1395,17 @@
     }
 
     function onPasteTextInput(e) {
+        offEventDefault(e);
         var $ = this,
             picker = getReference($),
-            _mask = picker._mask,
-            self = picker.self,
-            hint = _mask.hint;
-        picker._event = e;
+            _mask = picker._mask;
+        picker.self;
+        var hint = _mask.hint;
         delay(function () {
-            return setText($, getText($));
-        })(); // Convert to plain text
-        delay(function () {
-            return setText(hint, getText($, false) ? "" : self.placeholder);
+            return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
         }, 1)();
+        setText($, e.clipboardData.getData('text/plain')), selectTo($); // Paste as plain text
+        picker.fire('paste', [e])._event = e;
     }
 
     function onPointerDownMask(e) {
@@ -1581,7 +1580,7 @@
 
     function selectToOptionFirst(picker, k) {
         var option;
-        if (option = goToOptionFirst(picker, k)) {
+        if (option = goToOptionFirst(picker)) {
             return selectToOption(option, picker);
         }
     }
@@ -1604,7 +1603,7 @@
             setValue(self, v = "");
             if (isInput(self)) {
                 letAria(input, 'activedescendant');
-                setText(hint, self.placeholder);
+                letStyle(hint, 'color');
                 setText(input, "");
             } else {
                 letDatum(value, 'value');
@@ -1740,14 +1739,15 @@
             set: function set(value) {
                 var $ = this,
                     _event = $._event,
-                    _mask = $._mask,
-                    self = $.self,
-                    hint = _mask.hint,
+                    _mask = $._mask;
+                $.self;
+                var hint = _mask.hint,
                     input = _mask.input,
-                    text = _mask.text;
+                    text = _mask.text,
+                    v;
                 if (text) {
-                    setText(input, _fromValue(value));
-                    setText(hint, getText(input, false) ? "" : self.placeholder + "");
+                    setText(input, v = _fromValue(value));
+                    v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
                 }
                 return $.fire('set.text', [_event, value]);
             }
@@ -1915,7 +1915,7 @@
                         forEachMap($._options, function (v, k) {
                             return values.push(k);
                         });
-                        $.fire('load', [$._event, null, values]).fit();
+                        $.fire('load', [$._event, null, values])[$.options.open ? 'enter' : 'exit']().fit();
                     });
                 } else {
                     if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
@@ -1965,7 +1965,7 @@
                 mask = $.mask,
                 input = _mask.input;
             if (input) {
-                selectNone();
+                selectToNone();
             }
             return (input || mask).blur(), $.exit();
         },
@@ -2035,11 +2035,12 @@
                 _options = $._options,
                 mask = $.mask,
                 self = $.self,
-                input = _mask.input;
+                input = _mask.input,
+                options = _mask.options;
             if (!_active) {
                 return $;
             }
-            setAria(mask, 'expanded', true);
+            setAria(mask, 'expanded', toCount(getChildren(options)) > 0);
             var theRootReference = getReference(R);
             if (theRootReference && $ !== theRootReference) {
                 theRootReference.exit(); // Exit other(s)
@@ -2281,11 +2282,11 @@
                 // `picker.options.set('asdf', [ … ])`
             } else;
             if (hasState(value[1], '&')) {
-                optionGroup = getElement('.' + n + '-group[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', options);
+                optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', options);
                 if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
                     var _getState, _getState2;
                     setChildLast(options, optionGroup = setElement('span', {
-                        'class': n + '-group',
+                        'class': n + 's-batch',
                         'data': {
                             'value': value[1]['&']
                         },
@@ -2329,7 +2330,7 @@
                 },
                 'class': n,
                 'data': {
-                    'group': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false,
+                    'batch': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false,
                     'value': v
                 },
                 'role': 'option',

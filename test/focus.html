@@ -7,31 +7,23 @@
     <title>Option Picker</title>
     <link href="../index.min.css" rel="stylesheet">
     <style>
-      .option-picker {
-        width: 100%;
-      }
-      .option-picker.option-picker--focus {
-        border-color: #f00;
-      }
-      .option-picker.option-picker--focus-option {
-        background: #0f0;
-      }
-      .option-picker.option-picker--focus-text {
-        background: #ff0;
+      .option-picker__options {
+        background: #fff;
       }
     </style>
   </head>
   <body>
     <main>
-      <p><input list="options" placeholder="Option goes here&hellip;" type="text"></p>
-    </main><datalist id="options">
-      <option>Option 1</option>
-      <option>Option 2</option>
-      <option value="3">Option 3</option>
-    </datalist>
+      <p><select autofocus id="test">
+          <option>Option 1</option>
+          <option>Option 2</option>
+          <option value="3">Option 3</option>
+        </select></p>
+      <p><label for="test" style="text-decoration:underline;">Click here</label> to focus to the option picker!</p>
+    </main>
     <script src="../index.min.js"></script>
     <script>
-      const picker = new OptionPicker(document.querySelector('input'));
+      const picker = new OptionPicker(document.querySelector('select'));
     </script>
   </body>
 </html>

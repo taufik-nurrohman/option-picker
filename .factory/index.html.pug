@@ -30,13 +30,16 @@ block style
     |   border-width: 0;
     |   padding: 0 0.5em;
     | }
-    | .option-picker--focus {
+    | .option-picker:focus,
+    | .option-picker:focus-within {
     |   border-color: #00f;
     | }
-    | .option-picker--focus .option-picker__options {
+    | .option-picker:focus .option-picker__options,
+    | .option-picker:focus-within .option-picker__options {
     |   border-color: #00f;
     | }
-    | .option-picker--focus .option-picker__value {
+    | .option-picker:focus .option-picker__value,
+    | .option-picker:focus-within .option-picker__value {
     |   background: 0 0;
     |   outline: 0;
     | }
@@ -57,23 +60,6 @@ block style
     |   background: #00f;
     |   color: #fff;
     | }
-    | .option-picker__option-group {
-    |   border: 0;
-    |   gap: 0;
-    |   padding: 0;
-    | }
-    | .option-picker__option-group:not(:first-child) {
-    |   border-top: 1px solid;
-    |   border-top-color: inherit;
-    | }
-    | .option-picker__option-group::before {
-    |   background: #eef;
-    |   border: 0;
-    |   padding: 0 0.5em;
-    | }
-    | .option-picker__option-group .option-picker__option {
-    |   padding-left: 1em;
-    | }
     | .option-picker__options {
     |   background: #fff;
     |   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
@@ -88,6 +74,23 @@ block style
     | }
     | .option-picker__options:hover .option-picker__option:where(:not([aria-disabled='true']):not([aria-selected='true']):not(:hover)):focus {
     |   background: #eee;
+    | }
+    | .option-picker__options-batch {
+    |   border: 0;
+    |   gap: 0;
+    |   padding: 0;
+    | }
+    | .option-picker__options-batch:not(:first-child) {
+    |   border-top: 1px solid;
+    |   border-top-color: inherit;
+    | }
+    | .option-picker__options-batch::before {
+    |   background: #eef;
+    |   border: 0;
+    |   padding: 0 0.5em;
+    | }
+    | .option-picker__options-batch .option-picker__option {
+    |   padding-left: 1em;
     | }
     | .option-picker__values {
     |   padding: 0;
@@ -1439,8 +1442,7 @@ block content
       li: a(href='test.html' target='_blank') No Idea?
       li: a(href='test/attach,detach.html' target='_blank') Attach, Detach
       li: a(href='test/disabled.html' target='_blank') Disabled State
-      li: a(href='test/focus-auto.html' target='_blank') Focus Automatically
-      li: a(href='test/focus.html' target='_blank') Focus States
+      li: a(href='test/focus.html' target='_blank') Focus Automatically
       li: a(href='test/group.html' target='_blank') Grouped Options
       li: a(href='test/hooks.html' target='_blank') Hooks
       li: a(href='test/self.html' target='_blank') Multiple Instances

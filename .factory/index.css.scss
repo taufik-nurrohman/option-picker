@@ -35,13 +35,12 @@ $name: 'option-picker';
   flex-wrap: wrap;
   position: relative;
   vertical-align: middle;
-  &--focus {
-    .#{$name}__value {
-      outline: 1px solid;
-      outline-offset: -2px;
-    }
+  &:focus,
+  &:focus-within {
     .#{$name}__value {
       background: rgba(0, 0, 255, 0.5);
+      outline: 1px solid;
+      outline-offset: -2px;
     }
   }
   &[aria-expanded='true'] {
@@ -92,21 +91,10 @@ $name: 'option-picker';
     &[aria-selected='true'] {
       background: rgba(0, 0, 255, 0.5);
     }
-    &--focus,
     &:focus,
     &:where(:not([aria-disabled='true'])):hover {
       outline: 1px solid;
       outline-offset: -2px;
-    }
-    &-group {
-      @extend %items;
-      border: inherit;
-      flex-direction: column;
-      &::before {
-        @extend %item;
-        content: attr(data-value);
-        font-weight: bold;
-      }
     }
   }
   &__options {
@@ -129,6 +117,16 @@ $name: 'option-picker';
     }
     &:empty {
       display: none;
+    }
+    &-batch {
+      @extend %items;
+      border: inherit;
+      flex-direction: column;
+      &::before {
+        @extend %item;
+        content: attr(data-value);
+        font-weight: bold;
+      }
     }
   }
   &__self {
@@ -195,15 +193,15 @@ $name: 'option-picker';
     .#{$name}__arrow {
       display: none;
     }
-    .#{$name}__option-group {
-      border-width: 1px;
-    }
     .#{$name}__options {
       border-width: 0;
       min-width: 0;
       padding-top: 0;
       position: static;
       visibility: visible;
+      &-batch {
+        border-width: 1px;
+      }
     }
   }
 }

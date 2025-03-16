@@ -12,6 +12,7 @@
     "@taufik-nurrohman/is": "*",
     "@taufik-nurrohman/pattern": "*",
     "@taufik-nurrohman/rect": "*",
+    "@taufik-nurrohman/selection": "*",
     "@taufik-nurrohman/tick": "*",
     "@taufik-nurrohman/to": "*"
   },

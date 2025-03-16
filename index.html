@@ -1611,11 +1611,11 @@ picker.exit(true); // Hide the option picker’s options and focus to the option
       <pre><code>picker.focus(); // Focus and select the text
 picker.focus(-1); // Focus and put the caret to the start of the text
 picker.focus(+1); // Focus and put the caret to the end of the text</code></pre>
-      <h4><code>picker.off(event, then)</code></h4>
+      <h4><code>picker.off(event, task)</code></h4>
       <p>Removes an event.</p>
       <pre><code>picker.off('change'); // Remove all events from the `change` event container
 picker.off('change', onChange); // Remove `onChange` event from the `change` event container</code></pre>
-      <h4><code>picker.on(event, then)</code></h4>
+      <h4><code>picker.on(event, task)</code></h4>
       <p>Adds a new event.</p>
       <pre><code>picker.on('change', function () {
     console.log(this.value);

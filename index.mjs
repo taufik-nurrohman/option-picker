@@ -98,21 +98,21 @@ function focusTo(node) {
     return node.focus(), node;
 }
 
-function focusToOption(option) {
+function focusToOption(option, picker) {
     if (option) {
         return focusTo(option), option;
     }
 }
 
-function focusToOptionFirst(k) {
+function focusToOptionFirst(picker, k) {
     let option;
-    if (option = goToOptionFirst(k)) {
-        return focusToOption(option);
+    if (option = goToOptionFirst(picker, k)) {
+        return focusToOption(option, picker);
     }
 }
 
-function focusToOptionLast() {
-    return focusToOptionFirst('Last');
+function focusToOptionLast(picker) {
+    return focusToOptionFirst(picker, 'Last');
 }
 
 function getOptionSelected($, strict) {
@@ -453,7 +453,7 @@ function onKeyDownOption(e) {
         while (nextOption && (getAria(nextOption, 'disabled') || nextOption.hidden)) {
             nextOption = getNext(nextOption);
         }
-        nextOption ? focusToOption(nextOption) : focusToOptionFirst();
+        nextOption ? focusToOption(nextOption, picker) : focusToOptionFirst(picker);
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
         if (KEY_PAGE_UP === key && 'group' === getRole(parentOption = getParent($))) {
@@ -485,13 +485,13 @@ function onKeyDownOption(e) {
         while (prevOption && (getAria(prevOption, 'disabled') || prevOption.hidden)) {
             prevOption = getPrev(prevOption);
         }
-        prevOption ? focusToOption(prevOption) : focusToOptionLast();
+        prevOption ? focusToOption(prevOption, picker) : focusToOptionLast(picker);
     } else if (KEY_BEGIN === key) {
         exit = true;
-        focusToOptionFirst();
+        focusToOptionFirst(picker);
     } else if (KEY_END === key) {
         exit = true;
-        focusToOptionLast();
+        focusToOptionLast(picker);
     } else {
         isInput(self) && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setStyle(hint, 'color', 'transparent');
         picker.exit(!(exit = false));
@@ -813,7 +813,7 @@ setObjectAttributes(OptionPicker, {
                     setReference(R, $);
                 }
             }
-            return $.fire('set.size', [_event, size]);
+            return $.fire((1 === size ? 'l' : 's') + 'et.size', [_event, size]);
         }
     },
     text: {
@@ -830,8 +830,9 @@ setObjectAttributes(OptionPicker, {
             if (text) {
                 setText(input, v = fromValue(value));
                 v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
+                return $.fire((v ? 's' : 'l') + 'et.text', [_event, value]);
             }
-            return $.fire('set.text', [_event, value]);
+            return $;
         }
     },
     value: {
@@ -849,7 +850,7 @@ setObjectAttributes(OptionPicker, {
             if (v = getValueInMap(toValue(value), _options._o)) {
                 selectToOption(v[2], $);
             }
-            return $.fire('set.value', [_event, value]);
+            return $.fire((v ? 's' : 'l') + 'et.value', [_event, value]);
         }
     },
     // TODO: `<select multiple>`
@@ -963,7 +964,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         _mask.self = mask;
         _mask[isInputSelf ? 'text' : 'value'] = text;
         $._mask = _mask;
-        $.size = state.size ?? (isInputSelf ? 1 : self.size);
         let {_active} = $,
             {options} = state, selected;
         // Force the `this._active` value to `true` to set the initial value
@@ -1010,6 +1010,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setID(self);
         setID(textInput);
         setID(textInputHint);
+        $.size = state.size ?? (isInputSelf ? 1 : self.size);
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
             forEachArray(state.with, (v, k) => {

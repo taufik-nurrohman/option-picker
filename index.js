@@ -339,7 +339,7 @@
             of = getPrototype(of);
         }
         return forEachObject(attributes, function (v, k) {
-            return Object.defineProperty(of, k, v);
+            Object.defineProperty(of, k, v);
         }), of;
     };
     var setObjectMethods = function setObjectMethods(of, methods, asStaticMethods) {
@@ -347,7 +347,7 @@
             of = getPrototype(of);
         }
         return forEachObject(methods, function (v, k) {
-            return of [k] = v;
+            of [k] = v;
         }), of;
     };
     var setReference = function setReference(key, value) {
@@ -362,7 +362,7 @@
     var toValuesFromMap = function toValuesFromMap(map) {
         var r = [];
         return forEachMap(map, function (v) {
-            return r.push(v);
+            r.push(v);
         }), r;
     };
     var references = new WeakMap();
@@ -961,21 +961,21 @@
         return node.focus(), node;
     }
 
-    function focusToOption(option) {
+    function focusToOption(option, picker) {
         if (option) {
             return focusTo(option), option;
         }
     }
 
-    function focusToOptionFirst(k) {
+    function focusToOptionFirst(picker, k) {
         var option;
-        if (option = goToOptionFirst(k)) {
+        if (option = goToOptionFirst(picker, k)) {
             return focusToOption(option);
         }
     }
 
-    function focusToOptionLast() {
-        return focusToOptionFirst('Last');
+    function focusToOptionLast(picker) {
+        return focusToOptionFirst(picker, 'Last');
     }
 
     function getOptionSelected($, strict) {
@@ -1044,7 +1044,7 @@
     function goToOptionFirst(picker, k) {
         var _options = picker._options,
             option;
-        if (option = toValuesFromMap(_options)['find' + ("")](function (v) {
+        if (option = toValuesFromMap(_options)['find' + (k || "")](function (v) {
                 return !getAria(v[2], 'disabled') && !v[2].hidden;
             })) {
             return option[2];
@@ -1348,7 +1348,7 @@
             while (nextOption && (getAria(nextOption, 'disabled') || nextOption.hidden)) {
                 nextOption = getNext(nextOption);
             }
-            nextOption ? focusToOption(nextOption) : focusToOptionFirst();
+            nextOption ? focusToOption(nextOption) : focusToOptionFirst(picker);
         } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
             exit = true;
             if (KEY_PAGE_UP === key && 'group' === getRole(parentOption = getParent($))) {
@@ -1380,13 +1380,13 @@
             while (prevOption && (getAria(prevOption, 'disabled') || prevOption.hidden)) {
                 prevOption = getPrev(prevOption);
             }
-            prevOption ? focusToOption(prevOption) : focusToOptionLast();
+            prevOption ? focusToOption(prevOption) : focusToOptionLast(picker);
         } else if (KEY_BEGIN === key) {
             exit = true;
-            focusToOptionFirst();
+            focusToOptionFirst(picker);
         } else if (KEY_END === key) {
             exit = true;
-            focusToOptionLast();
+            focusToOptionLast(picker);
         } else {
             isInput(self) && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setStyle(hint, 'color', 'transparent');
             picker.exit(!(exit = false));
@@ -1580,7 +1580,7 @@
 
     function selectToOptionFirst(picker, k) {
         var option;
-        if (option = goToOptionFirst(picker)) {
+        if (option = goToOptionFirst(picker, k)) {
             return selectToOption(option, picker);
         }
     }
@@ -1725,7 +1725,7 @@
                         setReference(R, $);
                     }
                 }
-                return $.fire('set.size', [_event, size]);
+                return $.fire((1 === size ? 'l' : 's') + 'et.size', [_event, size]);
             }
         },
         text: {
@@ -1748,8 +1748,9 @@
                 if (text) {
                     setText(input, v = _fromValue(value));
                     v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
+                    return $.fire((v ? 's' : 'l') + 'et.text', [_event, value]);
                 }
-                return $.fire('set.text', [_event, value]);
+                return $;
             }
         },
         value: {
@@ -1772,7 +1773,7 @@
                 if (v = getValueInMap(_toValue(value), _options._o)) {
                     selectToOption(v[2], $);
                 }
-                return $.fire('set.value', [_event, value]);
+                return $.fire((v ? 's' : 'l') + 'et.value', [_event, value]);
             }
         },
         // TODO: `<select multiple>`
@@ -1891,7 +1892,6 @@
             _mask.self = mask;
             _mask[isInputSelf ? 'text' : 'value'] = text;
             $._mask = _mask;
-            $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             var _active = $._active,
                 _state2 = state,
                 options = _state2.options,
@@ -1942,6 +1942,7 @@
             setID(self);
             setID(textInput);
             setID(textInputHint);
+            $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             // Attach extension(s)
             if (isSet(state) && isArray(state.with)) {
                 forEachArray(state.with, function (v, k) {

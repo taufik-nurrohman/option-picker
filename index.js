@@ -1105,7 +1105,8 @@
         _mask.value;
         var strict = state.strict,
             hasSize = getDatum(mask, 'size'),
-            option;
+            option,
+            v;
         var count = _options.count;
         if (selectOnly) {
             forEachMap(_options, function (v) {
@@ -1136,10 +1137,11 @@
                 if (count && (option = goToOptionFirst($))) {
                     setAria(option, 'selected', true);
                     setAttribute(option._[OPTION_SELF], 'selected', "");
-                    setValue(self, getOptionValue(option));
+                    setValue(self, v = getOptionValue(option));
                 } else {
-                    setValue(self, "");
+                    setValue(self, v = "");
                 }
+                $.fire('change', ["" === v ? null : v]); // TODO
             } else {
                 setValue(self, query);
             }
@@ -1186,6 +1188,7 @@
             if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
             } else {
+                options.hidden = false;
                 selectToOptionsNone(picker, 1);
             }
         }
@@ -1605,7 +1608,7 @@
                 setHTML(value, getHTML(option));
             }
             if (a !== b) {
-                picker.fire('change', [_event, _toValue(b)]);
+                picker.fire('change', [_event, "" === b ? null : b]);
             }
             return option;
         }
@@ -1655,7 +1658,9 @@
             return new OptionPicker(self, state);
         }
         setReference(self, hook($, OptionPicker._));
-        return $.attach(self, _fromStates({}, OptionPicker.state, state || {}));
+        return $.attach(self, _fromStates({}, OptionPicker.state, false === state || true === state ? {
+            strict: state
+        } : state || {}));
     }
 
     function OptionPickerOptions(of, options) {

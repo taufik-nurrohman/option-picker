@@ -1475,6 +1475,7 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
         <li><a href="tweak/animation-slide.html" target="_blank">Slide Animation</a></li>
       </ul>
       <h2 id="constructor"><a href="#constructor">#</a> Constructor</h2>
+      <pre><code>const picker = new OptionPicker(self, strict = false);</code></pre>
       <pre><code>const picker = new OptionPicker(self, state = {
     options: null,
     size: null,
@@ -1484,6 +1485,8 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <h2 id="parameters"><a href="#parameters">#</a> Parameters</h2>
       <h3><code>self</code></h3>
       <p>The <code>&lt;input&gt;</code> or <code>&lt;select&gt;</code> element.</p>
+      <h3><code>strict</code></h3>
+      <p>Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the <kbd>Tab</kbd> key will automatically select the first active option.</p>
       <h3><code>state</code></h3>
       <p>The configuration data.</p>
       <h3><code>state.options</code></h3>

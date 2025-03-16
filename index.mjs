@@ -200,7 +200,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         {_event, _mask, mask, self, state} = $,
         {options, value} = _mask,
         {strict} = state,
-        hasSize = getDatum(mask, 'size'), option;
+        hasSize = getDatum(mask, 'size'), option, v;
     let {count} = _options;
     if (selectOnly) {
         forEachMap(_options, v => {
@@ -231,10 +231,11 @@ const filter = debounce(($, input, _options, selectOnly) => {
             if (count && (option = goToOptionFirst($))) {
                 setAria(option, 'selected', true);
                 setAttribute(option._[OPTION_SELF], 'selected', "");
-                setValue(self, getOptionValue(option));
+                setValue(self, v = getOptionValue(option));
             } else {
-                setValue(self, "");
+                setValue(self, v = "");
             }
+            $.fire('change', ["" === v ? null : v]); // TODO
         } else {
             setValue(self, query);
         }
@@ -279,6 +280,7 @@ function onBlurTextInput(e) {
         if (!options.hidden && (option = getOptionSelected(picker, 1))) {
             selectToOption(option, picker);
         } else {
+            options.hidden = false;
             selectToOptionsNone(picker, 1);
         }
     }
@@ -665,7 +667,7 @@ function selectToOption(option, picker) {
             setHTML(value, getHTML(option));
         }
         if (a !== b) {
-            picker.fire('change', [_event, toValue(b)]);
+            picker.fire('change', [_event, "" === b ? null : b]);
         }
         return option;
     }
@@ -714,7 +716,9 @@ function OptionPicker(self, state) {
         return new OptionPicker(self, state);
     }
     setReference(self, hook($, OptionPicker._));
-    return $.attach(self, fromStates({}, OptionPicker.state, (state || {})));
+    return $.attach(self, fromStates({}, OptionPicker.state, false === state || true === state ? {
+        strict: state
+    } : (state || {})));
 }
 
 function OptionPickerOptions(of, options) {

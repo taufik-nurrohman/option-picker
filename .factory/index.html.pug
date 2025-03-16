@@ -1465,6 +1465,8 @@ block content
       a(href='#constructor') #
       = ' Constructor'
     pre: code
+      | const picker = new OptionPicker(self, strict = false);
+    pre: code
       | const picker = new OptionPicker(self, state = {
       |     options: null,
       |     size: null,
@@ -1476,6 +1478,8 @@ block content
       = ' Parameters'
     h3: code self
     p The #[code &lt;input&gt;] or #[code &lt;select&gt;] element.
+    h3: code strict
+    p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
     h3: code state
     p The configuration data.
     h3: code state.options

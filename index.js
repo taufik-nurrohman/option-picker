@@ -712,6 +712,39 @@
     var _setRange = function _setRange() {
         return D.createRange();
     };
+    // <https://stackoverflow.com/a/6691294/1163000>
+    var insertAtSelection = function insertAtSelection(node, content, mode, selection) {
+        selection = selection || _getSelection();
+        var from, range, to;
+        if (selection.rangeCount) {
+            range = selection.getRangeAt(0);
+            range.deleteContents();
+            to = D.createDocumentFragment();
+            var nodeCurrent, nodeFirst, nodeLast;
+            if (isString(content)) {
+                from = setElement('div');
+                setHTML(from, content);
+                while (nodeCurrent = getChildFirst(from, 1)) {
+                    nodeLast = setChildLast(to, nodeCurrent);
+                }
+            } else if (isArray(content)) {
+                forEachArray(content, function (v) {
+                    return nodeLast = setChildLast(to, v);
+                });
+            } else {
+                nodeLast = setChildLast(to, content);
+            }
+            nodeFirst = getChildFirst(to, 1);
+            range.insertNode(to);
+            if (nodeLast) {
+                range = range.cloneRange();
+                range.setStartAfter(nodeLast);
+                range.setStartBefore(nodeFirst);
+                setSelection(node, range, selectToNone(selection));
+            }
+        }
+        return selection;
+    };
     // The `node` parameter is currently not in use
     var letSelection = function letSelection(node, selection) {
         selection = selection || _getSelection();
@@ -1404,7 +1437,7 @@
         delay(function () {
             return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
         }, 1)();
-        setText($, e.clipboardData.getData('text/plain')), selectTo($); // Paste as plain text
+        insertAtSelection($, e.clipboardData.getData('text/plain'));
         picker.fire('paste', [e])._event = e;
     }
 

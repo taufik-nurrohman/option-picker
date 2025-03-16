@@ -1,6 +1,6 @@
 import {D, R, W, getAria, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasClass, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
-import {/* focusTo, */selectTo, selectToNone} from '@taufik-nurrohman/selection';
+import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
 import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toKeysFromMap, toKeyFirstFromMap, toKeyLastFromMap, toValuesFromMap, toValueFirstFromMap, toValueLastFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getOffset, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
@@ -506,7 +506,7 @@ function onPasteTextInput(e) {
         {_mask, self} = picker,
         {hint} = _mask;
     delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
-    setText($, e.clipboardData.getData('text/plain')), selectTo($); // Paste as plain text
+    insertAtSelection($, e.clipboardData.getData('text/plain'));
     picker.fire('paste', [e])._event = e;
 }
 

@@ -983,10 +983,10 @@
                 setValue(self, b = query);
             }
             if (a !== b) {
-                $.fire('change', ["" === b ? null : b]);
+                $.fire('change', ["" !== b ? b : null]);
             }
         }
-        $.fire('search', [_event, query]);
+        $.fire('search', [_event, query = "" !== query ? query : null]);
         var call = state.options;
         // Only fetch when no other option(s) are available to query
         if (0 === count && isFunction(call)) {
@@ -996,6 +996,7 @@
                 call.then(function (v) {
                     createOptionsFrom($, v, options);
                     letAria(mask, 'busy');
+                    console.log(goToOptionFirst($)); // TODO
                     $.fire('load', [_event, query, v])[$.options.open ? 'enter' : 'exit']().fit();
                 });
             } else {
@@ -1634,7 +1635,7 @@
                 setHTML(value, getHTML(option));
             }
             if (a !== b) {
-                picker.fire('change', [_event, "" === b ? null : b]);
+                picker.fire('change', [_event, "" !== b ? b : null]);
             }
             return option;
         }
@@ -1897,7 +1898,7 @@
         value: {
             get: function get() {
                 var value = getValue(this.self);
-                return "" === value ? null : value;
+                return "" !== value ? value : null;
             },
             set: function set(value) {
                 var $ = this,

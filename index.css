@@ -122,10 +122,10 @@
 }
 .option-picker__self:disabled + .option-picker {
   color: rgb(128, 128, 128);
-}
-.option-picker__self:disabled + .option-picker,
-.option-picker__self:disabled + .option-picker * {
   cursor: not-allowed;
+}
+.option-picker__self:disabled + .option-picker * {
+  pointer-events: none;
 }
 .option-picker__text {
   border-color: transparent;

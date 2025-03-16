@@ -1477,6 +1477,8 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <h2 id="constructor"><a href="#constructor">#</a> Constructor</h2>
       <pre><code>const picker = new OptionPicker(self, strict = false);</code></pre>
       <pre><code>const picker = new OptionPicker(self, state = {
+    max: null,
+    min: null,
     options: null,
     size: null,
     strict: false,
@@ -1489,7 +1491,9 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <p>Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the <kbd>Tab</kbd> key will automatically select the first active option.</p>
       <h3><code>state</code></h3>
       <p>The configuration data.</p>
-      <h3><code>state.multiple</code></h3>
+      <h3><code>state.max</code></h3>
+      <p><em>TODO</em>.</p>
+      <h3><code>state.min</code></h3>
       <p><em>TODO</em>.</p>
       <h3><code>state.options</code></h3>
       <p>A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.</p>
@@ -1641,6 +1645,10 @@ picker.reset(true); // Reset the option picker’s value or values and focus to 
 });</code></pre>
       <h2 id="properties"><a href="#properties">#</a> Properties</h2>
       <h3>Instance Properties</h3>
+      <h4><code>picker.active</code></h4>
+      <P><em>TODO</em>.</P>
+      <h4><code>picker.fix</code></h4>
+      <P><em>TODO</em>.</P>
       <p>Instance properties are properties available through the results of an <code>OptionPicker</code> construct.</p>
       <h4><code>picker.hooks</code></h4>
       <p>Returns the events data.</p>
@@ -1648,8 +1656,10 @@ picker.reset(true); // Reset the option picker’s value or values and focus to 
       <h4><code>picker.mask</code></h4>
       <p>Returns the option picker’s mask.</p>
       <pre><code>picker.mask.classList.add(picker.state.n + '--dark');</code></pre>
-      <h4><code>picker.multiple</code></h4>
-      <p>Allows multiple selection of options.</p>
+      <h4><code>picker.max</code></h4>
+      <P><em>TODO</em>.</P>
+      <h4><code>picker.min</code></h4>
+      <P><em>TODO</em>.</P>
       <h4><code>picker.options</code></h4>
       <p>Gets the current options list data, or sets (overwrites) the current options list with new data.</p>
       <pre><code>console.log(picker.options);</code></pre>

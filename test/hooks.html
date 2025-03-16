@@ -16,6 +16,15 @@
         padding: 0.25em;
         text-shadow: 0 0 0 #fff;
       }
+      code hr {
+        border: 0;
+        border-top: 1px dotted;
+        margin: 0.25em 0;
+        padding: 0;
+      }
+      code hr:last-child {
+        display: none;
+      }
       .option-picker__options {
         background: #fff;
       }
@@ -29,7 +38,7 @@
             <option selected>Option 2</option>
             <option>Option 3</option>
           </select></p>
-        <p><button onclick="picker.options = ['#1', '#2'];" type="button">Set Options</button> <button onclick="picker.options.set('#3');" type="button">Set Option</button> <button onclick="picker.options.let('#3');" type="button">Let Option</button> <button onclick="picker.options.let();" type="button">Let Options</button></p>
+        <p><button onclick="picker.options = ['#1', '#2'];" type="button">Set Options</button> <button onclick="picker.options.set('#3');" type="button">Set Option</button> <button onclick="picker.options.let('#3');" type="button">Let Option</button> <button onclick="picker.options.let();" type="button">Let Options</button> <button onclick="picker.active = !picker.active;" type="button">Disable/Enable</button></p>
         <p><button type="submit">Submit</button> <button type="reset">Reset</button></p>
       </form>
       <pre><code></code></pre>
@@ -50,11 +59,19 @@
           }
           return r;
       }
-      ['blur', 'blur.self', 'change', 'click', 'enter', 'exit', 'fit', 'focus', 'focus.option', 'focus.self', 'focus.text', 'has.option', 'let.option', 'let.options', 'load', 'not.option', 'reset', 'search', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'].forEach(v => picker.on(v, (function () {
+      let now;
+      ['blur', 'blur.self', 'change', 'enter', 'exit', 'fit', 'focus', 'focus.option', 'focus.self', 'focus.text', 'has.option', 'let.active', 'let.fix', 'let.max', 'let.min', 'let.option', 'let.options', 'let.size', 'let.text', 'let.value', 'load', 'not.option', 'reset', 'search', 'set.active', 'set.fix', 'set.max', 'set.min', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'
+          // 'click',
+      ].forEach(v => picker.on(v, (function () {
           return function (e, ...lot) {
-              let note = document.createElement('span');
+              let note = document.createElement('span'),
+                  s = (new Date).getSeconds();
               note.style.color = stringToColor(v);
               note.style.display = 'block';
+              if (now !== s) {
+                  log.prepend(document.createElement('hr'));
+                  now = s;
+              }
               note.textContent = '↑↑↑ [' + v + ']: ' + JSON.stringify(lot) + ' ' + (e ? '@' + e.type : "");
               log.prepend(note);
           }

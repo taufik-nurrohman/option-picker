@@ -30,6 +30,73 @@ const OPTION_SELF = 0;
 
 const bounce = debounce($ => $.fit(), 10);
 
+const filter = debounce(($, input, _options, selectOnly) => {
+    let query = isString(input) ? input : getText(input) || "",
+        q = toCaseLower(query),
+        {_event, _mask, mask, self, state} = $,
+        {options, value} = _mask,
+        {strict} = state,
+        hasSize = getDatum(mask, 'size'), option, v;
+    let {count} = _options;
+    if (selectOnly) {
+        forEachMap(_options, v => {
+            let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
+            if ("" !== q && q === text.slice(0, toCount(q)) && !getAria(v[2], 'disabled')) {
+                selectToOption(v[2], $);
+                if (hasSize) {
+                    scrollTo(v[2]);
+                }
+                return 0;
+            }
+            --count;
+        });
+    } else {
+        forEachMap(_options, v => {
+            let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
+            if ("" === q || hasValue(q, text)) {
+                v[2].hidden = false;
+            } else {
+                v[2].hidden = true;
+                --count;
+            }
+        });
+        options.hidden = !count;
+        let a = getValue(self), b;
+        if (strict) {
+            selectToOptionsNone($);
+            // Silently select the first option without affecting the currently typed query and focus/select state
+            if (count && (option = goToOptionFirst($))) {
+                setAria(option, 'selected', true);
+                setAttribute(option._[OPTION_SELF], 'selected', "");
+                setValue(self, b = getOptionValue(option));
+            } else {
+                setValue(self, b = "");
+            }
+        } else {
+            setValue(self, b = query);
+        }
+        if (a !== b) {
+            $.fire('change', ["" === b ? null : b]);
+        }
+    }
+    $.fire('search', [_event, query]);
+    let call = state.options;
+    // Only fetch when no other option(s) are available to query
+    if (0 === count && isFunction(call)) {
+        setAria(mask, 'busy', true);
+        call = call.call($, query);
+        if (isInstance(call, Promise)) {
+            call.then(v => {
+                createOptionsFrom($, v, options);
+                letAria(mask, 'busy');
+                $.fire('load', [_event, query, v])[$.options.open ? 'enter' : 'exit']().fit();
+            });
+        } else {
+            createOptionsFrom($, call, options);
+        }
+    }
+}, FILTER_COMMIT_TIME);
+
 const name = 'OptionPicker';
 
 function createOptions($, options, values) {
@@ -173,7 +240,21 @@ function getOptions(self) {
     return map;
 }
 
-function getOptionsSelected(options) {}
+function getOptionsSelected(options) {
+    let {_options, self} = $, selected;
+    forEachMap(_options, (v, k) => {
+        if (isArray(v) && v[2] && !getAria(v[2], 'disabled') && getAria(v[2], 'selected')) {
+            return (selected = v[2]), 0;
+        }
+    });
+    if (!isSet(selected) && (strict || !isInput(self))) {
+        // Select the first option
+        forEachMap(_options, (v, k) => {
+            return (selected = v[2]), 0;
+        });
+    }
+    return selected;
+}
 
 function goToOptionFirst(picker, k) {
     let {_options} = picker, option;
@@ -189,77 +270,6 @@ function goToOptionLast(picker, k) {
 function isInput(self) {
     return 'input' === getName(self);
 }
-
-function scrollTo(node) {
-    node.scrollIntoView({block: 'nearest'});
-}
-
-const filter = debounce(($, input, _options, selectOnly) => {
-    let query = isString(input) ? input : getText(input) || "",
-        q = toCaseLower(query),
-        {_event, _mask, mask, self, state} = $,
-        {options, value} = _mask,
-        {strict} = state,
-        hasSize = getDatum(mask, 'size'), option, v;
-    let {count} = _options;
-    if (selectOnly) {
-        forEachMap(_options, v => {
-            let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-            if ("" !== q && q === text.slice(0, toCount(q)) && !getAria(v[2], 'disabled')) {
-                selectToOption(v[2], $);
-                if (hasSize) {
-                    scrollTo(v[2]);
-                }
-                return 0;
-            }
-            --count;
-        });
-    } else {
-        forEachMap(_options, v => {
-            let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-            if ("" === q || hasValue(q, text)) {
-                v[2].hidden = false;
-            } else {
-                v[2].hidden = true;
-                --count;
-            }
-        });
-        options.hidden = !count;
-        let a = getValue(self), b;
-        if (strict) {
-            selectToOptionsNone($);
-            // Silently select the first option without affecting the currently typed query and focus/select state
-            if (count && (option = goToOptionFirst($))) {
-                setAria(option, 'selected', true);
-                setAttribute(option._[OPTION_SELF], 'selected', "");
-                setValue(self, b = getOptionValue(option));
-            } else {
-                setValue(self, b = "");
-            }
-        } else {
-            setValue(self, b = query);
-        }
-        if (a !== b) {
-            $.fire('change', ["" === b ? null : b]);
-        }
-    }
-    $.fire('search', [_event, query]);
-    let call = state.options;
-    // Only fetch when no other option(s) are available to query
-    if (0 === count && isFunction(call)) {
-        setAria(mask, 'busy', true);
-        call = call.call($, query);
-        if (isInstance(call, Promise)) {
-            call.then(v => {
-                createOptionsFrom($, v, options);
-                letAria(mask, 'busy');
-                $.fire('load', [_event, query, v])[$.options.open ? 'enter' : 'exit']().fit();
-            });
-        } else {
-            createOptionsFrom($, call, options);
-        }
-    }
-}, FILTER_COMMIT_TIME);
 
 function onBlurMask(e) {
     let $ = this,
@@ -423,7 +433,7 @@ function onKeyDownOption(e) {
     if (KEY_DELETE_LEFT === key) {
         picker.exit(exit = true);
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
-        if (picker.multiple) {
+        if (picker.max > 1) {
             // TODO
             console.log('multiple');
         } else {
@@ -551,7 +561,7 @@ function onPointerDownOption(e) {
     picker._event = e;
     // Select it immediately, then close the option(s) list when the event occurs with a mouse
     if ('mousedown' === e.type) {
-        if (picker.multiple) {
+        if (picker.max > 1) {
             // TODO
             console.log('multiple');
         } else {
@@ -623,7 +633,7 @@ function onPointerUpOption(e) {
     // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
     // (this event) is fired. If it has a difference, then it scrolls ;)
     if (getScroll(options)[1] === optionsScrollTop) {
-        if (picker.multiple) {
+        if (picker.max > 1) {
             // TODO
             console.log('multiple');
         } else {
@@ -661,6 +671,12 @@ function onSubmitForm(e) {
         picker = getReference($);
     picker._event = e;
     return picker.fire('submit', [e, picker.value]);
+}
+
+function scrollTo(node) {
+    node.scrollIntoView({
+        block: 'nearest'
+    });
 }
 
 function selectToOption(option, picker) {
@@ -757,7 +773,8 @@ OptionPicker.from = function (self, state) {
 OptionPicker.of = getReference;
 
 OptionPicker.state = {
-    'multiple': null,
+    'max': null,
+    'min': null,
     'n': 'option-picker',
     'options': null,
     'size': null,
@@ -774,22 +791,68 @@ setObjectAttributes(OptionPicker, {
 }, 1);
 
 setObjectAttributes(OptionPicker, {
-    multiple: {
+    active: {
         get: function () {
-            let $ = this,
-                {self} = $;
-            return !isInput(self) && self.multiple;
+            return this._active;
         },
         set: function (value) {
             let $ = this,
-                {_event, mask, self} = $;
-            if (value) {
+                {_event, self} = $,
+                v = !!value;
+            $._active = v;
+            self.disabled = !v;
+            return $.fire((v ? 's' : 'l') + 'et.active', [_event, v]).detach().attach();
+        }
+    },
+    fix: {
+        get: function () {
+            return this._fix;
+        },
+        set: function (value) {
+            let $ = this,
+                {_event, self} = $,
+                v = !!value;
+            $._fix = v;
+            self.readOnly = !v;
+            return $.fire((v ? 's' : 'l') + 'et.fix', [_event, v]).detach().attach();
+        }
+    },
+    max: {
+        get: function () {
+            let $ = this,
+                {self, state} = $;
+            return !isInput(self) && self.multiple ? state.max : 1;
+        },
+        set: function (value) {
+            let $ = this,
+                {_event, mask, self, state} = $, v;
+            if (v = isInteger(value) && value > 1) {
                 setAria(mask, 'multiselectable', self.multiple = true);
+                state.max = value;
             } else {
                 letAria(mask, 'multiselectable');
                 self.multiple = false;
+                state.max = value = 1;
             }
-            return $.fire((value ? 's' : 'l') + 'et.multiple', [_event, !!value]);
+            return $.fire((v ? 's' : 'l') + 'et.max', [_event, value]);
+        }
+    },
+    min: {
+        get: function () {
+            let $ = this,
+                {state} = $,
+                {min} = state;
+            return !isInteger(min) || min < 0 ? 0 : min;
+        },
+        set: function (value) {
+            let $ = this,
+                {_event, mask, self, state} = $, v;
+            if (v = isInteger(value) && value > 0) {
+                state.min = value;
+            } else {
+                state.min = value = 0;
+            }
+            return $.fire((v ? 's' : 'l') + 'et.min', [_event, value]);
         }
     },
     options: {
@@ -833,7 +896,7 @@ setObjectAttributes(OptionPicker, {
             let $ = this,
                 {_event, _mask, mask, state} = $,
                 {options} = _mask,
-                size = !isInteger(value) ? 1 : (value < 1 ? 1 : value);
+                size = !isInteger(value) || value < 1 ? 1 : value;
             state.size = size;
             if (1 === size) {
                 letDatum(mask, 'size');
@@ -867,7 +930,7 @@ setObjectAttributes(OptionPicker, {
             if (text) {
                 setText(input, v = fromValue(value));
                 v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
-                return $.fire((v ? 's' : 'l') + 'et.text', [_event, value]);
+                return $.fire((v ? 's' : 'l') + 'et.text', [_event, v]);
             }
             return $;
         }
@@ -887,7 +950,7 @@ setObjectAttributes(OptionPicker, {
             if (v = getValueInMap(toValue(value), _options._o)) {
                 selectToOption(v[2], $);
             }
-            return $.fire((v ? 's' : 'l') + 'et.value', [_event, value]);
+            return $.fire((v ? 's' : 'l') + 'et.value', [_event, fromValue(value)]);
         }
     },
     // TODO: `<select multiple>`
@@ -904,28 +967,34 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         let $ = this;
         self = self || $.self;
         state = state || $.state;
-        $._active = !isDisabled(self) && !isReadOnly(self);
         $._event = null;
         $._options = new OptionPickerOptions($);
         $._value = getValue(self) || null;
         $.self = self;
         $.state = state;
-        let isInputSelf = isInput(self),
-            isMultipleSelect = state.multiple ?? (!isInputSelf && self.multiple),
-            {n} = state;
+        let {max, n} = state,
+            isDisabledSelf = isDisabled(self),
+            isInputSelf = isInput(self),
+            isMultipleSelect = max && max > 1 || (!isInputSelf && self.multiple),
+            isReadOnlySelf = isReadOnly(self);
+        $._active = !isDisabledSelf && !isReadOnlySelf;
+        $._fix = isInputSelf && isReadOnlySelf;
         const arrow = setElement('span', {
-            'class': n + '__arrow'
+            'class': n + '__arrow',
+            'role': 'none'
         });
         const form = getParentForm(self);
         const mask = setElement('div', {
             'aria': {
+                'disabled': isDisabled(self) ? 'true' : false,
                 'expanded': 'false',
                 'haspopup': 'listbox',
-                'multiselectable': isMultipleSelect ? 'true' : false
+                'multiselectable': isMultipleSelect ? 'true' : false,
+                'readonly': isInputSelf && isReadOnlySelf ? 'true' : false
             },
             'class': n,
             'role': 'combobox',
-            'tabindex': isDisabled(self) || isInputSelf ? false : 0
+            'tabindex': isDisabledSelf || isInputSelf ? false : 0
         });
         $.mask = mask;
         const maskOptions = setElement('div', {
@@ -942,18 +1011,20 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         const textInput = setElement('span', {
             'aria': {
                 'autocomplete': 'list',
-                'disabled': isDisabled(self) ? 'true' : false,
+                'disabled': isDisabledSelf ? 'true' : false,
                 'multiline': 'false',
                 'placeholder': isInputSelf ? self.placeholder : false,
-                'readonly': isReadOnly(self) ? 'true' : false,
+                'readonly': isReadOnlySelf ? 'true' : false,
             },
             'autocapitalize': 'off',
-            'contenteditable': isDisabled(self) || isReadOnly(self) || !isInputSelf ? false : "",
+            'contenteditable': isDisabledSelf || isReadOnlySelf || !isInputSelf ? false : "",
             'role': 'searchbox',
             'spellcheck': !isInputSelf ? false : 'false',
-            'tabindex': isReadOnly(self) && isInputSelf ? 0 : false
+            'tabindex': isReadOnlySelf && isInputSelf ? 0 : false
         });
-        const textInputHint = setElement('span', isInputSelf ? self.placeholder + "" : "");
+        const textInputHint = setElement('span', isInputSelf ? self.placeholder + "" : "", {
+            'role': 'none'
+        });
         setChildLast(mask, maskValues);
         setChildLast(mask, maskOptions);
         setChildLast(maskValues, text);
@@ -1048,7 +1119,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setID(self);
         setID(textInput);
         setID(textInputHint);
-        $.multiple = isMultipleSelect;
+        $.max = isMultipleSelect ? Infinity : 1;
+        $.min = isInputSelf ? 0 : 1;
         $.size = state.size ?? (isInputSelf ? 1 : self.size);
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
@@ -1367,9 +1439,9 @@ setObjectMethods(OptionPickerOptions, {
             optionGroup = optionGroupReal = false;
         }
         let {disabled, selected, value: v} = value[1];
-        if (isDisabled(self)) {
-            disabled = true;
-        }
+        // if (isDisabled(self)) {
+        //     disabled = true;
+        // }
         v = fromValue(v || key);
         option = value[2] || setElement('span', fromValue(value[0]), {
             'aria': {

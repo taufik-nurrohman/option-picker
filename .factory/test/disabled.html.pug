@@ -12,17 +12,11 @@ block script
     | sources.forEach(source => new OptionPicker(source));
     |
     | function disableAll() {
-    |     sources.forEach(source => {
-    |         source.disabled = true;
-    |         OptionPicker.of(source).detach().attach(); // Refresh!
-    |     });
+    |     sources.forEach(source => OptionPicker.of(source).active = false);
     | }
     |
     | function enableAll() {
-    |     sources.forEach(source => {
-    |         source.disabled = false;
-    |         OptionPicker.of(source).detach().attach(); // Refresh!
-    |     });
+    |     sources.forEach(source => OptionPicker.of(source).active = true);
     | }
 
 block style

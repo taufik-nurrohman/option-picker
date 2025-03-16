@@ -1468,6 +1468,8 @@ block content
       | const picker = new OptionPicker(self, strict = false);
     pre: code
       | const picker = new OptionPicker(self, state = {
+      |     max: null,
+      |     min: null,
       |     options: null,
       |     size: null,
       |     strict: false,
@@ -1482,7 +1484,9 @@ block content
     p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
     h3: code state
     p The configuration data.
-    h3: code state.multiple
+    h3: code state.max
+    p #[em TODO].
+    h3: code state.min
     p #[em TODO].
     h3: code state.options
     p A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.
@@ -1659,6 +1663,10 @@ block content
      a(href='#properties') #
      = ' Properties'
     h3 Instance Properties
+    h4: code picker.active
+    P #[em TODO].
+    h4: code picker.fix
+    P #[em TODO].
     p Instance properties are properties available through the results of an #[code OptionPicker] construct.
     h4: code picker.hooks
     p Returns the events data.
@@ -1668,8 +1676,10 @@ block content
     p Returns the option picker’s mask.
     pre: code
       | picker.mask.classList.add(picker.state.n + '--dark');
-    h4: code picker.multiple
-    p Allows multiple selection of options.
+    h4: code picker.max
+    P #[em TODO].
+    h4: code picker.min
+    P #[em TODO].
     h4: code picker.options
     p Gets the current options list data, or sets (overwrites) the current options list with new data.
     pre: code

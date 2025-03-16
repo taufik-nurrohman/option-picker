@@ -136,11 +136,9 @@ $name: 'option-picker';
     &:disabled {
       + .#{$name} {
         color: rgba(128, 128, 128);
-      }
-      + .#{$name} {
-        &,
-        & * {
-          cursor: not-allowed;
+        cursor: not-allowed;
+        * {
+          pointer-events: none;
         }
       }
     }

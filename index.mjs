@@ -7,7 +7,7 @@ import {getOffset, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
 import {getRect} from '@taufik-nurrohman/rect';
 import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
-import {isArray, isFloat, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';
+import {isArray, isBoolean, isFloat, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
 import {toCaseLower, toCount, toValue} from '@taufik-nurrohman/to';
 
@@ -37,7 +37,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         {options, value} = _mask,
         {strict} = state,
         hasSize = getDatum(mask, 'size'), option, v;
-    let {count} = _options;
+    let count = _options.count();
     if (selectOnly) {
         forEachMap(_options, v => {
             let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
@@ -805,7 +805,7 @@ function OptionPicker(self, state) {
         return new OptionPicker(self, state);
     }
     setReference(self, hook($, OptionPicker._));
-    return $.attach(self, fromStates({}, OptionPicker.state, false === state || true === state ? {
+    return $.attach(self, fromStates({}, OptionPicker.state, isBoolean(state) ? {
         strict: state
     } : (state || {})));
 }
@@ -816,10 +816,9 @@ function OptionPickerOptions(of, options) {
     if (!isInstance($, OptionPickerOptions)) {
         return new OptionPickerOptions(of, options);
     }
-    $._o = new Map;
-    $.count = 0;
     $.of = of;
-    if (options && toCount(options)) {
+    $.values = new Map;
+    if (options) {
         createOptionsFrom(of, options, of._mask.options);
     }
     return $;
@@ -1006,7 +1005,7 @@ setObjectAttributes(OptionPicker, {
             if (!_active) {
                 return $;
             }
-            if (v = getValueInMap(toValue(value), _options._o)) {
+            if (v = getValueInMap(toValue(value), _options.values)) {
                 selectToOption(v[2], $);
             }
             return $.fire((v ? 's' : 'l') + 'et.value', [_event, fromValue(value)]);
@@ -1279,7 +1278,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         if (focus) {
             if (isInput(self)) {
                 focusTo(input), selectTo(input, mode);
-            } else if (option = getValueInMap(toValue(getValue(self)), _options._o)) {
+            } else if (option = getValueInMap(toValue(getValue(self)), _options.values)) {
                 focusTo(option[2]), delay(() => scrollTo(option[2]), 1)();
             }
         }
@@ -1373,21 +1372,24 @@ setObjectAttributes(OptionPickerOptions, {
 });
 
 setObjectMethods(OptionPickerOptions, {
+    count: function () {
+        return this.values.size;
+    },
     delete: function (key, _fireValue = 1, _fireHook = 1) {
         let $ = this,
-            {_o, of} = $,
+            {of, values: map} = $,
             {_active, _event, _mask, self} = of,
             {options} = _mask, r;
         if (!_active) {
             return false;
         }
         if (!isSet(key)) {
-            forEachMap(_o, (v, k) => $.let(k, 0));
+            forEachMap(map, (v, k) => $.let(k, 0));
             selectToOptionsNone(of, _fireValue);
             options.hidden = true;
-            return _fireHook && of.fire('let.options', [_event, []]) && 0 === $.count;
+            return _fireHook && of.fire('let.options', [_event, []]) && 0 === $.count();
         }
-        if (!(r = getValueInMap(key = toValue(key), _o))) {
+        if (!(r = getValueInMap(key = toValue(key), map))) {
             return (_fireHook && of.fire('not.option', [_event, key])), false;
         }
         let parent = getParent(r[2]),
@@ -1401,9 +1403,7 @@ setObjectMethods(OptionPickerOptions, {
         offEvent('touchend', r[2], onPointerUpOption);
         offEvent('touchstart', r[2], onPointerDownOption);
         letElement(r[2]), letElement(r[3]);
-        if (r = letValueInMap(key, _o)) {
-            --$.count;
-        }
+        r = letValueInMap(key, map);
         // Remove empty group(s)
         parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
         parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
@@ -1418,24 +1418,27 @@ setObjectMethods(OptionPickerOptions, {
         }
         return (_fireHook && of.fire('let.option', [_event, key])), r;
     },
-    get: function (key) {
+    get: function (key, raw) {
         let $ = this,
-            {_o, of} = $,
-            value = getValueInMap(toValue(key), _o), parent;
+            {of, values: map} = $,
+            value = getValueInMap(toValue(key), map), parent;
+        if (raw) {
+            return value;
+        }
         if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
             return [getElementIndex(value[2]), getElementIndex(parent)];
         }
         return value ? getElementIndex(value[2]) : -1;
     },
     has: function (key) {
-        return hasKeyInMap(toValue(key), this._o);
+        return hasKeyInMap(toValue(key), this.values);
     },
     let: function (key, _fireHook = 1) {
         return this.delete(key, 1, _fireHook);
     },
     set: function (key, value, _fireHook = 1) {
         let $ = this,
-            {_o, of} = $,
+            {of, values: map} = $,
             {_active, _event} = of;
         if (!_active) {
             return false;
@@ -1551,15 +1554,14 @@ setObjectMethods(OptionPickerOptions, {
         setReference(option, of);
         value[2] = option;
         value[3] = optionReal;
-        ++$.count;
-        setValueInMap(key, value, _o);
+        setValueInMap(key, value, map);
         return (_fireHook && of.fire('set.option', [_event, key])), true;
     }
 });
 
 // In order for an object to be iterable, it must have a `Symbol.iterator` key
 getPrototype(OptionPickerOptions)[Symbol.iterator] = function () {
-    return this._o[Symbol.iterator]();
+    return this.values[Symbol.iterator]();
 };
 
 OptionPicker.Options = OptionPickerOptions;

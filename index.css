@@ -44,6 +44,13 @@
   outline: 1px solid;
   outline-offset: -2px;
 }
+.option-picker[aria-disabled=true] {
+  color: rgb(128, 128, 128);
+  cursor: not-allowed;
+}
+.option-picker[aria-disabled=true] * {
+  pointer-events: none;
+}
 .option-picker[aria-expanded=true] {
   z-index: 9999;
 }
@@ -119,13 +126,6 @@
   left: -9999px;
   position: fixed;
   top: -9999px;
-}
-.option-picker__self:disabled + .option-picker {
-  color: rgb(128, 128, 128);
-  cursor: not-allowed;
-}
-.option-picker__self:disabled + .option-picker * {
-  pointer-events: none;
 }
 .option-picker__text {
   border-color: transparent;

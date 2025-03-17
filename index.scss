@@ -43,6 +43,13 @@ $name: 'option-picker';
       outline-offset: -2px;
     }
   }
+  &[aria-disabled='true'] {
+    color: rgba(128, 128, 128);
+    cursor: not-allowed;
+    * {
+      pointer-events: none;
+    }
+  }
   &[aria-expanded='true'] {
     z-index: 9999;
     .#{$name}__arrow {
@@ -133,15 +140,6 @@ $name: 'option-picker';
     left: -9999px;
     position: fixed;
     top: -9999px;
-    &:disabled {
-      + .#{$name} {
-        color: rgba(128, 128, 128);
-        cursor: not-allowed;
-        * {
-          pointer-events: none;
-        }
-      }
-    }
   }
   &__text {
     border-color: transparent;

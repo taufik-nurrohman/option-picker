@@ -1484,11 +1484,11 @@ block content
     p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
     h3: code state
     p The configuration data.
-    h3: code state.max
-    p #[em TODO].
-    h3: code state.min
-    p #[em TODO].
-    h3: code state.options
+    h4: code state.max
+    p Determines the maximum number of options that can be selected on the option picker that are sourced from a #[code &lt;select multiple&gt;] element. It has a default value set to #[code Infinity]. If the source element is an #[code &lt;input&gt;] element, then its default value will be #[code 1]. This means that the multiple selection feature will apply only to #[code &lt;select&gt;] element.
+    h4: code state.min
+    p Determines the minimum number of options that can be selected on the option picker. If the source element is a #[code &lt;select&gt;] element, the default value will be #[code 1]; if the source element is an #[code &lt;input&gt;] element, the default value will be #[code 0].
+    h4: code state.options
     p A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.
     p #[strong Array] is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an #[code &lt;option&gt;] element without a #[code value] attribute.
     pre: code
@@ -1582,11 +1582,11 @@ block content
       | };
       |
       | const picker = new OptionPicker(document.querySelector('select'), {options});
-    h3: code state.size
+    h4: code state.size
     p Set the value to an integer greater than #[code 1] to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a #[code &lt;select&gt;] element when given the #[code size] attribute. It has a default value of #[code null]. If #[code self] is a #[code &lt;select&gt;] element, then the application will try to use the #[code size] attribute value of that element. This does not apply if #[code self] is an #[code &lt;input&gt;] element, because #[code size] attribute on an #[code &lt;input&gt;] element has different semantics. #[sup #[a(href='https://html.spec.whatwg.org#attr-input-size' rel='nofollow' target='_blank') 1]] #[sup #[a(href='https://html.spec.whatwg.org#attr-select-size' rel='nofollow' target='_blank') 2]]
-    h3: code state.strict
+    h4: code state.strict
     p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
-    h3: code state.with
+    h4: code state.with
     p List of callable functions or objects containing an #[code attach()] method to be invoked each time the application is initialized. A very simple “plugin” system.
     h2#methods
       a(href='#methods') #
@@ -1663,11 +1663,16 @@ block content
      a(href='#properties') #
      = ' Properties'
     h3 Instance Properties
-    h4: code picker.active
-    P #[em TODO].
-    h4: code picker.fix
-    P #[em TODO].
     p Instance properties are properties available through the results of an #[code OptionPicker] construct.
+    h4: code picker.active
+    p Gets or sets the active state of the option picker. By setting the value to #[code false] or #[code true], the disabled state of the source element will also be set automatically.
+    pre: code
+      | picker.active = false; // Disable option picker
+      | picker.active = true; // Enable option picker
+    h4: code picker.fix
+    p Gets or sets the read-only state of the option picker. By setting the value to #[code false] or #[code true], the read-only state of the source element will also be set automatically. This only applies to the option picker that is sourced from an #[code &lt;input&gt;] element.
+    pre: code
+      | picker.fix = true; // Make the option picker “read-only”
     h4: code picker.hooks
     p Returns the events data.
     pre: code

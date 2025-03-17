@@ -114,6 +114,9 @@
     var isArray = function isArray(x) {
         return Array.isArray(x);
     };
+    var isBoolean = function isBoolean(x) {
+        return false === x || true === x;
+    };
     var isDefined = function isDefined(x) {
         return 'undefined' !== typeof x;
     };
@@ -949,7 +952,7 @@
         var strict = state.strict,
             hasSize = getDatum(mask, 'size'),
             option;
-        var count = _options.count;
+        var count = _options.count();
         if (selectOnly) {
             forEachMap(_options, function (v) {
                 var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
@@ -1776,7 +1779,7 @@
             return new OptionPicker(self, state);
         }
         setReference(self, hook($, OptionPicker._));
-        return $.attach(self, _fromStates({}, OptionPicker.state, false === state || true === state ? {
+        return $.attach(self, _fromStates({}, OptionPicker.state, isBoolean(state) ? {
             strict: state
         } : state || {}));
     }
@@ -1787,10 +1790,9 @@
         if (!isInstance($, OptionPickerOptions)) {
             return new OptionPickerOptions(of, options);
         }
-        $._o = new Map();
-        $.count = 0;
         $.of = of;
-        if (options && toCount(options)) {
+        $.values = new Map();
+        if (options) {
             createOptionsFrom(of, options, of._mask.options);
         }
         return $;
@@ -2003,7 +2005,7 @@
                 if (!_active) {
                     return $;
                 }
-                if (v = getValueInMap(_toValue(value), _options._o)) {
+                if (v = getValueInMap(_toValue(value), _options.values)) {
                     selectToOption(v[2], $);
                 }
                 return $.fire((v ? 's' : 'l') + 'et.value', [_event, _fromValue(value)]);
@@ -2297,7 +2299,7 @@
             if (focus) {
                 if (isInput(self)) {
                     focusTo(input), selectTo(input, mode);
-                } else if (option = getValueInMap(_toValue(getValue(self)), _options._o)) {
+                } else if (option = getValueInMap(_toValue(getValue(self)), _options.values)) {
                     focusTo(option[2]), delay(function () {
                         return scrollTo(option[2]);
                     }, 1)();
@@ -2404,6 +2406,9 @@
         }
     });
     setObjectMethods(OptionPickerOptions, {
+        count: function count() {
+            return this.values.size;
+        },
         delete: function _delete(key, _fireValue, _fireHook) {
             if (_fireValue === void 0) {
                 _fireValue = 1;
@@ -2412,8 +2417,8 @@
                 _fireHook = 1;
             }
             var $ = this,
-                _o = $._o,
                 of = $.of,
+                map = $.values,
                 _active = of._active,
                 _event = of._event,
                 _mask = of._mask,
@@ -2424,14 +2429,14 @@
                 return false;
             }
             if (!isSet(key)) {
-                forEachMap(_o, function (v, k) {
+                forEachMap(map, function (v, k) {
                     return $.let(k, 0);
                 });
                 selectToOptionsNone(of, _fireValue);
                 options.hidden = true;
-                return _fireHook && of.fire('let.options', [_event, []]) && 0 === $.count;
+                return _fireHook && of.fire('let.options', [_event, []]) && 0 === $.count();
             }
-            if (!(r = getValueInMap(key = _toValue(key), _o))) {
+            if (!(r = getValueInMap(key = _toValue(key), map))) {
                 return _fireHook && of.fire('not.option', [_event, key]), false;
             }
             var parent = getParent(r[2]),
@@ -2445,9 +2450,7 @@
             offEvent('touchend', r[2], onPointerUpOption);
             offEvent('touchstart', r[2], onPointerDownOption);
             letElement(r[2]), letElement(r[3]);
-            if (r = letValueInMap(key, _o)) {
-                --$.count;
-            }
+            r = letValueInMap(key, map);
             // Remove empty group(s)
             parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
             parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
@@ -2462,19 +2465,22 @@
             }
             return _fireHook && of.fire('let.option', [_event, key]), r;
         },
-        get: function get(key) {
-            var $ = this,
-                _o = $._o;
+        get: function get(key, raw) {
+            var $ = this;
             $.of;
-            var value = getValueInMap(_toValue(key), _o),
+            var map = $.values,
+                value = getValueInMap(_toValue(key), map),
                 parent;
+            if (raw) {
+                return value;
+            }
             if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
                 return [getElementIndex(value[2]), getElementIndex(parent)];
             }
             return value ? getElementIndex(value[2]) : -1;
         },
         has: function has(key) {
-            return hasKeyInMap(_toValue(key), this._o);
+            return hasKeyInMap(_toValue(key), this.values);
         },
         let: function _let(key, _fireHook) {
             if (_fireHook === void 0) {
@@ -2488,8 +2494,8 @@
                 _fireHook = 1;
             }
             var $ = this,
-                _o = $._o,
                 of = $.of,
+                map = $.values,
                 _active = of._active,
                 _event = of._event;
             if (!_active) {
@@ -2618,14 +2624,13 @@
             setReference(option, of);
             value[2] = option;
             value[3] = optionReal;
-            ++$.count;
-            setValueInMap(key, value, _o);
+            setValueInMap(key, value, map);
             return _fireHook && of.fire('set.option', [_event, key]), true;
         }
     });
     // In order for an object to be iterable, it must have a `Symbol.iterator` key
     getPrototype(OptionPickerOptions)[Symbol.iterator] = function () {
-        return this._o[Symbol.iterator]();
+        return this.values[Symbol.iterator]();
     };
     OptionPicker.Options = OptionPickerOptions;
     return OptionPicker;

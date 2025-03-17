@@ -89,8 +89,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
             call.then(v => {
                 createOptionsFrom($, v, options);
                 letAria(mask, 'busy');
-                console.log(goToOptionFirst($)); // TODO
-                $.fire('load', [_event, query, v])[$.options.open ? 'enter' : 'exit']().fit();
+                $.fire('load', [_event, query, v])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
             });
         } else {
             createOptionsFrom($, call, options);
@@ -352,7 +351,7 @@ function onKeyDownTextInput(e) {
         delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
     }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
-        let currentOption = getValueInMap(toValue(getValue(self)), _options._o);
+        let currentOption = getValueInMap(toValue(getValue(self)), _options.values);
         currentOption = currentOption ? currentOption[2] : 0;
         if (!currentOption || currentOption.hidden) {
             currentOption = toValueFirstFromMap(_options);
@@ -1372,6 +1371,9 @@ setObjectAttributes(OptionPickerOptions, {
 });
 
 setObjectMethods(OptionPickerOptions, {
+    at: function (key) {
+        return getValueInMap(toValue(key), this.values);
+    },
     count: function () {
         return this.values.size;
     },
@@ -1418,13 +1420,10 @@ setObjectMethods(OptionPickerOptions, {
         }
         return (_fireHook && of.fire('let.option', [_event, key])), r;
     },
-    get: function (key, raw) {
+    get: function (key) {
         let $ = this,
             {of, values: map} = $,
             value = getValueInMap(toValue(key), map), parent;
-        if (raw) {
-            return value;
-        }
         if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
             return [getElementIndex(value[2]), getElementIndex(parent)];
         }

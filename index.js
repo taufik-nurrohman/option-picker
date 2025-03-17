@@ -1005,8 +1005,7 @@
                 call.then(function (v) {
                     createOptionsFrom($, v, options);
                     letAria(mask, 'busy');
-                    console.log(goToOptionFirst($)); // TODO
-                    $.fire('load', [_event, query, v])[$.options.open ? 'enter' : 'exit']().fit();
+                    $.fire('load', [_event, query, v])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
                 });
             } else {
                 createOptionsFrom($, call, options);
@@ -1293,7 +1292,7 @@
             }, FILTER_COMMIT_TIME + 1)();
         }
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
-            var currentOption = getValueInMap(_toValue(getValue(self)), _options._o);
+            var currentOption = getValueInMap(_toValue(getValue(self)), _options.values);
             currentOption = currentOption ? currentOption[2] : 0;
             if (!currentOption || currentOption.hidden) {
                 currentOption = toValueFirstFromMap(_options);
@@ -2406,6 +2405,9 @@
         }
     });
     setObjectMethods(OptionPickerOptions, {
+        at: function at(key) {
+            return getValueInMap(_toValue(key), this.values);
+        },
         count: function count() {
             return this.values.size;
         },
@@ -2465,15 +2467,12 @@
             }
             return _fireHook && of.fire('let.option', [_event, key]), r;
         },
-        get: function get(key, raw) {
+        get: function get(key) {
             var $ = this;
             $.of;
             var map = $.values,
                 value = getValueInMap(_toValue(key), map),
                 parent;
-            if (raw) {
-                return value;
-            }
             if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
                 return [getElementIndex(value[2]), getElementIndex(parent)];
             }

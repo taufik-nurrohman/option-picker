@@ -528,6 +528,9 @@
     var hasAttribute = function hasAttribute(node, attribute) {
         return node.hasAttribute(attribute);
     };
+    var hasClass = function hasClass(node, value) {
+        return node.classList.contains(value);
+    };
     var hasID = function hasID(node) {
         return hasAttribute(node, 'id');
     };
@@ -562,6 +565,9 @@
     var letHTML = function letHTML(node) {
         var state = 'innerHTML';
         return hasState(node, state) && (node[state] = ""), node;
+    };
+    var letID = function letID(node) {
+        return letAttribute(node, 'id');
     };
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
@@ -1159,6 +1165,23 @@
         return map;
     }
 
+    function getOptionsSelected($) {
+        var _options = $._options,
+            selected = [];
+        return forEachMap(_options, function (v, k) {
+            if (isArray(v) && v[2] && !getAria(v[2], 'disabled') && getAria(v[2], 'selected')) {
+                selected.push(v[2]);
+            }
+        }), selected;
+    }
+
+    function getOptionsSelectedValue($) {
+        var selected = [];
+        return forEachArray(getOptionsSelected($), function (v, k) {
+            selected.push(getOptionValue(v));
+        }), selected;
+    }
+
     function goToOptionFirst(picker, k) {
         var _options = picker._options,
             option;
@@ -1492,10 +1515,9 @@
         var options = _mask.options;
         picker._event = e;
         // Select it immediately, then close the option(s) list when the event occurs with a mouse
-        if ('mousedown' === e.type) {
+        if ('mousedown' === e.type && !getAria($, 'disabled')) {
             if (picker.max > 1) {
-                // TODO
-                console.log('multiple');
+                toggleToOption($, picker);
             } else {
                 selectToOption($, picker) && !getDatum(mask, 'size') && picker.exit(true);
             }
@@ -1564,10 +1586,9 @@
         // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
         // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
         // (this event) is fired. If it has a difference, then it scrolls ;)
-        if (getScroll(options)[1] === optionsScrollTop) {
+        if (getScroll(options)[1] === optionsScrollTop && !getAria($, 'disabled')) {
             if (picker.max > 1) {
-                // TODO
-                console.log('multiple');
+                toggleToOption($, picker);
             } else {
                 selectToOption($, picker), picker.exit(true);
             }
@@ -1675,6 +1696,76 @@
         }
     }
 
+    function toggleToOption(option, picker) {
+        var _event = picker._event,
+            _mask = picker._mask,
+            _options = picker._options,
+            self = picker.self,
+            state = picker.state,
+            value = _mask.value,
+            max = state.max,
+            min = state.min,
+            n = state.n;
+        if (option) {
+            var a = getOptionsSelectedValue(picker),
+                b,
+                c;
+            if (getAria(option, 'selected')) {
+                if (min > 0 && (c = toCount(a)) <= min) {
+                    picker.fire('min.options', [_event, c, min]);
+                } else {
+                    letAria(option, 'selected');
+                    letAttribute(option._[OPTION_SELF], 'selected');
+                }
+            } else {
+                setAria(option, 'selected', true);
+                setAttribute(option._[OPTION_SELF], 'selected', "");
+            }
+            if (!isInput(self)) {
+                b = getOptionsSelectedValue(picker);
+                if (max !== Infinity && (c = toCount(b)) === max) {
+                    forEachMap(_options, function (v, k) {
+                        if (!getAria(v[2], 'selected')) {
+                            letAttribute(v[2], 'tabindex');
+                            setAria(v[2], 'disabled', true);
+                            setDatum(v[2], 'max', max);
+                        }
+                    });
+                    picker.fire('max.options', [_event, c, max]);
+                } else {
+                    forEachMap(_options, function (v, k) {
+                        if (getDatum(v[2], 'max')) {
+                            letAria(v[2], 'disabled');
+                            letDatum(v[2], 'max');
+                            setAttribute(v[2], 'tabindex', 0);
+                        }
+                    });
+                }
+                var selected = getOptionsSelected(picker),
+                    selectedFirst = selected.shift(),
+                    valueCurrent,
+                    valueNext;
+                if (selectedFirst) {
+                    setDatum(value, 'value', getOptionValue(selectedFirst));
+                    setHTML(value, getHTML(selectedFirst));
+                    while ((valueCurrent = getNext(value)) && hasClass(valueCurrent, n + '__value')) {
+                        letElement(valueCurrent);
+                    }
+                    forEachArray(selected, function (v, k) {
+                        valueNext = setID(letID(value.cloneNode(true)));
+                        setDatum(valueNext, 'value', getOptionValue(v));
+                        setHTML(valueNext, getHTML(v));
+                        setNext(value, valueNext);
+                    });
+                }
+            }
+            if (a.sort().join('\n') !== b.sort().join('\n')) {
+                picker.fire('change', [_event, b]);
+            }
+            return option;
+        }
+    }
+
     function OptionPicker(self, state) {
         var $ = this;
         if (!self) {
@@ -1766,7 +1857,7 @@
                     self = $.self,
                     state = $.state,
                     v;
-                if (v = isInteger(value) && value > 1) {
+                if (v = (Infinity === value || isInteger(value)) && value > 1) {
                     setAria(mask, 'multiselectable', self.multiple = true);
                     state.max = value;
                 } else {
@@ -2094,7 +2185,7 @@
             setID(self);
             setID(textInput);
             setID(textInputHint);
-            $.max = isMultipleSelect ? Infinity : 1;
+            $.max = isMultipleSelect ? max != null ? max : Infinity : 1;
             $.min = isInputSelf ? 0 : 1;
             $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             // Attach extension(s)

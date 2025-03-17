@@ -1,4 +1,4 @@
-import {D, R, W, getAria, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasClass, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
+import {D, R, W, getAria, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasClass, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
 import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toKeysFromMap, toKeyFirstFromMap, toKeyLastFromMap, toValuesFromMap, toValueFirstFromMap, toValueLastFromMap} from '@taufik-nurrohman/f';
@@ -241,20 +241,20 @@ function getOptions(self) {
     return map;
 }
 
-function getOptionsSelected(options) {
-    let {_options, self} = $, selected;
-    forEachMap(_options, (v, k) => {
+function getOptionsSelected($) {
+    let {_options} = $, selected = [];
+    return forEachMap(_options, (v, k) => {
         if (isArray(v) && v[2] && !getAria(v[2], 'disabled') && getAria(v[2], 'selected')) {
-            return (selected = v[2]), 0;
+            selected.push(v[2]);
         }
-    });
-    if (!isSet(selected) && (strict || !isInput(self))) {
-        // Select the first option
-        forEachMap(_options, (v, k) => {
-            return (selected = v[2]), 0;
-        });
-    }
-    return selected;
+    }), selected;
+}
+
+function getOptionsSelectedValue($) {
+    let selected = [];
+    return forEachArray(getOptionsSelected($), (v, k) => {
+        selected.push(getOptionValue(v));
+    }), selected;
 }
 
 function goToOptionFirst(picker, k) {
@@ -561,10 +561,9 @@ function onPointerDownOption(e) {
         {options} = _mask;
     picker._event = e;
     // Select it immediately, then close the option(s) list when the event occurs with a mouse
-    if ('mousedown' === e.type) {
+    if ('mousedown' === e.type && !getAria($, 'disabled')) {
         if (picker.max > 1) {
-            // TODO
-            console.log('multiple');
+            toggleToOption($, picker);
         } else {
             selectToOption($, picker) && !getDatum(mask, 'size') && picker.exit(true);
         }
@@ -633,10 +632,9 @@ function onPointerUpOption(e) {
     // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
     // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
     // (this event) is fired. If it has a difference, then it scrolls ;)
-    if (getScroll(options)[1] === optionsScrollTop) {
+    if (getScroll(options)[1] === optionsScrollTop && !getAria($, 'disabled')) {
         if (picker.max > 1) {
-            // TODO
-            console.log('multiple');
+            toggleToOption($, picker);
         } else {
             selectToOption($, picker), picker.exit(true);
         }
@@ -737,6 +735,66 @@ function selectToOptionsNone(picker, fireValue) {
     }
 }
 
+function toggleToOption(option, picker) {
+    let {_event, _mask, _options, self, state} = picker,
+        {value} = _mask,
+        {max, min, n} = state;
+    if (option) {
+        let a = getOptionsSelectedValue(picker), b, c;
+        if (getAria(option, 'selected')) {
+            if (min > 0 && (c = toCount(a)) <= min) {
+                picker.fire('min.options', [_event, c, min]);
+            } else {
+                letAria(option, 'selected');
+                letAttribute(option._[OPTION_SELF], 'selected');
+            }
+        } else {
+            setAria(option, 'selected', true);
+            setAttribute(option._[OPTION_SELF], 'selected', "");
+        }
+        if (!isInput(self)) {
+            b = getOptionsSelectedValue(picker);
+            if (max !== Infinity && (c = toCount(b)) === max) {
+                forEachMap(_options, (v, k) => {
+                    if (!getAria(v[2], 'selected')) {
+                        letAttribute(v[2], 'tabindex');
+                        setAria(v[2], 'disabled', true);
+                        setDatum(v[2], 'max', max);
+                    }
+                });
+                picker.fire('max.options', [_event, c, max]);
+            } else {
+                forEachMap(_options, (v, k) => {
+                    if (getDatum(v[2], 'max')) {
+                        letAria(v[2], 'disabled');
+                        letDatum(v[2], 'max');
+                        setAttribute(v[2], 'tabindex', 0);
+                    }
+                });
+            }
+            let selected = getOptionsSelected(picker),
+                selectedFirst = selected.shift(), valueCurrent, valueNext;
+            if (selectedFirst) {
+                setDatum(value, 'value', getOptionValue(selectedFirst));
+                setHTML(value, getHTML(selectedFirst));
+                while ((valueCurrent = getNext(value)) && hasClass(valueCurrent, n + '__value')) {
+                    letElement(valueCurrent);
+                }
+                forEachArray(selected, (v, k) => {
+                    valueNext = setID(letID(value.cloneNode(true)));
+                    setDatum(valueNext, 'value', getOptionValue(v));
+                    setHTML(valueNext, getHTML(v));
+                    setNext(value, valueNext);
+                });
+            }
+        }
+        if (a.sort().join('\n') !== b.sort().join('\n')) {
+            picker.fire('change', [_event, b]);
+        }
+        return option;
+    }
+}
+
 function OptionPicker(self, state) {
     const $ = this;
     if (!self) {
@@ -827,7 +885,7 @@ setObjectAttributes(OptionPicker, {
         set: function (value) {
             let $ = this,
                 {_event, mask, self, state} = $, v;
-            if (v = isInteger(value) && value > 1) {
+            if (v = (Infinity === value || isInteger(value)) && value > 1) {
                 setAria(mask, 'multiselectable', self.multiple = true);
                 state.max = value;
             } else {
@@ -1120,7 +1178,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setID(self);
         setID(textInput);
         setID(textInputHint);
-        $.max = isMultipleSelect ? Infinity : 1;
+        $.max = isMultipleSelect ? (max ?? Infinity) : 1;
         $.min = isInputSelf ? 0 : 1;
         $.size = state.size ?? (isInputSelf ? 1 : self.size);
         // Attach extension(s)

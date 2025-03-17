@@ -1,0 +1,31 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Option Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('select'), {
+    |     max: 3
+    | });
+
+block style
+  style
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    form(method='get' target='_blank')
+      p
+        select(multiple name='test[]')
+          option Option 1
+          option Option 2
+          option Option 3
+          option Option 4
+          option Option 5
+      p
+        button(type='submit') Submit

@@ -26,18 +26,11 @@ block script
     |
     | [
     |     'blur',
-    |     'blur.mask',
     |     'change',
-    |     'click',
-    |     'click.mask',
-    |     'click.option',
     |     'enter',
     |     'exit',
     |     'fit',
     |     'focus',
-    |     'focus.mask',
-    |     'focus.option',
-    |     'focus.text',
     |     'has.option',
     |     'let.active',
     |     'let.fix',
@@ -63,9 +56,10 @@ block script
     |     'set.size',
     |     'set.text',
     |     'set.value',
-    |     'submit'
+    |     'submit',
+    |     'touch',
     | ].forEach(v => picker.on(v, (function () {
-    |     return function (e, ...lot) {
+    |     return function (...lot) {
     |         let note = document.createElement('span'),
     |             s = (new Date).getSeconds();
     |         note.style.color = stringToColor(v);
@@ -74,7 +68,7 @@ block script
     |             log.prepend(document.createElement('hr'));
     |             now = s;
     |         }
-    |         note.textContent = '↑↑↑ [' + v + ']: ' + JSON.stringify(lot) + ' ' + (e ? '@' + e.type : "");
+    |         note.textContent = '↑↑↑ [' + v + ']: ' + JSON.stringify(lot);
     |         log.prepend(note);
     |     }
     | })(v)));

@@ -13,8 +13,8 @@ block script
     | color.style.backgroundColor = picker.value || '#000';
     | color.style.width = '1.25em';
     |
-    | picker.on('change', function () {
-    |     color.style.backgroundColor = this.value;
+    | picker.on('change', function (value) {
+    |     color.style.backgroundColor = value;
     |     this._mask.text.parentNode.prepend(color);
     | });
     |

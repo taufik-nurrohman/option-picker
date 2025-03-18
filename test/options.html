@@ -31,8 +31,8 @@
               value: 3
           }]]
       });
-      picker.on('change', function () {
-          console.log(this.value);
+      picker.on('change', function (value) {
+          console.log(value);
       });
 
       function createOptions_1(picker) {

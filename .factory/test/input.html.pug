@@ -9,8 +9,8 @@ block script
   script
     | document.querySelectorAll('input').forEach(input => {
     |     let picker = new OptionPicker(input);
-    |     picker.on('change', (e, v) => console.log(['change', v]));
-    |     picker.on('search', (e, v) => console.log(['search', v]));
+    |     picker.on('change', v => console.log(['change', v]));
+    |     picker.on('search', v => console.log(['search', v]));
     | });
 
 block style

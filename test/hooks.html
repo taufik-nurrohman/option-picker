@@ -60,8 +60,8 @@
           return r;
       }
       let now;
-      ['blur', 'blur.mask', 'change', 'click', 'click.mask', 'click.option', 'enter', 'exit', 'fit', 'focus', 'focus.mask', 'focus.option', 'focus.text', 'has.option', 'let.active', 'let.fix', 'let.max', 'let.min', 'let.option', 'let.options', 'let.size', 'let.text', 'let.value', 'load', 'max.options', 'min.options', 'not.option', 'reset', 'search', 'set.active', 'set.fix', 'set.max', 'set.min', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'].forEach(v => picker.on(v, (function () {
-          return function (e, ...lot) {
+      ['blur', 'change', 'enter', 'exit', 'fit', 'focus', 'has.option', 'let.active', 'let.fix', 'let.max', 'let.min', 'let.option', 'let.options', 'let.size', 'let.text', 'let.value', 'load', 'max.options', 'min.options', 'not.option', 'reset', 'search', 'set.active', 'set.fix', 'set.max', 'set.min', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit', 'touch', ].forEach(v => picker.on(v, (function () {
+          return function (...lot) {
               let note = document.createElement('span'),
                   s = (new Date).getSeconds();
               note.style.color = stringToColor(v);
@@ -70,7 +70,7 @@
                   log.prepend(document.createElement('hr'));
                   now = s;
               }
-              note.textContent = '↑↑↑ [' + v + ']: ' + JSON.stringify(lot) + ' ' + (e ? '@' + e.type : "");
+              note.textContent = '↑↑↑ [' + v + ']: ' + JSON.stringify(lot);
               log.prepend(note);
           }
       })(v)));

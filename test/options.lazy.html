@@ -59,17 +59,17 @@
               });
           }
       });
-      pickerInput.on('change', function () {
-          console.log('change: ' + JSON.stringify(this.value));
+      pickerInput.on('change', function (value) {
+          console.log('change: ' + JSON.stringify(value));
       });
       pickerInput.on('load', function () {
           console.log('load: true');
       });
-      pickerInput.on('search', function (e, query) {
+      pickerInput.on('search', function (query) {
           console.log('search: ' + JSON.stringify(query));
       });
-      pickerSelect.on('change', function () {
-          console.log('change: ' + JSON.stringify(this.value));
+      pickerSelect.on('change', function (value) {
+          console.log('change: ' + JSON.stringify(value));
       });
       pickerSelect.on('load', function () {
           console.log('load: true');

@@ -60,9 +60,7 @@
           return r;
       }
       let now;
-      ['blur', 'blur.self', 'change', 'enter', 'exit', 'fit', 'focus', 'focus.option', 'focus.self', 'focus.text', 'has.option', 'let.active', 'let.fix', 'let.max', 'let.min', 'let.option', 'let.options', 'let.size', 'let.text', 'let.value', 'load', 'max.options', 'min.options', 'not.option', 'reset', 'search', 'set.active', 'set.fix', 'set.max', 'set.min', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'
-          // 'click',
-      ].forEach(v => picker.on(v, (function () {
+      ['blur', 'blur.mask', 'change', 'click', 'click.mask', 'click.option', 'enter', 'exit', 'fit', 'focus', 'focus.mask', 'focus.option', 'focus.text', 'has.option', 'let.active', 'let.fix', 'let.max', 'let.min', 'let.option', 'let.options', 'let.size', 'let.text', 'let.value', 'load', 'max.options', 'min.options', 'not.option', 'reset', 'search', 'set.active', 'set.fix', 'set.max', 'set.min', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit'].forEach(v => picker.on(v, (function () {
           return function (e, ...lot) {
               let note = document.createElement('span'),
                   s = (new Date).getSeconds();

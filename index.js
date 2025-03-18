@@ -847,14 +847,6 @@
         }
         return [x, y, w, h, X, Y];
     };
-    var getScroll = function getScroll(node) {
-        return [node.scrollLeft, node.scrollTop];
-    };
-    var setScroll = function setScroll(node, data) {
-        node.scrollLeft = data[0];
-        node.scrollTop = data[1];
-        return node;
-    };
 
     function hook($, $$) {
         $$ = $$ || $;
@@ -1126,6 +1118,12 @@
         return getDatum(option, 'value', parseValue);
     }
 
+    function getOptionsValues(options, parseValue) {
+        return options.map(function (v) {
+            return getOptionValue(v, parseValue);
+        });
+    }
+
     function getOptions(self) {
         var map = new Map();
         var item,
@@ -1177,13 +1175,6 @@
         }), selected;
     }
 
-    function getOptionsSelectedValue($) {
-        var selected = [];
-        return forEachArray(getOptionsSelected($), function (v, k) {
-            selected.push(getOptionValue(v));
-        }), selected;
-    }
-
     function goToOptionFirst(picker, k) {
         var _options = picker._options,
             option;
@@ -1201,7 +1192,7 @@
     function onBlurMask(e) {
         var $ = this,
             picker = getReference($);
-        picker.fire('blur', [e]).fire('blur.self', [e])._event = e;
+        picker.fire('blur', [e]).fire('blur.mask', [e])._event = e;
     }
 
     function onBlurOption(e) {
@@ -1244,7 +1235,7 @@
     function onFocusMask(e) {
         var $ = this,
             picker = getReference($);
-        picker.fire('focus', [e]).fire('focus.self', [e])._event = e;
+        picker.fire('focus', [e]).fire('focus.mask', [e])._event = e;
     }
 
     function onFocusOption(e) {
@@ -1482,60 +1473,40 @@
         insertAtSelection($, e.clipboardData.getData('text/plain'));
         picker.fire('paste', [e])._event = e;
     }
+    // The default state is `0`. When the pointer is pressed on the option mask, its value will become `1`. This check is
+    // done to distinguish between a “touch only” and a “touch move” on touch device(s), but it is also checked on pointer
+    // device(s) and should not give a wrong result.
+    var currentPointerState = 0;
 
     function onPointerDownMask(e) {
-        // This will prevent us from being able to focus natively on the mask because current `e.type` is `mousedown` or
-        // `touchstart`, so we will have to fire the `focus` and `focus.self` hook(s) manually as if it were actually going
-        // to focus natively.
-        offEventDefault(e);
         var $ = this,
             picker = getReference($),
             _options = picker._options,
             self = picker.self,
-            target = e.target;
+            target = e.target,
+            v;
         picker._event = e;
         if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
             return;
         }
         if ('listbox' === getRole(target) || getParent(target, '[role=listbox]')) {
-            // The user is likely browsing the available option(s) by dragging the scroll bar
+            // The user is likely browsing through the available option(s) by dragging the scroll bar
             return;
         }
         forEachMap(_options, function (v) {
             return v[2].hidden = false;
         });
-        picker.fire('focus', [e]).fire('focus.self', [e])[getAria($, 'expanded') ? 'exit' : 'enter'](true).fit();
+        picker.fire('click', [e, v = picker.value]).fire('click.mask', [e, v]).enter(true).fit();
     }
-    var optionsScrollTop = 0;
 
     function onPointerDownOption(e) {
         var $ = this,
-            picker = getReference($),
-            _mask = picker._mask,
-            mask = picker.mask;
-        picker.state;
-        var options = _mask.options;
+            picker = getReference($);
         picker._event = e;
-        // Select it immediately, then close the option(s) list when the event occurs with a mouse
-        if ('mousedown' === e.type && !getAria($, 'disabled')) {
-            if (picker.max > 1) {
-                toggleToOption($, picker);
-            } else {
-                selectToOption($, picker) && !getDatum(mask, 'size') && picker.exit(true);
-            }
-            // Must be a `touchstart` event, just focus on the option. To touch an option does not always mean to select it, the
-            // user may be about to scroll the option(s) list
-        } else {
-            focusTo($), optionsScrollTop = getScroll(options)[1];
-        }
-        offEventDefault(e);
+        currentPointerState = 1; // Pointer is “down”
     }
-    var touchTop = false;
 
     function onPointerDownRoot(e) {
-        if ('touchstart' === e.type) {
-            touchTop = e.touches[0].clientY;
-        }
         var $ = this,
             picker = getReference($);
         if (!picker) {
@@ -1552,28 +1523,19 @@
             } else {
                 letReference($), picker.exit();
             }
+        } else {
+            console.log('toggle: ' + JSON.stringify(getAria(mask, 'expanded')));
+            // TODO: Toggle
         }
     }
 
     function onPointerMoveRoot(e) {
-        if (false === touchTop) {
-            return;
-        }
         var $ = this,
             picker = getReference($);
-        picker._event = e;
-        if ('touchmove' === e.type && picker) {
-            var _mask = picker._mask,
-                options = _mask.options,
-                touchTopCurrent = e.touches[0].clientY;
-            // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
-            // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than
-            // doing nothing :\
-            if (options) {
-                var scroll = getScroll(options);
-                scroll[1] -= touchTopCurrent - touchTop;
-                setScroll(options, scroll);
-                touchTop = touchTopCurrent;
+        if (picker) {
+            picker._event = e;
+            if (1 === currentPointerState) {
+                ++currentPointerState;
             }
         }
     }
@@ -1581,24 +1543,25 @@
     function onPointerUpOption(e) {
         var $ = this,
             picker = getReference($),
-            _mask = picker._mask,
-            options = _mask.options;
+            _mask = picker._mask;
+        _mask.options;
+        var v;
         picker._event = e;
-        // Select it, then close the option(s) list if the `touchstart` (that was done before this `touchend` event) event
-        // is not intended to perform a scroll action. This is done by comparing the scroll offset of the option(s) list at
-        // the first time `touchstart` event is fired with the scroll offset of the option(s) list when `touchend` event
-        // (this event) is fired. If it has a difference, then it scrolls ;)
-        if (getScroll(options)[1] === optionsScrollTop && !getAria($, 'disabled')) {
+        // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
+        if (currentPointerState > 1);
+        else {
             if (picker.max > 1) {
                 toggleToOption($, picker);
             } else {
                 selectToOption($, picker), picker.exit(true);
             }
+            picker.fire('click', [e, v = getOptionValue($)]).fire('click.option', [e, v]);
         }
+        currentPointerState = 0; // Reset current pointer state
     }
 
     function onPointerUpRoot() {
-        touchTop = false;
+        currentPointerState = 0; // Reset current pointer state
     }
 
     function onResetForm(e) {
@@ -1707,9 +1670,10 @@
             value = _mask.value,
             max = state.max,
             min = state.min,
-            n = state.n;
+            n = state.n,
+            selected;
         if (option) {
-            var a = getOptionsSelectedValue(picker),
+            var a = getOptionsValues(selected = getOptionsSelected(picker)),
                 b,
                 c;
             if (getAria(option, 'selected')) {
@@ -1724,7 +1688,7 @@
                 setAttribute(option._[OPTION_SELF], 'selected', "");
             }
             if (!isInput(self)) {
-                b = getOptionsSelectedValue(picker);
+                b = getOptionsValues(getOptionsSelected(picker));
                 if (max !== Infinity && (c = toCount(b)) === max) {
                     forEachMap(_options, function (v, k) {
                         if (!getAria(v[2], 'selected')) {
@@ -1743,8 +1707,7 @@
                         }
                     });
                 }
-                var selected = getOptionsSelected(picker),
-                    selectedFirst = selected.shift(),
+                var selectedFirst = selected.shift(),
                     valueCurrent,
                     valueNext;
                 if (selectedFirst) {
@@ -2293,7 +2256,6 @@
                 theRootReference.exit(); // Exit other(s)
             }
             setReference(R, $); // Link current picker to the root target
-            setReference(W, $);
             $.fire('enter', [_event]);
             if (focus) {
                 if (isInput(self)) {
@@ -2373,7 +2335,7 @@
             } else {
                 focusTo(mask);
             }
-            return $.fire('focus', [_event]).fire('focus.self', [_event]);
+            return $.fire('focus', [_event]).fire('focus.mask', [_event]);
         },
         reset: function reset(focus, mode) {
             var $ = this,
@@ -2449,6 +2411,7 @@
             offEvent('focus', r[2], onFocusOption);
             offEvent('keydown', r[2], onKeyDownOption);
             offEvent('mousedown', r[2], onPointerDownOption);
+            offEvent('mouseup', r[2], onPointerUpOption);
             offEvent('touchend', r[2], onPointerUpOption);
             offEvent('touchstart', r[2], onPointerDownOption);
             letElement(r[2]), letElement(r[3]);
@@ -2615,6 +2578,7 @@
                 onEvent('focus', option, onFocusOption);
                 onEvent('keydown', option, onKeyDownOption);
                 onEvent('mousedown', option, onPointerDownOption);
+                onEvent('mouseup', option, onPointerUpOption);
                 onEvent('touchend', option, onPointerUpOption);
                 onEvent('touchstart', option, onPointerDownOption);
             }

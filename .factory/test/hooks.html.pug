@@ -26,14 +26,17 @@ block script
     |
     | [
     |     'blur',
-    |     'blur.self',
+    |     'blur.mask',
     |     'change',
+    |     'click',
+    |     'click.mask',
+    |     'click.option',
     |     'enter',
     |     'exit',
     |     'fit',
     |     'focus',
+    |     'focus.mask',
     |     'focus.option',
-    |     'focus.self',
     |     'focus.text',
     |     'has.option',
     |     'let.active',
@@ -61,7 +64,6 @@ block script
     |     'set.text',
     |     'set.value',
     |     'submit'
-    |     // 'click',
     | ].forEach(v => picker.on(v, (function () {
     |     return function (e, ...lot) {
     |         let note = document.createElement('span'),

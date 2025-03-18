@@ -15,6 +15,8 @@ const FILTER_COMMIT_TIME = 10;
 const SEARCH_CLEAR_TIME = 500;
 
 const KEY_ARROW_DOWN = 'ArrowDown';
+const KEY_ARROW_LEFT = 'ArrowLeft';
+const KEY_ARROW_RIGHT = 'ArrowRight';
 const KEY_ARROW_UP = 'ArrowUp';
 const KEY_BEGIN = 'Home';
 const KEY_DELETE_LEFT = 'Backspace';
@@ -268,10 +270,6 @@ function isInput(self) {
     return 'input' === getName(self);
 }
 
-function onBlurMask(e) {
-    getReference(this).fire('blur')._event = e;
-}
-
 function onBlurOption(e) {
     getReference(this).fire('blur')._event = e;
 }
@@ -303,8 +301,8 @@ function onCutTextInput(e) {
     console.log(getSelection($));
 }
 
-function onFocusMask(e) {
-    getReference(this).fire('focus')._event = e;
+function onBlurValue(e) {
+    getReference(this).fire('blur')._event = e;
 }
 
 function onFocusOption(e) {
@@ -322,6 +320,10 @@ function onFocusTextInput(e) {
         picker = getReference($);
     picker.fire('focus')._event = e;
     getText($, 0) ? selectTo($) : picker.enter().fit();
+}
+
+function onFocusValue(e) {
+    getReference(this).fire('focus')._event = e;
 }
 
 let searchQuery = "";
@@ -377,37 +379,6 @@ function onKeyDownTextInput(e) {
 let searchTerm = "",
     searchTermClear = debounce(() => (searchTerm = ""), SEARCH_CLEAR_TIME);
 
-function onKeyDownMask(e) {
-    let $ = this, exit,
-        key = e.key,
-        keyIsAlt = e.altKey,
-        keyIsCtrl = e.ctrlKey,
-        picker = getReference($),
-        {_options, self} = picker;
-    searchTermClear();
-    if (isDisabled(self) || isReadOnly(self)) {
-        return offEventDefault(e);
-    }
-    picker._event = e;
-    if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
-        searchTerm = "";
-    } else if (KEY_ESCAPE === key) {
-        searchTerm = "";
-        picker.exit(exit = true);
-    } else if (KEY_TAB === key) {
-        searchTerm = "";
-        picker.exit(exit = false);
-    } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
-        picker.enter(exit = true).fit();
-    } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
-        searchTerm += key;
-    }
-    if ("" !== searchTerm) {
-        filter(picker, searchTerm, _options, exit = true);
-    }
-    exit && offEventDefault(e);
-}
-
 function onKeyDownOption(e) {
     let $ = this, exit,
         key = e.key,
@@ -418,12 +389,17 @@ function onKeyDownOption(e) {
         {hint, input, value} = _mask;
     let nextOption, parentOption, prevOption;
     picker._event = e;
-    if (KEY_DELETE_LEFT === key) {
-        picker.exit(exit = true);
+    if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
+        exit = true;
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
         if (picker.max > 1) {
-            // TODO
-            console.log('multiple');
+            if (KEY_ESCAPE === key) {
+                picker.exit(exit = true);
+            } else if (KEY_TAB === key) {
+                picker.exit(exit = false);
+            } else {
+                toggleToOption($, picker);
+            }
         } else {
             if (KEY_ESCAPE !== key) {
                 selectToOption($, picker);
@@ -507,6 +483,49 @@ function onKeyDownOption(e) {
     exit && (offEventDefault(e), offEventPropagation(e));
 }
 
+function onKeyDownValue(e) {
+    let $ = this, exit,
+        key = e.key,
+        keyIsAlt = e.altKey,
+        keyIsCtrl = e.ctrlKey,
+        picker = getReference($),
+        {_options, self, state} = picker,
+        {n} = state,
+        valueNext, valuePrev;
+    searchTermClear();
+    if (isDisabled(self) || isReadOnly(self)) {
+        return offEventDefault(e);
+    }
+    picker._event = e;
+    if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
+        searchTerm = "";
+    } else if (KEY_ESCAPE === key) {
+        searchTerm = "";
+        picker.exit(exit = true);
+    } else if (KEY_TAB === key) {
+        searchTerm = "";
+        picker.exit(exit = false);
+    } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
+        picker.enter(exit = true).fit();
+    } else if (KEY_ARROW_LEFT === key) {
+        exit = true;
+        if ((valuePrev = getPrev($)) && hasClass(valuePrev, n + '__value')) {
+            focusTo(valuePrev);
+        }
+    } else if (KEY_ARROW_RIGHT === key) {
+        exit = true;
+        if ((valueNext = getNext($)) && hasClass(valueNext, n + '__value')) {
+            focusTo(valueNext);
+        }
+    } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
+        searchTerm += key;
+    }
+    if ("" !== searchTerm) {
+        filter(picker, searchTerm, _options, exit = true);
+    }
+    exit && offEventDefault(e);
+}
+
 function onPasteTextInput(e) {
     offEventDefault(e);
     let $ = this,
@@ -524,6 +543,10 @@ function onPasteTextInput(e) {
 let currentPointerState = 0;
 
 function onPointerDownMask(e) {
+    // This is necessary so that device(s) that support both touch and pointer control do not execute both `mousedown`
+    // and `touchstart` event(s) at the same time, causing the option picker’s option(s) to open and then close
+    // immediately. Note that this will also disable the native pane scrolling feature on touch device(s).
+    offEventDefault(e);
     let $ = this,
         picker = getReference($),
         {_options, self} = picker,
@@ -541,7 +564,8 @@ function onPointerDownMask(e) {
 }
 
 function onPointerDownOption(e) {
-    getReference(this)._event = e;
+    let $ = this;
+    focusTo($), (getReference($)._event = e);
     currentPointerState = 1; // Pointer is “down”
 }
 
@@ -561,9 +585,6 @@ function onPointerDownRoot(e) {
         } else {
             letReference($), picker.exit();
         }
-    } else {
-        console.log('toggle: ' + JSON.stringify(getAria(mask, 'expanded')));
-        // TODO: Toggle
     }
 }
 
@@ -689,9 +710,10 @@ function selectToOptionsNone(picker, fireValue) {
 function toggleToOption(option, picker) {
     let {_mask, _options, self, state} = picker,
         {value} = _mask,
-        {max, min, n} = state, selected;
+        {max, min, n} = state,
+        selected, selectedFirst, valueCurrent, valueNext;
     if (option) {
-        let a = getOptionsValues(selected = getOptionsSelected(picker)), b, c;
+        let a = getOptionsValues(getOptionsSelected(picker)), b, c;
         if (getAria(option, 'selected')) {
             if (min > 0 && (c = toCount(a)) <= min) {
                 picker.fire('min.options', [c, min]);
@@ -723,18 +745,28 @@ function toggleToOption(option, picker) {
                     }
                 });
             }
-            let selectedFirst = selected.shift(), valueCurrent, valueNext;
+            selected = getOptionsSelected(picker);
+            selectedFirst = selected.shift();
             if (selectedFirst) {
                 setDatum(value, 'value', getOptionValue(selectedFirst));
                 setHTML(value, getHTML(selectedFirst));
                 while ((valueCurrent = getNext(value)) && hasClass(valueCurrent, n + '__value')) {
-                    letElement(valueCurrent);
+                    offEvent('blur', valueCurrent, onBlurValue);
+                    offEvent('focus', valueCurrent, onFocusValue);
+                    offEvent('keydown', valueCurrent, onKeyDownValue);
+                    letReference(valueCurrent, picker), letElement(valueCurrent);
                 }
+                valueCurrent = value;
                 forEachArray(selected, (v, k) => {
                     valueNext = setID(letID(value.cloneNode(true)));
+                    valueNext.tabIndex = -1;
+                    onEvent('blur', valueNext, onBlurValue);
+                    onEvent('focus', valueNext, onFocusValue);
+                    onEvent('keydown', valueNext, onKeyDownValue);
                     setDatum(valueNext, 'value', getOptionValue(v));
                     setHTML(valueNext, getHTML(v));
-                    setNext(value, valueNext);
+                    setReference(valueNext, picker), setNext(valueCurrent, valueNext);
+                    valueCurrent = valueNext;
                 });
             }
         }
@@ -1001,8 +1033,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 'readonly': isInputSelf && isReadOnlySelf ? 'true' : false
             },
             'class': n,
-            'role': 'combobox',
-            'tabindex': isDisabledSelf || isInputSelf ? false : 0
+            'role': 'combobox'
         });
         $.mask = mask;
         const maskOptions = setElement('div', {
@@ -1014,7 +1045,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'role': 'group'
         });
         const text = setElement('span', {
-            'class': n + '__' + (isInputSelf ? 'text' : 'value')
+            'class': n + '__' + (isInputSelf ? 'text' : 'value'),
+            'tabindex': isInputSelf ? false : 0
         });
         const textInput = setElement('span', {
             'aria': {
@@ -1047,9 +1079,10 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             setChildLast(text, textInputHint);
             setReference(textInput, $);
         } else {
-            onEvent('blur', mask, onBlurMask);
-            onEvent('focus', mask, onFocusMask);
-            onEvent('keydown', mask, onKeyDownMask);
+            onEvent('blur', text, onBlurValue);
+            onEvent('focus', text, onFocusValue);
+            onEvent('keydown', text, onKeyDownValue);
+            setReference(text, $);
         }
         setClass(self, n + '__self');
         setNext(self, mask);
@@ -1159,7 +1192,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     detach: function () {
         let $ = this,
             {_mask, mask, self, state} = $,
-            {input} = _mask;
+            {input, value} = _mask;
         const form = getParentForm(self);
         $._active = false;
         $._options = new OptionPickerOptions($);
@@ -1170,13 +1203,15 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         }
         if (input) {
             offEvent('blur', input, onBlurTextInput);
-            offEvent('blur', mask, onBlurMask);
             offEvent('cut', input, onCutTextInput);
             offEvent('focus', input, onFocusTextInput);
-            offEvent('focus', mask, onFocusMask);
             offEvent('keydown', input, onKeyDownTextInput);
-            offEvent('keydown', mask, onKeyDownMask);
             offEvent('paste', input, onPasteTextInput);
+        }
+        if (value) {
+            offEvent('blur', value, onBlurValue);
+            offEvent('focus', value, onFocusValue);
+            offEvent('keydown', value, onKeyDownValue);
         }
         offEvent('focus', self, onFocusSelf);
         offEvent('mousedown', R, onPointerDownRoot);
@@ -1236,7 +1271,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     exit: function (focus, mode) {
         let $ = this,
             {_active, _mask, _options, mask, self} = $,
-            {input} = _mask;
+            {input, value} = _mask;
         if (!_active) {
             return $;
         }
@@ -1248,7 +1283,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             if (isInput(self)) {
                 focusTo(input), selectTo(input, mode);
             } else {
-                focusTo(mask);
+                focusTo(value);
             }
         }
         return $;
@@ -1283,11 +1318,11 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     focus: function (mode) {
         let $ = this,
             {_mask, mask} = $,
-            {input} = _mask;
+            {input, value} = _mask;
         if (input) {
             focusTo(input), selectTo(input, mode);
         } else {
-            focusTo(mask);
+            focusTo(value);
         }
         return $.fire('focus');
     },

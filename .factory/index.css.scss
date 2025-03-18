@@ -35,14 +35,6 @@ $name: 'option-picker';
   flex-wrap: wrap;
   position: relative;
   vertical-align: middle;
-  &:focus,
-  &:focus-within {
-    .#{$name}__value {
-      background: rgba(0, 0, 255, 0.5);
-      outline: 1px solid;
-      outline-offset: -2px;
-    }
-  }
   &[aria-disabled='true'] {
     color: rgba(128, 128, 128);
     cursor: not-allowed;
@@ -72,7 +64,18 @@ $name: 'option-picker';
     overflow: hidden;
     position: relative;
   }
+  &__value {
+    user-select: none;
+    &[aria-selected='true'] {
+      background: rgba(0, 0, 255, 0.5);
+    }
+    &:focus {
+      outline: 1px solid;
+      outline-offset: -2px;
+    }
+  }
   &__arrow {
+    user-select: none;
     &::after {
       border: {
         left: 0.25em solid transparent;
@@ -88,6 +91,7 @@ $name: 'option-picker';
   &__option {
     @extend %item;
     display: block;
+    user-select: none;
     &[hidden] {
       display: none;
     }
@@ -133,6 +137,7 @@ $name: 'option-picker';
         @extend %item;
         content: attr(data-value);
         font-weight: bold;
+        user-select: none;
       }
     }
   }

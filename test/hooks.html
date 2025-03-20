@@ -60,7 +60,7 @@
           return r;
       }
       let now;
-      ['blur', 'change', 'enter', 'exit', 'fit', 'focus', 'has.option', 'let.active', 'let.fix', 'let.max', 'let.min', 'let.option', 'let.options', 'let.size', 'let.text', 'let.value', 'load', 'max.options', 'min.options', 'not.option', 'reset', 'search', 'set.active', 'set.fix', 'set.max', 'set.min', 'set.option', 'set.options', 'set.size', 'set.text', 'set.value', 'submit', 'touch', ].forEach(v => picker.on(v, (function () {
+      ['change', 'enter', 'exit', 'fit', 'has.option', 'let.option', 'let.options', 'load', 'max.options', 'min.options', 'not.option', 'search', 'set.option', 'set.options', ].forEach(v => picker.on(v, (function () {
           return function (...lot) {
               let note = document.createElement('span'),
                   s = (new Date).getSeconds();

@@ -3,7 +3,7 @@ import {debounce, delay} from '@taufik-nurrohman/tick';
 import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
 import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toKeysFromMap, toKeyFirstFromMap, toKeyLastFromMap, toValuesFromMap, toValueFirstFromMap, toValueLastFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
-import {getOffset, getSize, setScroll} from '@taufik-nurrohman/rect';
+import {getOffset, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
 import {getRect} from '@taufik-nurrohman/rect';
 import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
@@ -91,7 +91,9 @@ const filter = debounce(($, input, _options, selectOnly) => {
             call.then(v => {
                 createOptionsFrom($, v, options);
                 letAria(mask, 'busy');
-                $.fire('load', [query, v])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
+                let values = [];
+                forEachMap($._options, v => values.push(getOptionValue(v[2])));
+                $.fire('load', [query, values])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
             });
         } else {
             createOptionsFrom($, call, options);
@@ -270,10 +272,6 @@ function isInput(self) {
     return 'input' === getName(self);
 }
 
-function onBlurOption(e) {
-    getReference(this).fire('blur')._event = e;
-}
-
 function onBlurTextInput(e) {
     let $ = this,
         picker = getReference($),
@@ -288,29 +286,30 @@ function onBlurTextInput(e) {
             selectToOptionsNone(picker, 1);
         }
     }
-    picker.fire('blur')._event = e;
 }
 
 function onCutTextInput(e) {
     let $ = this,
         picker = getReference($),
-        {_mask, self} = picker,
+        {_mask, self, strict} = picker,
         {hint} = _mask;
-    delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
-    picker.fire('cut')._event = e;
-    console.log(getSelection($));
-}
-
-function onBlurValue(e) {
-    getReference(this).fire('blur')._event = e;
+    let a = getValue(self), b;
+    delay(() => {
+        getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
+        if (strict) {} else {
+            if (a !== (b = getText($))) {
+                setValue(self, b);
+                picker.fire('change', ["" !== b ? b : null]);
+            }
+        }
+    }, 1)();
 }
 
 function onFocusOption(e) {
     selectToNone();
-    getReference(this).fire('focus')._event = e;
 }
 
-// Focus on the “visually hidden” self will move its focus to the mask. This maintains the natural flow of the tabs
+// Focus on the “visually hidden” self will move its focus to the mask, maintains the natural flow of the tab(s)!
 function onFocusSelf(e) {
     getReference(this).focus();
 }
@@ -318,12 +317,7 @@ function onFocusSelf(e) {
 function onFocusTextInput(e) {
     let $ = this,
         picker = getReference($);
-    picker.fire('focus')._event = e;
     getText($, 0) ? selectTo($) : picker.enter().fit();
-}
-
-function onFocusValue(e) {
-    getReference(this).fire('focus')._event = e;
 }
 
 let searchQuery = "";
@@ -477,8 +471,13 @@ function onKeyDownOption(e) {
         exit = true;
         focusToOptionLast(picker);
     } else {
-        isInput(self) && 1 === toCount(key) && !keyIsAlt && !keyIsCtrl && setStyle(hint, 'color', 'transparent');
-        picker.exit(!(exit = false));
+        if (keyIsCtrl && 'a' === key && !isInput(self) && picker.max > 1) {
+            exit = true;
+            console.log('select all');
+        } else if (!keyIsCtrl) {
+            isInput(self) && 1 === toCount(key) && !keyIsAlt && setStyle(hint, 'color', 'transparent');
+            picker.exit(!(exit = false));
+        }
     }
     exit && (offEventDefault(e), offEventPropagation(e));
 }
@@ -506,6 +505,7 @@ function onKeyDownValue(e) {
         searchTerm = "";
         picker.exit(exit = false);
     } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
+        console.log(getOptionValue($));
         picker.enter(exit = true).fit();
     } else if (KEY_ARROW_LEFT === key) {
         exit = true;
@@ -531,21 +531,23 @@ function onPasteTextInput(e) {
     let $ = this,
         picker = getReference($),
         {_mask, self} = picker,
-        {hint} = _mask, v;
+        {hint} = _mask;
     delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
-    insertAtSelection($, v = e.clipboardData.getData('text/plain'));
-    picker.fire('paste', [v])._event = e;
+    insertAtSelection($, e.clipboardData.getData('text/plain'));
 }
 
 // The default state is `0`. When the pointer is pressed on the option mask, its value will become `1`. This check is
-// done to distinguish between a “touch only” and a “touch move” on touch device(s), but it is also checked on pointer
+// done to distinguish between a “touch only” and a “touch move” on touch device(s). It is also checked on pointer
 // device(s) and should not give a wrong result.
-let currentPointerState = 0;
+let currentPointerState = 0,
+
+    touchTop = false,
+    touchTopCurrent = 0;
 
 function onPointerDownMask(e) {
-    // This is necessary so that device(s) that support both touch and pointer control do not execute both `mousedown`
-    // and `touchstart` event(s) at the same time, causing the option picker’s option(s) to open and then close
-    // immediately. Note that this will also disable the native pane scrolling feature on touch device(s).
+    // This is necessary for device(s) that support both pointer and touch control so that they will not execute both
+    // `mousedown` and `touchstart` event(s), causing the option picker’s option(s) to open and then close immediately.
+    // Note that this will also disable the native pane scrolling feature on touch device(s).
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
@@ -560,7 +562,7 @@ function onPointerDownMask(e) {
         return;
     }
     forEachMap(_options, v => v[2].hidden = false);
-    picker.fire('touch', [picker['value' + (picker.max > 1 ? 's' : "")]])[getReference(R) !== picker ? 'enter' : 'exit'](true).fit();
+    picker[getReference(R) !== picker ? 'enter' : 'exit'](true).fit();
 }
 
 function onPointerDownOption(e) {
@@ -574,6 +576,9 @@ function onPointerDownRoot(e) {
         picker = getReference($);
     if (!picker) {
         return;
+    }
+    if ('touchstart' === e.type) {
+        touchTop = e.touches[0].clientY;
     }
     let {mask, state} = picker,
         {n} = state,
@@ -593,8 +598,20 @@ function onPointerMoveRoot(e) {
         picker = getReference($);
     if (picker) {
         picker._event = e;
+        let {_mask} = picker,
+            {options} = _mask;
         if (1 === currentPointerState) {
             ++currentPointerState;
+        }
+        // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
+        // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than
+        // doing nothing :\
+        if ('touchmove' === e.type && false !== touchTop) {
+            touchTopCurrent = e.touches[0].clientY;
+            let scroll = getScroll(options);
+            scroll[1] -= (touchTopCurrent - touchTop);
+            setScroll(options, scroll);
+            touchTop = touchTopCurrent;
         }
     }
 }
@@ -612,13 +629,13 @@ function onPointerUpOption(e) {
         } else {
             selectToOption($, picker), picker.exit(true);
         }
-        picker.fire('select', [getOptionValue($)]);
     }
     currentPointerState = 0; // Reset current pointer state
 }
 
 function onPointerUpRoot() {
     currentPointerState = 0; // Reset current pointer state
+    touchTop = false;
 }
 
 function onResetForm(e) {
@@ -636,12 +653,6 @@ function onResizeWindow(e) {
 
 function onScrollWindow(e) {
     onResizeWindow.call(this, e);
-}
-
-function onSubmitForm(e) {
-    let $ = this,
-        picker = getReference($);
-    picker.fire('submit', [picker['value' + (picker.max > 1 ? 's' : "")]])._event = e;
 }
 
 function scrollTo(node) {
@@ -751,8 +762,6 @@ function toggleToOption(option, picker) {
                 setDatum(value, 'value', getOptionValue(selectedFirst));
                 setHTML(value, getHTML(selectedFirst));
                 while ((valueCurrent = getNext(value)) && hasClass(valueCurrent, n + '__value')) {
-                    offEvent('blur', valueCurrent, onBlurValue);
-                    offEvent('focus', valueCurrent, onFocusValue);
                     offEvent('keydown', valueCurrent, onKeyDownValue);
                     letReference(valueCurrent, picker), letElement(valueCurrent);
                 }
@@ -760,8 +769,6 @@ function toggleToOption(option, picker) {
                 forEachArray(selected, (v, k) => {
                     valueNext = setID(letID(value.cloneNode(true)));
                     valueNext.tabIndex = -1;
-                    onEvent('blur', valueNext, onBlurValue);
-                    onEvent('focus', valueNext, onFocusValue);
                     onEvent('keydown', valueNext, onKeyDownValue);
                     setDatum(valueNext, 'value', getOptionValue(v));
                     setHTML(valueNext, getHTML(v));
@@ -841,7 +848,7 @@ setObjectAttributes(OptionPicker, {
                 v = !!value;
             $._active = v;
             self.disabled = !v;
-            return $.fire((v ? 's' : 'l') + 'et.active', [v]).detach().attach();
+            return $.detach().attach();
         }
     },
     fix: {
@@ -852,9 +859,12 @@ setObjectAttributes(OptionPicker, {
             let $ = this,
                 {self} = $,
                 v = !!value;
+            if (!isInput(self)) {
+                return $; // Ignore element(s) other than `<input>`
+            }
             $._fix = v;
             self.readOnly = !v;
-            return $.fire((v ? 's' : 'l') + 'et.fix', [v]).detach().attach();
+            return $.detach().attach();
         }
     },
     max: {
@@ -865,16 +875,20 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {mask, self, state} = $, v;
-            if (v = (Infinity === value || isInteger(value)) && value > 1) {
+                {mask, self, state} = $;
+            value = (Infinity === value || isInteger(value)) && value > 1 ? value : 1;
+            if (isInput(self)) {
+                return $; // Ignore element(s) other than `<select>`
+            }
+            if (value > 1) {
                 setAria(mask, 'multiselectable', self.multiple = true);
                 state.max = value;
             } else {
                 letAria(mask, 'multiselectable');
                 self.multiple = false;
-                state.max = value = 1;
+                state.max = value;
             }
-            return $.fire((v ? 's' : 'l') + 'et.max', [value]);
+            return $;
         }
     },
     min: {
@@ -886,13 +900,9 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {mask, self, state} = $, v;
-            if (v = isInteger(value) && value > 0) {
-                state.min = value;
-            } else {
-                state.min = value = 0;
-            }
-            return $.fire((v ? 's' : 'l') + 'et.min', [value]);
+                {state} = $;
+            state.min = isInteger(value) && value > 0 ? value : 0;
+            return $;
         }
     },
     options: {
@@ -920,24 +930,29 @@ setObjectAttributes(OptionPicker, {
                 }
             }
             let values = [];
-            forEachMap(_options, (v, k) => values.push(k));
+            forEachMap(_options, v => values.push(getOptionValue(v[2])));
             return $.fire('set.options', [values]);
         }
     },
     size: {
         get: function () {
-            let size = this.state.size || 1;
-            if (!isInteger(size)) {
-                return 1;
+            let $ = this,
+                {self, state} = $, size;
+            if (isInput(self)) {
+                return null;
             }
-            return size < 1 ? 1 : size; // <https://html.spec.whatwg.org#attr-select-size>
+            size = self.size ?? (state.size || 1);
+            return !isInteger(size) || size < 1 ? 1 : size; // <https://html.spec.whatwg.org#attr-select-size>
         },
         set: function (value) {
             let $ = this,
-                {_mask, mask, state} = $,
+                {_mask, mask, self, state} = $,
                 {options} = _mask,
                 size = !isInteger(value) || value < 1 ? 1 : value;
-            state.size = size;
+            if (isInput(self)) {
+                return $; // Ignore element(s) other than `<select>`
+            }
+            self.size = state.size = size;
             if (1 === size) {
                 letDatum(mask, 'size');
                 letStyle(options, 'max-height');
@@ -953,7 +968,7 @@ setObjectAttributes(OptionPicker, {
                     setReference(R, $);
                 }
             }
-            return $.fire((1 === size ? 'l' : 's') + 'et.size', [size]);
+            return $;
         }
     },
     text: {
@@ -967,12 +982,11 @@ setObjectAttributes(OptionPicker, {
             let $ = this,
                 {_mask, self} = $,
                 {hint, input, text} = _mask, v;
-            if (text) {
-                setText(input, v = fromValue(value));
-                v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
-                return $.fire((v ? 's' : 'l') + 'et.text', [v]);
+            if (!text) {
+                return $;
             }
-            return $;
+            setText(input, v = fromValue(value));
+            return (v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color')), $;
         }
     },
     value: {
@@ -982,15 +996,14 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active, _options, mask, state} = $,
-                {n} = state, v;
+                {_active, _options, mask, self} = $, v;
             if (!_active) {
                 return $;
             }
             if (v = getValueInMap(toValue(value), _options.values)) {
                 selectToOption(v[2], $);
             }
-            return $.fire((v ? 's' : 'l') + 'et.value', [fromValue(value)]);
+            return $;
         }
     },
     // TODO: `<select multiple>`
@@ -1079,8 +1092,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             setChildLast(text, textInputHint);
             setReference(textInput, $);
         } else {
-            onEvent('blur', text, onBlurValue);
-            onEvent('focus', text, onFocusValue);
             onEvent('keydown', text, onKeyDownValue);
             setReference(text, $);
         }
@@ -1088,7 +1099,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setNext(self, mask);
         if (form) {
             onEvent('reset', form, onResetForm);
-            onEvent('submit', form, onSubmitForm);
             setID(form);
             setReference(form, $);
         }
@@ -1132,7 +1142,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                         // $.values = selected;
                     }
                     let values = [];
-                    forEachMap($._options, (v, k) => values.push(k));
+                    forEachMap($._options, v => values.push(getOptionValue(v[2])));
                     $.fire('load', [null, values])[$.options.open ? 'enter' : 'exit']().fit();
                 });
             } else {
@@ -1199,7 +1209,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         $._value = getValue(self) || null; // Update initial value to be the current value
         if (form) {
             offEvent('reset', form, onResetForm);
-            offEvent('submit', form, onSubmitForm);
         }
         if (input) {
             offEvent('blur', input, onBlurTextInput);
@@ -1209,8 +1218,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             offEvent('paste', input, onPasteTextInput);
         }
         if (value) {
-            offEvent('blur', value, onBlurValue);
-            offEvent('focus', value, onFocusValue);
             offEvent('keydown', value, onKeyDownValue);
         }
         offEvent('focus', self, onFocusSelf);
@@ -1324,7 +1331,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         } else {
             focusTo(value);
         }
-        return $.fire('focus');
+        return $;
     },
     reset: function (focus, mode) {
         let $ = this,
@@ -1335,8 +1342,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         if (picker.max > 1) {
             // TODO
         } else {
-            let value = $.value; // The previous value
-            $.fire('reset', [value]).value = _value;
+            $.value = _value;
         }
         return focus ? $.focus(mode) : $;
     }
@@ -1369,7 +1375,7 @@ setObjectMethods(OptionPickerOptions, {
     delete: function (key, _fireValue = 1, _fireHook = 1) {
         let $ = this,
             {of, values: map} = $,
-            {_active, _mask, self} = of,
+            {_active, _mask, self, state} = of,
             {options} = _mask, r;
         if (!_active) {
             return false;
@@ -1387,7 +1393,6 @@ setObjectMethods(OptionPickerOptions, {
             parentReal = getParent(r[3]),
             value = getOptionValue(r[2]),
             valueReal = of.value;
-        offEvent('blur', r[2], onBlurOption);
         offEvent('focus', r[2], onFocusOption);
         offEvent('keydown', r[2], onKeyDownOption);
         offEvent('mousedown', r[2], onPointerDownOption);
@@ -1405,8 +1410,11 @@ setObjectMethods(OptionPickerOptions, {
             options.hidden = true;
         // Reset value to the first option if removed option is the selected option
         } else {
-            // setValue(self, "");
+            setValue(self, "");
             value === valueReal && selectToOptionFirst(of);
+        }
+        if (!isFunction(state.options)) {
+            state.options = map;
         }
         return (_fireHook && of.fire('let.option', [key])), r;
     },
@@ -1531,7 +1539,6 @@ setObjectMethods(OptionPickerOptions, {
         option._ = {};
         option._[OPTION_SELF] = optionReal;
         if (!disabled && !value[2]) {
-            onEvent('blur', option, onBlurOption);
             onEvent('focus', option, onFocusOption);
             onEvent('keydown', option, onKeyDownOption);
             onEvent('mousedown', option, onPointerDownOption);
@@ -1545,6 +1552,9 @@ setObjectMethods(OptionPickerOptions, {
         value[2] = option;
         value[3] = optionReal;
         setValueInMap(key, value, map);
+        if (!isFunction(state.options)) {
+            state.options = map;
+        }
         return (_fireHook && of.fire('set.option', [key])), true;
     }
 });

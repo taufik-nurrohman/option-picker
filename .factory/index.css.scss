@@ -41,6 +41,10 @@ $name: 'option-picker';
     * {
       pointer-events: none;
     }
+    .#{$name}__option[aria-selected='true'],
+    .#{$name}__value[aria-selected='true'] {
+      background: rgba(0, 0, 255, 0.25);
+    }
   }
   &[aria-expanded='true'] {
     z-index: 9999;
@@ -68,6 +72,9 @@ $name: 'option-picker';
     user-select: none;
     &[aria-selected='true'] {
       background: rgba(0, 0, 255, 0.5);
+      &[aria-disabled='true'] {
+        background: rgba(0, 0, 255, 0.25);
+      }
     }
     &:focus {
       outline: 1px solid;
@@ -101,6 +108,9 @@ $name: 'option-picker';
     }
     &[aria-selected='true'] {
       background: rgba(0, 0, 255, 0.5);
+      &[aria-disabled='true'] {
+        background: rgba(0, 0, 255, 0.25);
+      }
     }
     &:focus,
     &:where(:not([aria-disabled='true'])):hover {
@@ -118,11 +128,25 @@ $name: 'option-picker';
     left: -1px;
     margin: 0;
     min-width: calc(100% + 2px);
-    overflow: auto;
     position: absolute;
     top: 100%;
     visibility: hidden;
     white-space: nowrap;
+    > div {
+      @extend %items;
+      border: {
+        color: inherit;
+        style: inherit;
+        width: 0;
+      }
+      display: flex;
+      flex: {
+        direction: column;
+        wrap: nowrap;
+      }
+      overflow: auto;
+      padding: 0;
+    }
     &[hidden] {
       display: none;
     }

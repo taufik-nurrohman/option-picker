@@ -30,8 +30,6 @@ const KEY_TAB = 'Tab';
 
 const OPTION_SELF = 0;
 
-const bounce = debounce($ => $.fit(), 10);
-
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
         q = toCaseLower(query),
@@ -643,12 +641,8 @@ function onResetForm(e) {
 }
 
 function onResizeWindow(e) {
-    let $ = this,
-        picker = getReference($);
-    if (!picker) {
-        return;
-    }
-    bounce(picker), (picker._event = e);
+    let picker = getReference(R);
+    picker && (picker.fit()._event = e);
 }
 
 function onScrollWindow(e) {
@@ -1053,6 +1047,9 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'class': n + '__options',
             'role': 'listbox'
         });
+        const maskOptionsBody = setElement('div', {
+            'role': 'none'
+        });
         const maskValues = setElement('div', {
             'class': n + '__values',
             'role': 'group'
@@ -1080,6 +1077,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         });
         setChildLast(mask, maskValues);
         setChildLast(mask, maskOptions);
+        setChildLast(maskOptions, maskOptionsBody);
         setChildLast(maskValues, text);
         setChildLast(maskValues, arrow);
         if (isInputSelf) {
@@ -1166,6 +1164,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setAria(textInput, 'controls', getID(maskOptions));
         setID(arrow);
         setID(mask);
+        setID(maskOptionsBody);
         setID(maskValues);
         setID(self);
         setID(textInput);
@@ -1465,9 +1464,9 @@ setObjectMethods(OptionPickerOptions, {
         // `picker.options.set('asdf', [ … ])`
         } else {}
         if (hasState(value[1], '&')) {
-            optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', options);
+            optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', getChildFirst(options));
             if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
-                setChildLast(options, optionGroup = setElement('span', {
+                setChildLast(getChildFirst(options), optionGroup = setElement('span', {
                     'class': n + 's-batch',
                     'data': {
                         'value': value[1]['&']
@@ -1546,7 +1545,7 @@ setObjectMethods(OptionPickerOptions, {
             onEvent('touchend', option, onPointerUpOption);
             onEvent('touchstart', option, onPointerDownOption);
         }
-        setChildLast(optionGroup || options, option);
+        setChildLast(optionGroup || getChildFirst(options), option);
         setChildLast(optionGroupReal || itemsParent, optionReal);
         setReference(option, of);
         value[2] = option;

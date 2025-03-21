@@ -1345,6 +1345,7 @@
             key = e.key,
             keyIsAlt = e.altKey,
             keyIsCtrl = e.ctrlKey,
+            keyIsShift = e.shiftKey,
             picker = getReference($),
             _mask = picker._mask,
             _options = picker._options,
@@ -1406,7 +1407,16 @@
             while (optionNext && (getAria(optionNext, 'disabled') || optionNext.hidden)) {
                 optionNext = getNext(optionNext);
             }
-            optionNext ? focusToOption(optionNext) : focusToOptionFirst(picker);
+            if (keyIsShift) {
+                if (optionNext) {
+                    if (!getAria(optionNext, 'selected')) {
+                        toggleToOption(optionNext, picker);
+                    }
+                    focusToOption(optionNext);
+                }
+            } else {
+                optionNext ? focusToOption(optionNext) : focusToOptionFirst(picker);
+            }
         } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
             exit = true;
             if (KEY_PAGE_UP === key && 'group' === getRole(optionParent = getParent($))) {
@@ -1438,7 +1448,16 @@
             while (optionPrev && (getAria(optionPrev, 'disabled') || optionPrev.hidden)) {
                 optionPrev = getPrev(optionPrev);
             }
-            optionPrev ? focusToOption(optionPrev) : focusToOptionLast(picker);
+            if (keyIsShift) {
+                if (optionPrev) {
+                    if (!getAria(optionPrev, 'selected')) {
+                        toggleToOption(optionPrev, picker);
+                    }
+                    focusToOption(optionPrev);
+                }
+            } else {
+                optionPrev ? focusToOption(optionPrev) : focusToOptionLast(picker);
+            }
         } else if (KEY_BEGIN === key) {
             exit = true;
             focusToOptionFirst(picker);
@@ -1451,7 +1470,6 @@
                 forEachMap(_options, function (v, k) {
                     if (!getAria(v[2], 'disabled') && !v[2].hidden) {
                         letAria(valueCurrent = v[2], 'selected');
-                        // letAttribute(v[3], 'selected');
                         v[3].selected = false;
                         toggleToOption(valueCurrent, picker); // Force select
                     }
@@ -1464,8 +1482,7 @@
                     } else {
                         searchTerm += key; // Initialize search term, right before the exit
                     }
-                }
-                picker.exit(!(exit = false));
+                }!keyIsShift && picker.exit(!(exit = false));
             }
         }
         exit && (offEventDefault(e), offEventPropagation(e));
@@ -1505,7 +1522,6 @@
                         if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
                             if (min < 1) {
                                 letAria(valueCurrent[2], 'selected');
-                                // letAttribute(valueCurrent[3], 'selected');
                                 valueCurrent[3].selected = false;
                                 letDatum(v, 'value');
                                 setHTML(v, "");
@@ -1515,7 +1531,6 @@
                     } else {
                         if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
                             letAria(valueCurrent[2], 'selected');
-                            // letAttribute(valueCurrent[3], 'selected');
                             valueCurrent[3].selected = false;
                         }
                         offEvent('keydown', v, onKeyDownValue);
@@ -1526,13 +1541,15 @@
                     ++index;
                 });
             }
+            forEachSet(values, function (v) {
+                return letAria(v, 'selected');
+            });
         } else if (KEY_DELETE_LEFT === key) {
             searchTerm = "";
             var countValues = toSetCount(values);
             if (min < countValues) {
                 if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                     letAria(valueCurrent[2], 'selected');
-                    // letAttribute(valueCurrent[3], 'selected');
                     valueCurrent[3].selected = false;
                     if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value') || (valuePrev = getNext($)) && hasDatum(valuePrev, 'value')) {
                         focusTo(_mask.value = valuePrev);
@@ -1563,7 +1580,6 @@
             if (min < _countValues) {
                 if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                     letAria(valueCurrent[2], 'selected');
-                    // letAttribute(valueCurrent[3], 'selected');
                     valueCurrent[3].selected = false;
                     if ((valueNext = getNext($)) && hasDatum(valueNext, 'value') || (valueNext = getPrev($)) && hasDatum(valueNext, 'value')) {
                         focusTo(_mask.value = valueNext);
@@ -1860,7 +1876,6 @@
             v;
         forEachMap(_options, function (v) {
             letAria(v[2], 'selected');
-            // letAttribute(v[3], 'selected');
             v[3].selected = false;
         });
         if (fireValue) {
@@ -1898,7 +1913,6 @@
                     picker.fire('min.options', [c, min]);
                 } else {
                     letAria(option, 'selected');
-                    // letAttribute(option._[OPTION_SELF], 'selected');
                     option._[OPTION_SELF].selected = false;
                 }
             } else {

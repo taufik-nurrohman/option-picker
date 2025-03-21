@@ -375,6 +375,7 @@ function onKeyDownOption(e) {
         key = e.key,
         keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
+        keyIsShift = e.shiftKey,
         picker = getReference($),
         {_mask, _options, self} = picker,
         {hint, value} = _mask;
@@ -433,7 +434,16 @@ function onKeyDownOption(e) {
         while (optionNext && (getAria(optionNext, 'disabled') || optionNext.hidden)) {
             optionNext = getNext(optionNext);
         }
-        optionNext ? focusToOption(optionNext, picker) : focusToOptionFirst(picker);
+        if (keyIsShift) {
+            if (optionNext) {
+                if (!getAria(optionNext, 'selected')) {
+                    toggleToOption(optionNext, picker);
+                }
+                focusToOption(optionNext, picker);
+            }
+        } else {
+            optionNext ? focusToOption(optionNext, picker) : focusToOptionFirst(picker);
+        }
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
         if (KEY_PAGE_UP === key && 'group' === getRole(optionParent = getParent($))) {
@@ -465,7 +475,16 @@ function onKeyDownOption(e) {
         while (optionPrev && (getAria(optionPrev, 'disabled') || optionPrev.hidden)) {
             optionPrev = getPrev(optionPrev);
         }
-        optionPrev ? focusToOption(optionPrev, picker) : focusToOptionLast(picker);
+        if (keyIsShift) {
+            if (optionPrev) {
+                if (!getAria(optionPrev, 'selected')) {
+                    toggleToOption(optionPrev, picker);
+                }
+                focusToOption(optionPrev, picker);
+            }
+        } else {
+            optionPrev ? focusToOption(optionPrev, picker) : focusToOptionLast(picker);
+        }
     } else if (KEY_BEGIN === key) {
         exit = true;
         focusToOptionFirst(picker);
@@ -478,7 +497,6 @@ function onKeyDownOption(e) {
             forEachMap(_options, (v, k) => {
                 if (!getAria(v[2], 'disabled') && !v[2].hidden) {
                     letAria(valueCurrent = v[2], 'selected');
-                    // letAttribute(v[3], 'selected');
                     v[3].selected = false;
                     toggleToOption(valueCurrent, picker); // Force select
                 }
@@ -492,7 +510,7 @@ function onKeyDownOption(e) {
                     searchTerm += key; // Initialize search term, right before the exit
                 }
             }
-            picker.exit(!(exit = false));
+            !keyIsShift && picker.exit(!(exit = false));
         }
     }
     exit && (offEventDefault(e), offEventPropagation(e));
@@ -525,7 +543,6 @@ function onKeyDownValue(e) {
                     if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
                         if (min < 1) {
                             letAria(valueCurrent[2], 'selected');
-                            // letAttribute(valueCurrent[3], 'selected');
                             valueCurrent[3].selected = false;
                             letDatum(v, 'value');
                             setHTML(v, "");
@@ -535,7 +552,6 @@ function onKeyDownValue(e) {
                 } else {
                     if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
                         letAria(valueCurrent[2], 'selected');
-                        // letAttribute(valueCurrent[3], 'selected');
                         valueCurrent[3].selected = false;
                     }
                     offEvent('keydown', v, onKeyDownValue);
@@ -546,13 +562,13 @@ function onKeyDownValue(e) {
                 ++index;
             });
         }
+        forEachSet(values, v => letAria(v, 'selected'));
     } else if (KEY_DELETE_LEFT === key) {
         searchTerm = "";
         let countValues = toSetCount(values);
         if (min < countValues) {
             if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                 letAria(valueCurrent[2], 'selected');
-                // letAttribute(valueCurrent[3], 'selected');
                 valueCurrent[3].selected = false;
                 if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value') || (valuePrev = getNext($)) && hasDatum(valuePrev, 'value')) {
                     focusTo(_mask.value = valuePrev);
@@ -583,7 +599,6 @@ function onKeyDownValue(e) {
         if (min < countValues) {
             if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                 letAria(valueCurrent[2], 'selected');
-                // letAttribute(valueCurrent[3], 'selected');
                 valueCurrent[3].selected = false;
                 if ((valueNext = getNext($)) && hasDatum(valueNext, 'value') || (valueNext = getPrev($)) && hasDatum(valueNext, 'value')) {
                     focusTo(_mask.value = valueNext);
@@ -870,7 +885,6 @@ function selectToOptionsNone(picker, fireValue) {
         {hint, input, value} = _mask, v;
     forEachMap(_options, v => {
         letAria(v[2], 'selected');
-        // letAttribute(v[3], 'selected');
         v[3].selected = false;
     });
     if (fireValue) {
@@ -898,7 +912,6 @@ function toggleToOption(option, picker) {
                 picker.fire('min.options', [c, min]);
             } else {
                 letAria(option, 'selected');
-                // letAttribute(option._[OPTION_SELF], 'selected');
                 option._[OPTION_SELF].selected = false;
             }
         } else {

@@ -108,9 +108,6 @@
             return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
         }
     }
-    var hasValue = function hasValue(x, data) {
-        return -1 !== data.indexOf(x);
-    };
     var isArray = function isArray(x) {
         return Array.isArray(x);
     };
@@ -161,6 +158,9 @@
     };
     var isString = function isString(x) {
         return 'string' === typeof x;
+    };
+    var hasValue = function hasValue(x, data) {
+        return -1 !== data.indexOf(x);
     };
     var fromJSON = function fromJSON(x) {
         var value = null;
@@ -373,6 +373,11 @@
     };
     var letValueInMap = function letValueInMap(k, map) {
         return map.delete(k);
+    };
+    var onAnimationsEnd = function onAnimationsEnd(node, task) {
+        return isFunction(node.getAnimations) ? Promise.all(node.getAnimations().map(function (v) {
+            return v.finished;
+        })).then(task) : task(), node;
     };
     var setObjectAttributes = function setObjectAttributes(of, attributes, asStaticAttributes) {
         if (!asStaticAttributes) {
@@ -1594,17 +1599,9 @@
             if (KEY_ENTER === key || "" === searchTerm && ' ' === key) {
                 if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                     focus = false;
-                    if (isFunction(options.getAnimations)) {
-                        // If animation or transition effect(s) have been added to the `$._mask.options`, wait for them to
-                        // finish animating, then focus and scroll to the first selected option(s).
-                        Promise.all(options.getAnimations().map(function (v) {
-                            return v.finished;
-                        })).then(function () {
-                            return focusTo(valueCurrent[2]);
-                        }, scrollTo(valueCurrent[2]));
-                    } else {
-                        focusTo(valueCurrent[2]), scrollTo(valueCurrent[2]);
-                    }
+                    onAnimationsEnd(options, function () {
+                        return focusTo(valueCurrent[2]);
+                    }, scrollTo(valueCurrent[2]));
                 }
             }
             picker.enter(focus).fit();
@@ -1700,6 +1697,12 @@
     function onPointerDownOption(e) {
         var $ = this;
         getReference($)._event = e;
+        // Add an “active” effect on `touchstart` to indicate which option is about to be selected. We don’t need this
+        // indication on `mousedown` because pointer device(s) already have a hover state that is clear enough to indicate
+        // which option is about to be selected.
+        if ('touchstart' === e.type && !getAria($, 'disabled')) {
+            setAria($, 'selected', true);
+        }
         currentPointerState = 1; // Pointer is “down”
     }
 
@@ -1750,14 +1753,14 @@
             }
         }
     }
-
+    // The actual option selection happens when the pointer is released, to clearly identify whether we want to select an
+    // option or just want to scroll through the option(s) list by swiping over the option on touch device(s).
     function onPointerUpOption(e) {
         var $ = this,
             picker = getReference($);
         picker._event = e;
         // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
-        if (currentPointerState > 1);
-        else {
+        if (1 === currentPointerState) {
             if (!getAria($, 'disabled')) {
                 if (picker.max > 1) {
                     toggleToOption($, picker);
@@ -1765,6 +1768,9 @@
                     selectToOption($, picker), picker.exit(true);
                 }
             }
+        } else {
+            // Remove the “active” effect that was previously added on `touchstart`
+            letAria($, 'selected');
         }
         currentPointerState = 0; // Reset current pointer state
     }
@@ -2522,29 +2528,13 @@
                 if (isInput(self)) {
                     focusTo(input), selectTo(input, mode);
                 } else if (option = getValueInMap(_toValue(getValue(self)), _options.values)) {
-                    if (isFunction(options.getAnimations)) {
-                        // If animation or transition effect(s) have been added to the `$._mask.options`, wait for them to
-                        // finish animating, then focus and scroll to the first selected option(s).
-                        Promise.all(options.getAnimations().map(function (v) {
-                            return v.finished;
-                        })).then(function () {
-                            return focusTo(option[2]);
-                        }, scrollTo(option[2]));
-                    } else {
-                        focusTo(option[2]), scrollTo(option[2]);
-                    }
+                    onAnimationsEnd(options, function () {
+                        return focusTo(option[2]);
+                    }, scrollTo(option[2]));
                 } else if (option = goToOptionFirst($)) {
-                    if (isFunction(options.getAnimations)) {
-                        // If animation or transition effect(s) have been added to the `$._mask.options`, wait for them to
-                        // finish animating, then focus and scroll to the first option.
-                        Promise.all(options.getAnimations().map(function (v) {
-                            return v.finished;
-                        })).then(function () {
-                            return focusTo(option);
-                        }, scrollTo(option));
-                    } else {
-                        focusTo(option), scrollTo(option);
-                    }
+                    onAnimationsEnd(options, function () {
+                        return focusTo(option);
+                    }, scrollTo(option));
                 }
             }
             return $;

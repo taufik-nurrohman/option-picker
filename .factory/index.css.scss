@@ -153,6 +153,7 @@ $name: 'option-picker';
         direction: column;
         wrap: nowrap;
       }
+      gap: inherit;
       overflow: auto;
       padding: 0;
     }

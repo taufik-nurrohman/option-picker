@@ -1,7 +1,7 @@
 import {R, W, getAria, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElements, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasDatum, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
-import {forEachArray, forEachMap, forEachObject, forEachSet, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toValuesFromMap, toValueFirstFromMap} from '@taufik-nurrohman/f';
+import {forEachArray, forEachMap, forEachObject, forEachSet, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, onAnimationsEnd, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toValuesFromMap, toValueFirstFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
 import {getScroll, setScroll} from '@taufik-nurrohman/rect';
 import {getRect} from '@taufik-nurrohman/rect';
@@ -619,13 +619,7 @@ function onKeyDownValue(e) {
         if (KEY_ENTER === key || ("" === searchTerm && ' ' === key)) {
             if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                 focus = false;
-                if (isFunction(options.getAnimations)) {
-                    // If animation or transition effect(s) have been added to the `$._mask.options`, wait for them to
-                    // finish animating, then focus and scroll to the first selected option(s).
-                    Promise.all(options.getAnimations().map(v => v.finished)).then(() => focusTo(valueCurrent[2]), scrollTo(valueCurrent[2]));
-                } else {
-                    focusTo(valueCurrent[2]), scrollTo(valueCurrent[2]);
-                }
+                onAnimationsEnd(options, () => focusTo(valueCurrent[2]), scrollTo(valueCurrent[2]));
             }
         }
         picker.enter(focus).fit();
@@ -716,6 +710,12 @@ function onPointerDownMask(e) {
 function onPointerDownOption(e) {
     let $ = this;
     getReference($)._event = e;
+    // Add an “active” effect on `touchstart` to indicate which option is about to be selected. We don’t need this
+    // indication on `mousedown` because pointer device(s) already have a hover state that is clear enough to indicate
+    // which option is about to be selected.
+    if ('touchstart' === e.type && !getAria($, 'disabled')) {
+        setAria($, 'selected', true);
+    }
     currentPointerState = 1; // Pointer is “down”
 }
 
@@ -766,12 +766,14 @@ function onPointerMoveRoot(e) {
     }
 }
 
+// The actual option selection happens when the pointer is released, to clearly identify whether we want to select an
+// option or just want to scroll through the option(s) list by swiping over the option on touch device(s).
 function onPointerUpOption(e) {
     let $ = this,
         picker = getReference($);
     picker._event = e;
     // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
-    if (currentPointerState > 1) {} else {
+    if (1 === currentPointerState) {
         if (!getAria($, 'disabled')) {
             if (picker.max > 1) {
                 toggleToOption($, picker);
@@ -779,6 +781,9 @@ function onPointerUpOption(e) {
                 selectToOption($, picker), picker.exit(true);
             }
         }
+    } else {
+        // Remove the “active” effect that was previously added on `touchstart`
+        letAria($, 'selected');
     }
     currentPointerState = 0; // Reset current pointer state
 }
@@ -1473,21 +1478,9 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             if (isInput(self)) {
                 focusTo(input), selectTo(input, mode);
             } else if (option = getValueInMap(toValue(getValue(self)), _options.values)) {
-                if (isFunction(options.getAnimations)) {
-                    // If animation or transition effect(s) have been added to the `$._mask.options`, wait for them to
-                    // finish animating, then focus and scroll to the first selected option(s).
-                    Promise.all(options.getAnimations().map(v => v.finished)).then(() => focusTo(option[2]), scrollTo(option[2]));
-                } else {
-                    focusTo(option[2]), scrollTo(option[2]);
-                }
+                onAnimationsEnd(options, () => focusTo(option[2]), scrollTo(option[2]));
             } else if (option = goToOptionFirst($)) {
-                if (isFunction(options.getAnimations)) {
-                    // If animation or transition effect(s) have been added to the `$._mask.options`, wait for them to
-                    // finish animating, then focus and scroll to the first option.
-                    Promise.all(options.getAnimations().map(v => v.finished)).then(() => focusTo(option), scrollTo(option));
-                } else {
-                    focusTo(option), scrollTo(option);
-                }
+                onAnimationsEnd(options, () => focusTo(option), scrollTo(option));
             }
         }
         return $;

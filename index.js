@@ -452,6 +452,9 @@
         }
         return index;
     };
+    var getElements = function getElements(query, scope) {
+        return _toArray((scope || D).querySelectorAll(query));
+    };
     var getHTML = function getHTML(node, trim) {
         if (trim === void 0) {
             trim = true;
@@ -1428,7 +1431,7 @@
                 forEachMap(_options, function (v, k) {
                     if (!getAria(v[2], 'disabled') && !v[2].hidden) {
                         letAria(valueCurrent = v[2], 'selected');
-                        letAttribute(v[3], 'selected');
+                        // letAttribute(v[3], 'selected');
                         v[3].selected = false;
                         toggleToOption(valueCurrent, picker); // Force select
                     }
@@ -1452,34 +1455,70 @@
             _mask = picker._mask,
             _options = picker._options,
             self = picker.self,
+            value = _mask.value,
+            max = picker.max,
+            min = picker.min,
             valueCurrent,
             valueNext,
             valuePrev;
         searchTermClear();
-        if (isDisabled(self) || isReadOnly(self)) {
+        if (isDisabled(self) || isInput(self) && isReadOnly(self)) {
             return offEventDefault(e);
         }
         picker._event = e;
-        if (KEY_DELETE_LEFT === key) {
+        if (getAria($, 'selected') && (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key)) {
             searchTerm = "";
-            if (valueCurrent = getValueInMap(_toValue(getOptionValue($)), _options.values)) {
-                letAria(valueCurrent[2], 'selected');
-                letAttribute(valueCurrent[3], 'selected');
-                valueCurrent[3].selected = false;
-                if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value') || (valuePrev = getNext($)) && hasDatum(valuePrev, 'value')) {
-                    focusTo(_mask.value = valuePrev);
-                    offEvent('keydown', $, onKeyDownValue);
-                    offEvent('mousedown', $, onPointerDownValue);
-                    offEvent('touchstart', $, onPointerDownValue);
-                    letElement($);
-                    // Do not remove the only option value
+            forEachArray(getElements('[aria-selected="true"]', getParent($)), function (v, k) {
+                if (min > k) {
+                    if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
+                        if (min < 1) {
+                            letAria(_mask.value = valueCurrent[2], 'selected');
+                            // letAttribute(valueCurrent[3], 'selected');
+                            valueCurrent[3].selected = false;
+                            letDatum(v, 'value');
+                            setHTML(v, "");
+                        }
+                    }
+                    focusTo(v);
                 } else {
-                    letDatum($, 'value');
-                    setHTML($, "");
+                    if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
+                        letAria(valueCurrent[2], 'selected');
+                        // letAttribute(valueCurrent[3], 'selected');
+                        valueCurrent[3].selected = false;
+                    }
+                    offEvent('keydown', v, onKeyDownValue);
+                    offEvent('mousedown', v, onPointerDownValue);
+                    offEvent('touchstart', v, onPointerDownValue);
+                    letElement(v);
+                    if (min === k - 1) {
+                        console.log('min.options');
+                    }
                 }
+            });
+        } else if (KEY_DELETE_LEFT === key) {
+            searchTerm = "";
+            var countOptionsSelected = toCount(getOptionsSelected(picker));
+            if (min < countOptionsSelected) {
+                if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
+                    letAria(valueCurrent[2], 'selected');
+                    // letAttribute(valueCurrent[3], 'selected');
+                    valueCurrent[3].selected = false;
+                    if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value') || (valuePrev = getNext($)) && hasDatum(valuePrev, 'value')) {
+                        focusTo(_mask.value = valuePrev);
+                        offEvent('keydown', $, onKeyDownValue);
+                        offEvent('mousedown', $, onPointerDownValue);
+                        offEvent('touchstart', $, onPointerDownValue);
+                        letElement($);
+                        // Do not remove the only option value
+                    } else {
+                        letDatum($, 'value');
+                        setHTML($, "");
+                    }
+                }
+            } else {
+                console.log('min.options');
             }
-            var max = picker.max;
-            if (max !== Infinity && max > toCount(getOptionsSelected(picker))) {
+            if (max !== Infinity && max > countOptionsSelected) {
                 forEachMap(_options, function (v, k) {
                     if (!v[3].disabled) {
                         letAria(v[2], 'disabled');
@@ -1489,21 +1528,34 @@
             }
         } else if (KEY_DELETE_RIGHT === key) {
             searchTerm = "";
-            if (valueCurrent = getValueInMap(_toValue(getOptionValue($)), _options.values)) {
-                letAria(valueCurrent[2], 'selected');
-                letAttribute(valueCurrent[3], 'selected');
-                valueCurrent[3].selected = false;
-                if ((valueNext = getNext($)) && hasDatum(valueNext, 'value') || (valueNext = getPrev($)) && hasDatum(valueNext, 'value')) {
-                    focusTo(_mask.value = valueNext);
-                    offEvent('keydown', $, onKeyDownValue);
-                    offEvent('mousedown', $, onPointerDownValue);
-                    offEvent('touchstart', $, onPointerDownValue);
-                    letElement($);
-                    // Do not remove the only option value
-                } else {
-                    letDatum($, 'value');
-                    setHTML($, "");
+            var _countOptionsSelected = toCount(getOptionsSelected(picker));
+            if (min < _countOptionsSelected) {
+                if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
+                    letAria(valueCurrent[2], 'selected');
+                    // letAttribute(valueCurrent[3], 'selected');
+                    valueCurrent[3].selected = false;
+                    if ((valueNext = getNext($)) && hasDatum(valueNext, 'value') || (valueNext = getPrev($)) && hasDatum(valueNext, 'value')) {
+                        focusTo(_mask.value = valueNext);
+                        offEvent('keydown', $, onKeyDownValue);
+                        offEvent('mousedown', $, onPointerDownValue);
+                        offEvent('touchstart', $, onPointerDownValue);
+                        letElement($);
+                        // Do not remove the only option value
+                    } else {
+                        letDatum($, 'value');
+                        setHTML($, "");
+                    }
                 }
+            } else {
+                console.log('min.options');
+            }
+            if (max !== Infinity && max > _countOptionsSelected) {
+                forEachMap(_options, function (v, k) {
+                    if (!v[3].disabled) {
+                        letAria(v[2], 'disabled');
+                        setAttribute(v[2], 'tabindex', 0);
+                    }
+                });
             }
         } else if (KEY_ESCAPE === key) {
             searchTerm = "";
@@ -1512,12 +1564,11 @@
             searchTerm = "";
             picker.exit(exit = false);
         } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
+            picker.enter(exit = true).fit();
             if (KEY_ENTER === key || "" === searchTerm && ' ' === key) {
-                if (valueCurrent = getValueInMap(_toValue(getOptionValue($)), _options.values)) {
+                if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                     focusTo(valueCurrent[2]);
                 }
-            } else {
-                picker.enter(exit = true).fit();
             }
         } else if (KEY_ARROW_LEFT === key) {
             exit = true;
@@ -1529,8 +1580,19 @@
             if ((valueNext = getNext($)) && hasDatum(valueNext, 'value')) {
                 focusTo(valueNext);
             }
-        } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
-            searchTerm += key;
+        } else if (1 === toCount(key) && !keyIsAlt) {
+            if (keyIsCtrl && 'a' === key && max > 1) {
+                // Select all visually
+                setAria(valueCurrent = value, 'selected', true);
+                while ((valueNext = getNext(valueCurrent)) && hasDatum(valueNext, 'value')) {
+                    setAria(valueCurrent = valueNext, 'selected', true);
+                }
+                while ((valuePrev = getPrev(valueCurrent)) && hasDatum(valuePrev, 'value')) {
+                    setAria(valueCurrent = valuePrev, 'selected', true);
+                }
+            } else {
+                searchTerm += key;
+            }
         }
         if ("" !== searchTerm) {
             filter(picker, searchTerm, _options, exit = true);
@@ -1542,12 +1604,26 @@
         offEventDefault(e);
         var $ = this,
             picker = getReference($),
-            v;
+            _mask = picker._mask,
+            value = _mask.value,
+            max = picker.max,
+            valueCurrent,
+            valueMany,
+            valueNext,
+            valuePrev;
         picker._event = e;
-        focusTo($);
-        if ((v = getPrev($)) && hasDatum(v, 'value') || (v = getNext($)) && hasDatum(v, 'value')) {
-            offEventPropagation(e);
+        // Clear all selection(s) on “click”
+        letAria(valueCurrent = value, 'selected');
+        while ((valueNext = getNext(valueCurrent)) && hasDatum(valueNext, 'value')) {
+            letAria(valueCurrent = valueNext, 'selected');
+            valueMany = true;
         }
+        while ((valuePrev = getPrev(valueCurrent)) && hasDatum(valuePrev, 'value')) {
+            letAria(valueCurrent = valuePrev, 'selected');
+            valueMany = true;
+        }
+        // Do not show option(s) on “click” value if it is not the only value for `<select multiple>`
+        max > 1 && valueMany && (picker.exit(), focusTo($), offEventPropagation(e));
     }
 
     function onPasteTextInput(e) {
@@ -1654,10 +1730,12 @@
         // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
         if (currentPointerState > 1);
         else {
-            if (picker.max > 1) {
-                toggleToOption($, picker);
-            } else {
-                selectToOption($, picker), picker.exit(true);
+            if (!getAria($, 'disabled')) {
+                if (picker.max > 1) {
+                    toggleToOption($, picker);
+                } else {
+                    selectToOption($, picker), picker.exit(true);
+                }
             }
         }
         currentPointerState = 0; // Reset current pointer state
@@ -1670,6 +1748,21 @@
 
     function onResetForm(e) {
         getReference(this).reset()._event = e;
+    }
+
+    function onSubmitForm(e) {
+        var $ = this,
+            picker = getReference($),
+            count = toCount(getOptionsSelected(picker)),
+            max = picker.max,
+            min = picker.min;
+        if (count < min) {
+            picker.fire('min.options', [count, min]);
+            offEventDefault(e);
+        } else if (count > max) {
+            picker.fire('max.options', [count, max]);
+            offEventDefault(e);
+        }
     }
 
     function onResizeWindow(e) {
@@ -1735,7 +1828,7 @@
             v;
         forEachMap(_options, function (v) {
             letAria(v[2], 'selected');
-            letAttribute(v[3], 'selected');
+            // letAttribute(v[3], 'selected');
             v[3].selected = false;
         });
         if (fireValue) {
@@ -1772,7 +1865,7 @@
                     picker.fire('min.options', [c, min]);
                 } else {
                     letAria(option, 'selected');
-                    letAttribute(option._[OPTION_SELF], 'selected');
+                    // letAttribute(option._[OPTION_SELF], 'selected');
                     option._[OPTION_SELF].selected = false;
                 }
             } else {
@@ -2090,6 +2183,7 @@
             $.state = state;
             var _state = state,
                 max = _state.max,
+                min = _state.min,
                 n = _state.n,
                 isDisabledSelf = isDisabled(self),
                 isInputSelf = isInput(self),
@@ -2170,6 +2264,7 @@
             setNext(self, mask);
             if (form) {
                 onEvent('reset', form, onResetForm);
+                onEvent('submit', form, onSubmitForm);
                 setID(form);
                 setReference(form, $);
             }
@@ -2253,7 +2348,7 @@
             setID(textInput);
             setID(textInputHint);
             $.max = isMultipleSelect ? max != null ? max : Infinity : 1;
-            $.min = isInputSelf ? 0 : 1;
+            $.min = isInputSelf ? 0 : min != null ? min : 1;
             $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             // Attach extension(s)
             if (isSet(state) && isArray(state.with)) {
@@ -2296,6 +2391,7 @@
             $._value = getValue(self) || null; // Update initial value to be the current value
             if (form) {
                 offEvent('reset', form, onResetForm);
+                offEvent('submit', form, onSubmitForm);
             }
             if (input) {
                 offEvent('blur', input, onBlurTextInput);

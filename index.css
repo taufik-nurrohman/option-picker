@@ -59,6 +59,7 @@
   border-top-width: 0;
 }
 .option-picker[aria-expanded=true] .option-picker__options {
+  max-height: 0;
   visibility: visible;
 }
 .option-picker__arrow,

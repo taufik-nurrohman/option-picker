@@ -1,4 +1,4 @@
-import {D, R, W, getAria, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasClass, hasDatum, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
+import {D, R, W, getAria, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElements, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasClass, hasDatum, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
 import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toKeysFromMap, toKeyFirstFromMap, toKeyLastFromMap, toValuesFromMap, toValueFirstFromMap, toValueLastFromMap} from '@taufik-nurrohman/f';
@@ -478,7 +478,7 @@ function onKeyDownOption(e) {
             forEachMap(_options, (v, k) => {
                 if (!getAria(v[2], 'disabled') && !v[2].hidden) {
                     letAria(valueCurrent = v[2], 'selected');
-                    letAttribute(v[3], 'selected');
+                    // letAttribute(v[3], 'selected');
                     v[3].selected = false;
                     toggleToOption(valueCurrent, picker); // Force select
                 }
@@ -499,32 +499,68 @@ function onKeyDownValue(e) {
         keyIsCtrl = e.ctrlKey,
         picker = getReference($),
         {_mask, _options, self} = picker,
+        {value} = _mask,
+        max = picker.max,
+        min = picker.min,
         valueCurrent, valueNext, valuePrev;
     searchTermClear();
-    if (isDisabled(self) || isReadOnly(self)) {
+    if (isDisabled(self) || isInput(self) && isReadOnly(self)) {
         return offEventDefault(e);
     }
     picker._event = e;
-    if (KEY_DELETE_LEFT === key) {
+    if (getAria($, 'selected') && (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key)) {
         searchTerm = "";
-        if (valueCurrent = getValueInMap(toValue(getOptionValue($)), _options.values)) {
-            letAria(valueCurrent[2], 'selected');
-            letAttribute(valueCurrent[3], 'selected');
-            valueCurrent[3].selected = false;
-            if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value') || (valuePrev = getNext($)) && hasDatum(valuePrev, 'value')) {
-                focusTo(_mask.value = valuePrev);
-                offEvent('keydown', $, onKeyDownValue);
-                offEvent('mousedown', $, onPointerDownValue);
-                offEvent('touchstart', $, onPointerDownValue);
-                letElement($);
-            // Do not remove the only option value
+        forEachArray(getElements('[aria-selected="true"]', getParent($)), (v, k) => {
+            if (min > k) {
+                if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
+                    if (min < 1) {
+                        letAria(_mask.value = valueCurrent[2], 'selected');
+                        // letAttribute(valueCurrent[3], 'selected');
+                        valueCurrent[3].selected = false;
+                        letDatum(v, 'value');
+                        setHTML(v, "");
+                    }
+                }
+                focusTo(v);
             } else {
-                letDatum($, 'value');
-                setHTML($, "");
+                if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
+                    letAria(valueCurrent[2], 'selected');
+                    // letAttribute(valueCurrent[3], 'selected');
+                    valueCurrent[3].selected = false;
+                }
+                offEvent('keydown', v, onKeyDownValue);
+                offEvent('mousedown', v, onPointerDownValue);
+                offEvent('touchstart', v, onPointerDownValue);
+                letElement(v);
+                if (min === k - 1) {
+                    console.log('min.options');
+                }
             }
+        });
+    } else if (KEY_DELETE_LEFT === key) {
+        searchTerm = "";
+        let countOptionsSelected = toCount(getOptionsSelected(picker));
+        if (min < countOptionsSelected) {
+            if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
+                letAria(valueCurrent[2], 'selected');
+                // letAttribute(valueCurrent[3], 'selected');
+                valueCurrent[3].selected = false;
+                if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value') || (valuePrev = getNext($)) && hasDatum(valuePrev, 'value')) {
+                    focusTo(_mask.value = valuePrev);
+                    offEvent('keydown', $, onKeyDownValue);
+                    offEvent('mousedown', $, onPointerDownValue);
+                    offEvent('touchstart', $, onPointerDownValue);
+                    letElement($);
+                // Do not remove the only option value
+                } else {
+                    letDatum($, 'value');
+                    setHTML($, "");
+                }
+            }
+        } else {
+            console.log('min.options');
         }
-        let max = picker.max;
-        if (max !== Infinity && max > toCount(getOptionsSelected(picker))) {
+        if (max !== Infinity && max > countOptionsSelected) {
             forEachMap(_options, (v, k) => {
                 if (!v[3].disabled) {
                     letAria(v[2], 'disabled');
@@ -534,21 +570,34 @@ function onKeyDownValue(e) {
         }
     } else if (KEY_DELETE_RIGHT === key) {
         searchTerm = "";
-        if (valueCurrent = getValueInMap(toValue(getOptionValue($)), _options.values)) {
-            letAria(valueCurrent[2], 'selected');
-            letAttribute(valueCurrent[3], 'selected');
-            valueCurrent[3].selected = false;
-            if ((valueNext = getNext($)) && hasDatum(valueNext, 'value') || (valueNext = getPrev($)) && hasDatum(valueNext, 'value')) {
-                focusTo(_mask.value = valueNext);
-                offEvent('keydown', $, onKeyDownValue);
-                offEvent('mousedown', $, onPointerDownValue);
-                offEvent('touchstart', $, onPointerDownValue);
-                letElement($);
-            // Do not remove the only option value
-            } else {
-                letDatum($, 'value');
-                setHTML($, "");
+        let countOptionsSelected = toCount(getOptionsSelected(picker));
+        if (min < countOptionsSelected) {
+            if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
+                letAria(valueCurrent[2], 'selected');
+                // letAttribute(valueCurrent[3], 'selected');
+                valueCurrent[3].selected = false;
+                if ((valueNext = getNext($)) && hasDatum(valueNext, 'value') || (valueNext = getPrev($)) && hasDatum(valueNext, 'value')) {
+                    focusTo(_mask.value = valueNext);
+                    offEvent('keydown', $, onKeyDownValue);
+                    offEvent('mousedown', $, onPointerDownValue);
+                    offEvent('touchstart', $, onPointerDownValue);
+                    letElement($);
+                // Do not remove the only option value
+                } else {
+                    letDatum($, 'value');
+                    setHTML($, "");
+                }
             }
+        } else {
+            console.log('min.options');
+        }
+        if (max !== Infinity && max > countOptionsSelected) {
+            forEachMap(_options, (v, k) => {
+                if (!v[3].disabled) {
+                    letAria(v[2], 'disabled');
+                    setAttribute(v[2], 'tabindex', 0);
+                }
+            });
         }
     } else if (KEY_ESCAPE === key) {
         searchTerm = "";
@@ -557,12 +606,11 @@ function onKeyDownValue(e) {
         searchTerm = "";
         picker.exit(exit = false);
     } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
+        picker.enter(exit = true).fit();
         if (KEY_ENTER === key || ("" === searchTerm && ' ' === key)) {
-            if (valueCurrent = getValueInMap(toValue(getOptionValue($)), _options.values)) {
+            if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                 focusTo(valueCurrent[2]);
             }
-        } else {
-            picker.enter(exit = true).fit();
         }
     } else if (KEY_ARROW_LEFT === key) {
         exit = true;
@@ -574,8 +622,19 @@ function onKeyDownValue(e) {
         if ((valueNext = getNext($)) && hasDatum(valueNext, 'value')) {
             focusTo(valueNext);
         }
-    } else if (1 === toCount(key) && !keyIsAlt && !keyIsCtrl) {
-        searchTerm += key;
+    } else if (1 === toCount(key) && !keyIsAlt) {
+        if (keyIsCtrl && 'a' === key && max > 1) {
+            // Select all visually
+            setAria(valueCurrent = value, 'selected', true);
+            while ((valueNext = getNext(valueCurrent)) && hasDatum(valueNext, 'value')) {
+                setAria(valueCurrent = valueNext, 'selected', true);
+            }
+            while ((valuePrev = getPrev(valueCurrent)) && hasDatum(valuePrev, 'value')) {
+                setAria(valueCurrent = valuePrev, 'selected', true);
+            }
+        } else {
+            searchTerm += key;
+        }
     }
     if ("" !== searchTerm) {
         filter(picker, searchTerm, _options, exit = true);
@@ -586,12 +645,24 @@ function onKeyDownValue(e) {
 function onPointerDownValue(e) {
     offEventDefault(e);
     let $ = this,
-        picker = getReference($), v;
+        picker = getReference($),
+        {_mask} = picker,
+        {value} = _mask,
+        max = picker.max,
+        valueCurrent, valueMany, valueNext, valuePrev;
     picker._event = e;
-    focusTo($);
-    if ((v = getPrev($)) && hasDatum(v, 'value') || (v = getNext($)) && hasDatum(v, 'value')) {
-        offEventPropagation(e);
+    // Clear all selection(s) on “click”
+    letAria(valueCurrent = value, 'selected');
+    while ((valueNext = getNext(valueCurrent)) && hasDatum(valueNext, 'value')) {
+        letAria(valueCurrent = valueNext, 'selected');
+        valueMany = true;
     }
+    while ((valuePrev = getPrev(valueCurrent)) && hasDatum(valuePrev, 'value')) {
+        letAria(valueCurrent = valuePrev, 'selected');
+        valueMany = true;
+    }
+    // Do not show option(s) on “click” value if it is not the only value for `<select multiple>`
+    max > 1 && valueMany && (picker.exit(), focusTo($), offEventPropagation(e));
 }
 
 function onPasteTextInput(e) {
@@ -692,10 +763,12 @@ function onPointerUpOption(e) {
     picker._event = e;
     // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
     if (currentPointerState > 1) {} else {
-        if (picker.max > 1) {
-            toggleToOption($, picker);
-        } else {
-            selectToOption($, picker), picker.exit(true);
+        if (!getAria($, 'disabled')) {
+            if (picker.max > 1) {
+                toggleToOption($, picker);
+            } else {
+                selectToOption($, picker), picker.exit(true);
+            }
         }
     }
     currentPointerState = 0; // Reset current pointer state
@@ -708,6 +781,21 @@ function onPointerUpRoot() {
 
 function onResetForm(e) {
     getReference(this).reset()._event = e;
+}
+
+function onSubmitForm(e) {
+    let $ = this,
+        picker = getReference($),
+        count = toCount(getOptionsSelected(picker)),
+        max = picker.max,
+        min = picker.min;
+    if (count < min) {
+        picker.fire('min.options', [count, min]);
+        offEventDefault(e);
+    } else if (count > max) {
+        picker.fire('max.options', [count, max]);
+        offEventDefault(e);
+    }
 }
 
 function onResizeWindow(e) {
@@ -768,7 +856,7 @@ function selectToOptionsNone(picker, fireValue) {
         {hint, input, options, value} = _mask, v;
     forEachMap(_options, v => {
         letAria(v[2], 'selected');
-        letAttribute(v[3], 'selected');
+        // letAttribute(v[3], 'selected');
         v[3].selected = false;
     });
     if (fireValue) {
@@ -796,7 +884,7 @@ function toggleToOption(option, picker) {
                 picker.fire('min.options', [c, min]);
             } else {
                 letAria(option, 'selected');
-                letAttribute(option._[OPTION_SELF], 'selected');
+                // letAttribute(option._[OPTION_SELF], 'selected');
                 option._[OPTION_SELF].selected = false;
             }
         } else {
@@ -1096,7 +1184,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         $._value = getValue(self) || null;
         $.self = self;
         $.state = state;
-        let {max, n} = state,
+        let {max, min, n} = state,
             isDisabledSelf = isDisabled(self),
             isInputSelf = isInput(self),
             isMultipleSelect = max && max > 1 || (!isInputSelf && self.multiple),
@@ -1176,6 +1264,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setNext(self, mask);
         if (form) {
             onEvent('reset', form, onResetForm);
+            onEvent('submit', form, onSubmitForm);
             setID(form);
             setReference(form, $);
         }
@@ -1249,7 +1338,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setID(textInput);
         setID(textInputHint);
         $.max = isMultipleSelect ? (max ?? Infinity) : 1;
-        $.min = isInputSelf ? 0 : 1;
+        $.min = isInputSelf ? 0 : (min ?? 1);
         $.size = state.size ?? (isInputSelf ? 1 : self.size);
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {
@@ -1287,6 +1376,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         $._value = getValue(self) || null; // Update initial value to be the current value
         if (form) {
             offEvent('reset', form, onResetForm);
+            offEvent('submit', form, onSubmitForm);
         }
         if (input) {
             offEvent('blur', input, onBlurTextInput);

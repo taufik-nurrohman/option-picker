@@ -58,6 +58,7 @@ $name: 'option-picker';
       }
     }
     .#{$name}__options {
+      max-height: 0;
       visibility: visible;
     }
   }

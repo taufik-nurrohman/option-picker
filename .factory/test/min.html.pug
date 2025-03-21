@@ -10,6 +10,14 @@ block script
     | const picker = new OptionPicker(document.querySelector('select'), {
     |     min: 3
     | });
+    |
+    | picker.on('max.options', function (count, max) {
+    |     alert('The maximum number of options to select is ' + max + ', your current selection is ' + count + '.');
+    | });
+    |
+    | picker.on('min.options', function (count, min) {
+    |     alert('The minimum number of options to select is ' + min + ', your current selection is ' + count + '.');
+    | });
 
 block style
   style

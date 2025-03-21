@@ -945,12 +945,9 @@
         var query = isString(input) ? input : getText(input) || "",
             q = toCaseLower(query),
             _mask = $._mask,
-            mask = $.mask,
-            self = $.self,
             state = $.state,
-            options = _mask.options;
-        _mask.value;
-        var strict = state.strict,
+            options = _mask.options,
+            strict = state.strict,
             hasSize = getDatum(mask, 'size'),
             option;
         var count = _options.count();
@@ -984,9 +981,9 @@
                 // Silently select the first option without affecting the currently typed query and focus/select state
                 if (count && (option = goToOptionFirst($))) {
                     setAria(option, 'selected', true);
-                    setAttribute(option._[OPTION_SELF], 'selected', "");
-                    setValue(self, b = getOptionValue(option));
+                    // setAttribute(option._[OPTION_SELF], 'selected', "");
                     option._[OPTION_SELF].selected = true;
+                    setValue(self, b = getOptionValue(option));
                 } else {
                     setValue(self, b = "");
                 }
@@ -1267,9 +1264,8 @@
             mask = picker.mask,
             self = picker.self,
             state = picker.state,
-            hint = _mask.hint;
-        _mask.input;
-        var strict = state.strict;
+            hint = _mask.hint,
+            strict = state.strict;
         picker._event = e;
         delay(function () {
             return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
@@ -1327,12 +1323,10 @@
             keyIsCtrl = e.ctrlKey,
             picker = getReference($),
             _mask = picker._mask,
-            _options = picker._options;
-        picker.mask;
-        var self = picker.self,
-            hint = _mask.hint;
-        _mask.input;
-        var value = _mask.value;
+            _options = picker._options,
+            self = picker.self,
+            hint = _mask.hint,
+            value = _mask.value;
         var optionNext, optionParent, optionPrev, valueCurrent;
         picker._event = e;
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
@@ -1630,9 +1624,8 @@
         offEventDefault(e);
         var $ = this,
             picker = getReference($),
-            _mask = picker._mask;
-        picker.self;
-        var hint = _mask.hint;
+            _mask = picker._mask,
+            hint = _mask.hint;
         delay(function () {
             return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
         }, 1)();
@@ -1704,7 +1697,7 @@
         if (picker) {
             picker._event = e;
             var _mask = picker._mask,
-                options = _mask.options;
+                lot = _mask.lot;
             if (1 === currentPointerState) {
                 ++currentPointerState;
             }
@@ -1713,9 +1706,9 @@
             // doing nothing :\
             if ('touchmove' === e.type && false !== touchTop) {
                 touchTopCurrent = e.touches[0].clientY;
-                var scroll = getScroll(options);
+                var scroll = getScroll(lot);
                 scroll[1] -= touchTopCurrent - touchTop;
-                setScroll(options, scroll);
+                setScroll(lot, scroll);
                 touchTop = touchTopCurrent;
             }
         }
@@ -1723,9 +1716,7 @@
 
     function onPointerUpOption(e) {
         var $ = this,
-            picker = getReference($),
-            _mask = picker._mask;
-        _mask.options;
+            picker = getReference($);
         picker._event = e;
         // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
         if (currentPointerState > 1);
@@ -1781,9 +1772,8 @@
     }
 
     function selectToOption(option, picker) {
-        var _mask = picker._mask;
-        picker._options;
-        var self = picker.self,
+        var _mask = picker._mask,
+            self = picker.self,
             hint = _mask.hint,
             input = _mask.input,
             value = _mask.value;
@@ -1822,9 +1812,8 @@
             _options = picker._options,
             self = picker.self,
             hint = _mask.hint,
-            input = _mask.input;
-        _mask.options;
-        var value = _mask.value,
+            input = _mask.input,
+            value = _mask.value,
             v;
         forEachMap(_options, function (v) {
             letAria(v[2], 'selected');
@@ -2130,9 +2119,8 @@
             },
             set: function set(value) {
                 var $ = this,
-                    _mask = $._mask;
-                $.self;
-                var hint = _mask.hint,
+                    _mask = $._mask,
+                    hint = _mask.hint,
                     input = _mask.input,
                     text = _mask.text,
                     v;
@@ -2151,10 +2139,8 @@
             set: function set(value) {
                 var $ = this,
                     _active = $._active,
-                    _options = $._options;
-                $.mask;
-                $.self;
-                var v;
+                    _options = $._options,
+                    v;
                 if (!_active) {
                     return $;
                 }
@@ -2208,16 +2194,17 @@
                 'role': 'combobox'
             });
             $.mask = mask;
+            var maskFlex = setElement('div', {
+                'class': n + '__flex',
+                'role': 'group'
+            });
             var maskOptions = setElement('div', {
                 'class': n + '__options',
                 'role': 'listbox'
             });
-            var maskOptionsBody = setElement('div', {
+            var maskOptionsLot = setElement('div', {
+                'class': n + '__options-lot',
                 'role': 'none'
-            });
-            var maskValues = setElement('div', {
-                'class': n + '__values',
-                'role': 'group'
             });
             var text = setElement('span', {
                 'class': n + '__' + (isInputSelf ? 'text' : 'value'),
@@ -2240,11 +2227,11 @@
             var textInputHint = setElement('span', isInputSelf ? self.placeholder + "" : "", {
                 'role': 'none'
             });
-            setChildLast(mask, maskValues);
+            setChildLast(mask, maskFlex);
             setChildLast(mask, maskOptions);
-            setChildLast(maskOptions, maskOptionsBody);
-            setChildLast(maskValues, text);
-            setChildLast(maskValues, arrow);
+            setChildLast(maskOptions, maskOptionsLot);
+            setChildLast(maskFlex, text);
+            setChildLast(maskFlex, arrow);
             if (isInputSelf) {
                 onEvent('blur', textInput, onBlurTextInput);
                 onEvent('cut', textInput, onCutTextInput);
@@ -2289,11 +2276,14 @@
             setReference(mask, $);
             var _mask = {};
             _mask.arrow = arrow;
+            _mask.flex = maskFlex;
             _mask.hint = isInputSelf ? textInputHint : null;
             _mask.input = isInputSelf ? textInput : null;
+            _mask.lot = maskOptionsLot;
             _mask.of = self;
             _mask.options = maskOptions;
             _mask.self = mask;
+            _mask.values = isInputSelf ? [] : [text];
             _mask[isInputSelf ? 'text' : 'value'] = text;
             $._mask = _mask;
             var _active = $._active,
@@ -2342,8 +2332,8 @@
             setAria(textInput, 'controls', getID(maskOptions));
             setID(arrow);
             setID(mask);
-            setID(maskOptionsBody);
-            setID(maskValues);
+            setID(maskFlex);
+            setID(maskOptionsLot);
             setID(self);
             setID(textInput);
             setID(textInputHint);
@@ -2444,11 +2434,11 @@
                 mask = $.mask,
                 self = $.self,
                 input = _mask.input,
-                options = _mask.options;
+                lot = _mask.lot;
             if (!_active) {
                 return $;
             }
-            setAria(mask, 'expanded', toCount(getChildren(getChildFirst(options))) > 0);
+            setAria(mask, 'expanded', toCount(getChildren(lot)) > 0);
             var theRootReference = getReference(R);
             if (theRootReference && $ !== theRootReference) {
                 theRootReference.exit(); // Exit other(s)
@@ -2524,9 +2514,8 @@
         },
         focus: function focus(mode) {
             var $ = this,
-                _mask = $._mask;
-            $.mask;
-            var input = _mask.input,
+                _mask = $._mask,
+                input = _mask.input,
                 value = _mask.value;
             if (input) {
                 focusTo(input), selectTo(input, mode);
@@ -2585,6 +2574,7 @@
                 _mask = of._mask,
                 self = of.self,
                 state = of.state,
+                lot = _mask.lot,
                 options = _mask.options,
                 r;
             if (!_active) {
@@ -2619,7 +2609,7 @@
             parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
             parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
             // Clear value if there are no option(s)
-            if (0 === toCount(getChildren(getChildFirst(options)))) {
+            if (0 === toCount(getChildren(lot))) {
                 selectToOptionsNone(of, !isInput(self));
                 options.hidden = true;
                 // Reset value to the first option if removed option is the selected option
@@ -2633,9 +2623,8 @@
             return _fireHook && of.fire('let.option', [key]), r;
         },
         get: function get(key) {
-            var $ = this;
-            $.of;
-            var map = $.values,
+            var $ = this,
+                map = $.values,
                 value = getValueInMap(_toValue(key), map),
                 parent;
             if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
@@ -2670,6 +2659,7 @@
             var _mask = of._mask,
                 self = of.self,
                 state = of.state,
+                lot = _mask.lot,
                 options = _mask.options,
                 n = state.n,
                 classes,
@@ -2697,10 +2687,10 @@
                 // `picker.options.set('asdf', [ … ])`
             } else;
             if (hasState(value[1], '&')) {
-                optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', getChildFirst(options));
+                optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
                 if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
                     var _getState, _getState2;
-                    setChildLast(getChildFirst(options), optionGroup = setElement('span', {
+                    setChildLast(lot, optionGroup = setElement('span', {
                         'class': n + 's-batch',
                         'data': {
                             'value': value[1]['&']
@@ -2782,7 +2772,7 @@
                 onEvent('touchend', option, onPointerUpOption);
                 onEvent('touchstart', option, onPointerDownOption);
             }
-            setChildLast(optionGroup || getChildFirst(options), option);
+            setChildLast(optionGroup || lot, option);
             setChildLast(optionGroupReal || itemsParent, optionReal);
             setReference(option, of);
             value[2] = option;

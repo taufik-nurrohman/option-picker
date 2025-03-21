@@ -11,10 +11,10 @@
   padding: 0 0.25em;
 }
 
-.option-picker__values,
+.option-picker__options-lot,
 .option-picker__options-batch,
-.option-picker__options > div,
-.option-picker__options {
+.option-picker__options,
+.option-picker__flex {
   border-color: inherit;
   display: flex;
   flex-wrap: wrap;
@@ -68,19 +68,6 @@
   overflow: hidden;
   position: relative;
 }
-.option-picker__value {
-  user-select: none;
-}
-.option-picker__value[aria-selected=true] {
-  background: rgba(0, 0, 255, 0.5);
-}
-.option-picker__value[aria-selected=true][aria-disabled=true] {
-  background: rgba(0, 0, 255, 0.25);
-}
-.option-picker__value:focus {
-  outline: 1px solid;
-  outline-offset: -2px;
-}
 .option-picker__arrow {
   user-select: none;
 }
@@ -92,6 +79,9 @@
   content: "";
   height: 0;
   width: 0;
+}
+.option-picker__flex {
+  flex: 1;
 }
 .option-picker__option {
   display: block;
@@ -127,16 +117,6 @@
   visibility: hidden;
   white-space: nowrap;
 }
-.option-picker__options > div {
-  border-color: inherit;
-  border-style: inherit;
-  border-width: 0;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  overflow: auto;
-  padding: 0;
-}
 .option-picker__options[hidden] {
   display: none;
 }
@@ -151,6 +131,16 @@
   content: attr(data-value);
   font-weight: bold;
   user-select: none;
+}
+.option-picker__options-lot {
+  border-color: inherit;
+  border-style: inherit;
+  border-width: 0;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  overflow: auto;
+  padding: 0;
 }
 .option-picker__self {
   left: -9999px;
@@ -189,12 +179,20 @@
 }
 .option-picker__value {
   flex: 1;
+  user-select: none;
+}
+.option-picker__value[aria-selected=true] {
+  background: rgba(0, 0, 255, 0.5);
+}
+.option-picker__value[aria-selected=true][aria-disabled=true] {
+  background: rgba(0, 0, 255, 0.25);
 }
 .option-picker__value:empty::after {
   content: "‌";
 }
-.option-picker__values {
-  flex: 1;
+.option-picker__value:focus {
+  outline: 1px solid;
+  outline-offset: -2px;
 }
 .option-picker[data-size] .option-picker__arrow {
   display: none;

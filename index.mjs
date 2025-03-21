@@ -1,9 +1,9 @@
-import {D, R, W, getAria, getAttribute, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElements, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasClass, hasDatum, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
+import {R, W, getAria, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElements, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasDatum, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
-import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toKeysFromMap, toKeyFirstFromMap, toKeyLastFromMap, toValuesFromMap, toValueFirstFromMap, toValueLastFromMap} from '@taufik-nurrohman/f';
+import {forEachArray, forEachMap, forEachObject, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toValuesFromMap, toValueFirstFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
-import {getOffset, getScroll, getSize, setScroll} from '@taufik-nurrohman/rect';
+import {getScroll, setScroll} from '@taufik-nurrohman/rect';
 import {getRect} from '@taufik-nurrohman/rect';
 import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
@@ -33,10 +33,10 @@ const OPTION_SELF = 0;
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
         q = toCaseLower(query),
-        {_mask, mask, self, state} = $,
-        {options, value} = _mask,
+        {_mask, state} = $,
+        {options} = _mask,
         {strict} = state,
-        hasSize = getDatum(mask, 'size'), option, v;
+        hasSize = getDatum(mask, 'size'), option;
     let count = _options.count();
     if (selectOnly) {
         forEachMap(_options, v => {
@@ -67,9 +67,9 @@ const filter = debounce(($, input, _options, selectOnly) => {
             // Silently select the first option without affecting the currently typed query and focus/select state
             if (count && (option = goToOptionFirst($))) {
                 setAria(option, 'selected', true);
-                setAttribute(option._[OPTION_SELF], 'selected', "");
-                setValue(self, b = getOptionValue(option));
+                // setAttribute(option._[OPTION_SELF], 'selected', "");
                 option._[OPTION_SELF].selected = true;
+                setValue(self, b = getOptionValue(option));
             } else {
                 setValue(self, b = "");
             }
@@ -326,7 +326,7 @@ function onKeyDownTextInput(e) {
         key = e.key,
         picker = getReference($),
         {_mask, _options, mask, self, state} = picker,
-        {hint, input} = _mask,
+        {hint} = _mask,
         {strict} = state;
     picker._event = e;
     delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
@@ -378,9 +378,9 @@ function onKeyDownOption(e) {
         keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
         picker = getReference($),
-        {_mask, _options, mask, self} = picker,
-        {hint, input, value} = _mask;
-    let optionNext, optionParent, optionPrev, valueCurrent, valueNext;
+        {_mask, _options, self} = picker,
+        {hint, value} = _mask;
+    let optionNext, optionParent, optionPrev, valueCurrent;
     picker._event = e;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
         exit = true;
@@ -669,7 +669,7 @@ function onPasteTextInput(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {_mask, self} = picker,
+        {_mask} = picker,
         {hint} = _mask;
     delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
     insertAtSelection($, e.clipboardData.getData('text/plain'));
@@ -738,7 +738,7 @@ function onPointerMoveRoot(e) {
     if (picker) {
         picker._event = e;
         let {_mask} = picker,
-            {options} = _mask;
+            {lot} = _mask;
         if (1 === currentPointerState) {
             ++currentPointerState;
         }
@@ -747,9 +747,9 @@ function onPointerMoveRoot(e) {
         // doing nothing :\
         if ('touchmove' === e.type && false !== touchTop) {
             touchTopCurrent = e.touches[0].clientY;
-            let scroll = getScroll(options);
+            let scroll = getScroll(lot);
             scroll[1] -= (touchTopCurrent - touchTop);
-            setScroll(options, scroll);
+            setScroll(lot, scroll);
             touchTop = touchTopCurrent;
         }
     }
@@ -757,9 +757,7 @@ function onPointerMoveRoot(e) {
 
 function onPointerUpOption(e) {
     let $ = this,
-        picker = getReference($),
-        {_mask} = picker,
-        {options} = _mask;
+        picker = getReference($);
     picker._event = e;
     // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
     if (currentPointerState > 1) {} else {
@@ -814,7 +812,7 @@ function scrollTo(node) {
 }
 
 function selectToOption(option, picker) {
-    let {_mask, _options, self} = picker,
+    let {_mask, self} = picker,
         {hint, input, value} = _mask;
     if (option) {
         let a = getValue(self), b;
@@ -853,7 +851,7 @@ function selectToOptions(options, picker) {}
 
 function selectToOptionsNone(picker, fireValue) {
     let {_mask, _options, self} = picker,
-        {hint, input, options, value} = _mask, v;
+        {hint, input, value} = _mask, v;
     forEachMap(_options, v => {
         letAria(v[2], 'selected');
         // letAttribute(v[3], 'selected');
@@ -1139,7 +1137,7 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_mask, self} = $,
+                {_mask} = $,
                 {hint, input, text} = _mask, v;
             if (!text) {
                 return $;
@@ -1155,7 +1153,7 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active, _options, mask, self} = $, v;
+                {_active, _options} = $, v;
             if (!_active) {
                 return $;
             }
@@ -1208,16 +1206,17 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'role': 'combobox'
         });
         $.mask = mask;
+        const maskFlex = setElement('div', {
+            'class': n + '__flex',
+            'role': 'group'
+        });
         const maskOptions = setElement('div', {
             'class': n + '__options',
             'role': 'listbox'
         });
-        const maskOptionsBody = setElement('div', {
+        const maskOptionsLot = setElement('div', {
+            'class': n + '__options-lot',
             'role': 'none'
-        });
-        const maskValues = setElement('div', {
-            'class': n + '__values',
-            'role': 'group'
         });
         const text = setElement('span', {
             'class': n + '__' + (isInputSelf ? 'text' : 'value'),
@@ -1240,11 +1239,11 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         const textInputHint = setElement('span', isInputSelf ? self.placeholder + "" : "", {
             'role': 'none'
         });
-        setChildLast(mask, maskValues);
+        setChildLast(mask, maskFlex);
         setChildLast(mask, maskOptions);
-        setChildLast(maskOptions, maskOptionsBody);
-        setChildLast(maskValues, text);
-        setChildLast(maskValues, arrow);
+        setChildLast(maskOptions, maskOptionsLot);
+        setChildLast(maskFlex, text);
+        setChildLast(maskFlex, arrow);
         if (isInputSelf) {
             onEvent('blur', textInput, onBlurTextInput);
             onEvent('cut', textInput, onCutTextInput);
@@ -1283,11 +1282,14 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setReference(mask, $);
         let _mask = {};
         _mask.arrow = arrow;
+        _mask.flex = maskFlex;
         _mask.hint = isInputSelf ? textInputHint : null;
         _mask.input = isInputSelf ? textInput : null;
+        _mask.lot = maskOptionsLot;
         _mask.of = self;
         _mask.options = maskOptions;
         _mask.self = mask;
+        _mask.values = isInputSelf ? [] : [text];
         _mask[isInputSelf ? 'text' : 'value'] = text;
         $._mask = _mask;
         let {_active} = $,
@@ -1332,8 +1334,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setAria(textInput, 'controls', getID(maskOptions));
         setID(arrow);
         setID(mask);
-        setID(maskOptionsBody);
-        setID(maskValues);
+        setID(maskFlex);
+        setID(maskOptionsLot);
         setID(self);
         setID(textInput);
         setID(textInputHint);
@@ -1423,11 +1425,11 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     enter: function (focus, mode) {
         let $ = this, option,
             {_active, _mask, _options, mask, self} = $,
-            {input, options} = _mask;
+            {input, lot} = _mask;
         if (!_active) {
             return $;
         }
-        setAria(mask, 'expanded', toCount(getChildren(getChildFirst(options))) > 0);
+        setAria(mask, 'expanded', toCount(getChildren(lot)) > 0);
         let theRootReference = getReference(R);
         if (theRootReference && $ !== theRootReference) {
             theRootReference.exit(); // Exit other(s)
@@ -1492,7 +1494,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     focus: function (mode) {
         let $ = this,
-            {_mask, mask} = $,
+            {_mask} = $,
             {input, value} = _mask;
         if (input) {
             focusTo(input), selectTo(input, mode);
@@ -1544,7 +1546,7 @@ setObjectMethods(OptionPickerOptions, {
         let $ = this,
             {of, values: map} = $,
             {_active, _mask, self, state} = of,
-            {options} = _mask, r;
+            {lot, options} = _mask, r;
         if (!_active) {
             return false;
         }
@@ -1573,7 +1575,7 @@ setObjectMethods(OptionPickerOptions, {
         parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
         parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
         // Clear value if there are no option(s)
-        if (0 === toCount(getChildren(getChildFirst(options)))) {
+        if (0 === toCount(getChildren(lot))) {
             selectToOptionsNone(of, !isInput(self));
             options.hidden = true;
         // Reset value to the first option if removed option is the selected option
@@ -1588,7 +1590,7 @@ setObjectMethods(OptionPickerOptions, {
     },
     get: function (key) {
         let $ = this,
-            {of, values: map} = $,
+            {values: map} = $,
             value = getValueInMap(toValue(key), map), parent;
         if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
             return [getElementIndex(value[2]), getElementIndex(parent)];
@@ -1612,7 +1614,7 @@ setObjectMethods(OptionPickerOptions, {
             return (_fireHook && of.fire('has.option', [key])), false;
         }
         let {_mask, self, state} = of,
-            {options} = _mask,
+            {lot, options} = _mask,
             {n} = state,
             classes, items, itemsParent, option, optionGroup, optionGroupReal, optionReal, styles;
         n += '__option';
@@ -1633,9 +1635,9 @@ setObjectMethods(OptionPickerOptions, {
         // `picker.options.set('asdf', [ … ])`
         } else {}
         if (hasState(value[1], '&')) {
-            optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', getChildFirst(options));
+            optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
             if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
-                setChildLast(getChildFirst(options), optionGroup = setElement('span', {
+                setChildLast(lot, optionGroup = setElement('span', {
                     'class': n + 's-batch',
                     'data': {
                         'value': value[1]['&']
@@ -1714,7 +1716,7 @@ setObjectMethods(OptionPickerOptions, {
             onEvent('touchend', option, onPointerUpOption);
             onEvent('touchstart', option, onPointerDownOption);
         }
-        setChildLast(optionGroup || getChildFirst(options), option);
+        setChildLast(optionGroup || lot, option);
         setChildLast(optionGroupReal || itemsParent, optionReal);
         setReference(option, of);
         value[2] = option;

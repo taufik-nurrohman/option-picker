@@ -69,19 +69,6 @@ $name: 'option-picker';
     overflow: hidden;
     position: relative;
   }
-  &__value {
-    user-select: none;
-    &[aria-selected='true'] {
-      background: rgba(0, 0, 255, 0.5);
-      &[aria-disabled='true'] {
-        background: rgba(0, 0, 255, 0.25);
-      }
-    }
-    &:focus {
-      outline: 1px solid;
-      outline-offset: -2px;
-    }
-  }
   &__arrow {
     user-select: none;
     &::after {
@@ -95,6 +82,10 @@ $name: 'option-picker';
       height: 0;
       width: 0;
     }
+  }
+  &__flex {
+    @extend %items;
+    flex: 1;
   }
   &__option {
     @extend %item;
@@ -133,21 +124,6 @@ $name: 'option-picker';
     top: 100%;
     visibility: hidden;
     white-space: nowrap;
-    > div {
-      @extend %items;
-      border: {
-        color: inherit;
-        style: inherit;
-        width: 0;
-      }
-      display: flex;
-      flex: {
-        direction: column;
-        wrap: nowrap;
-      }
-      overflow: auto;
-      padding: 0;
-    }
     &[hidden] {
       display: none;
     }
@@ -164,6 +140,21 @@ $name: 'option-picker';
         font-weight: bold;
         user-select: none;
       }
+    }
+    &-lot {
+      @extend %items;
+      border: {
+        color: inherit;
+        style: inherit;
+        width: 0;
+      }
+      display: flex;
+      flex: {
+        direction: column;
+        wrap: nowrap;
+      }
+      overflow: auto;
+      padding: 0;
     }
   }
   &__self {
@@ -205,15 +196,22 @@ $name: 'option-picker';
   }
   &__value {
     flex: 1;
+    user-select: none;
+    &[aria-selected='true'] {
+      background: rgba(0, 0, 255, 0.5);
+      &[aria-disabled='true'] {
+        background: rgba(0, 0, 255, 0.25);
+      }
+    }
     &:empty {
       &::after {
         content: '‌'; // `\u200c`
       }
     }
-  }
-  &__values {
-    @extend %items;
-    flex: 1;
+    &:focus {
+      outline: 1px solid;
+      outline-offset: -2px;
+    }
   }
   &[data-size] {
     .#{$name}__arrow {

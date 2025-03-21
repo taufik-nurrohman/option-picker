@@ -7,43 +7,31 @@ block state
 
 block script
   script
-    | document.querySelectorAll('select').forEach(select => new OptionPicker(select));
+    | function onExitAnimation() {
+    |     this.style.visibility = 'hidden'; // Hide once the animation is complete
+    | }
+    |
+    | document.querySelectorAll('select').forEach(select => {
+    |     const picker = new OptionPicker(select);
+    |     picker.on('enter', function () {
+    |         this._mask.options.removeEventListener('transitionend', onExitAnimation);
+    |         this._mask.options.style.maxHeight = '0px';
+    |         this._mask.options.style.visibility = 'hidden';
+    |     });
+    |     picker.on('fit', function () {
+    |         this._mask.options.style.visibility = 'visible';
+    |     });
+    |     picker.on('exit', function () {
+    |         this._mask.options.addEventListener('transitionend', onExitAnimation);
+    |         this._mask.options.style.maxHeight = '0px';
+    |     });
+    | });
 
 block style
   style
     | .option-picker__options {
     |   background: #fff;
-    | }
-    |
-    | @keyframes slide-down {
-    |   from {
-    |     max-height: 0;
-    |     visibility: hidden;
-    |   }
-    |   to {
-    |     max-height: 100vh;
-    |     visibility: visible;
-    |   }
-    | }
-    |
-    | @keyframes slide-up {
-    |   from {
-    |     max-height: 100vh;
-    |     visibility: visible;
-    |   }
-    |   to {
-    |     max-height: 0;
-    |     visibility: hidden;
-    |   }
-    | }
-    |
-    | /* Run the `slide-up` animation only when the `style` attribute is set, so it will not animate on page load */
-    | [aria-expanded='false'] .option-picker__options[style] {
-    |   animation: slide-up 0.125s ease-in-out;
-    | }
-    |
-    | [aria-expanded='true'] .option-picker__options {
-    |   animation: slide-down 0.125s ease-in-out;
+    |   transition: max-height 0.125s ease-out;
     | }
 
 block content

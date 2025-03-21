@@ -9,37 +9,16 @@
     <style>
       .option-picker__options {
         background: #fff;
+        transition: all 0.125s ease-out;
+        transition-property: opacity, visibility;
       }
 
-      @keyframes fade-in {
-        from {
-          opacity: 0;
-          visibility: hidden;
-        }
-        to {
-          opacity: 1;
-          visibility: visible;
-        }
-      }
-
-      @keyframes fade-out {
-        from {
-          opacity: 1;
-          visibility: visible;
-        }
-        to {
-          opacity: 0;
-          visibility: hidden;
-        }
-      }
-
-      /* Run the `fade-out` animation only when the `style` attribute is set, so it will not animate on page load */
-      [aria-expanded='false'] .option-picker__options[style] {
-        animation: fade-out 0.125s ease-in-out;
+      [aria-expanded='false'] .option-picker__options {
+        opacity: 0;
       }
 
       [aria-expanded='true'] .option-picker__options {
-        animation: fade-in 0.125s ease-in-out;
+        opacity: 1;
       }
     </style>
   </head>

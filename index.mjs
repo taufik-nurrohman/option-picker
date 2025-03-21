@@ -1427,7 +1427,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         if (!_active) {
             return $;
         }
-        setAria(mask, 'expanded', toCount(getChildren(options)) > 0);
+        setAria(mask, 'expanded', toCount(getChildren(getChildFirst(options))) > 0);
         let theRootReference = getReference(R);
         if (theRootReference && $ !== theRootReference) {
             theRootReference.exit(); // Exit other(s)
@@ -1573,7 +1573,7 @@ setObjectMethods(OptionPickerOptions, {
         parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
         parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
         // Clear value if there are no option(s)
-        if (0 === toCount(getChildren(options))) {
+        if (0 === toCount(getChildren(getChildFirst(options)))) {
             selectToOptionsNone(of, !isInput(self));
             options.hidden = true;
         // Reset value to the first option if removed option is the selected option

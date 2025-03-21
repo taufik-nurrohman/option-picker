@@ -211,12 +211,18 @@
     </main>
     <script src="../index.min.js"></script>
     <script>
+      function onEnterAnimation() {
+          this.firstChild.style.overflow = "";
+      }
+
       function onExitAnimation() {
           this.style.visibility = 'hidden'; // Hide once the animation is complete
       }
       document.querySelectorAll('select').forEach(select => {
           const picker = new OptionPicker(select);
           picker.on('enter', function () {
+              this._mask.options.addEventListener('transitionend', onEnterAnimation);
+              this._mask.options.firstChild.style.overflow = 'hidden';
               this._mask.options.removeEventListener('transitionend', onExitAnimation);
               this._mask.options.style.maxHeight = '0px';
               this._mask.options.style.visibility = 'hidden';
@@ -226,6 +232,8 @@
           });
           picker.on('exit', function () {
               this._mask.options.addEventListener('transitionend', onExitAnimation);
+              this._mask.options.firstChild.style.overflow = 'hidden';
+              this._mask.options.removeEventListener('transitionend', onEnterAnimation);
               this._mask.options.style.maxHeight = '0px';
           });
       });

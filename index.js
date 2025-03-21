@@ -1734,7 +1734,9 @@
             var _mask = picker._mask,
                 lot = _mask.lot;
             if (1 === currentPointerState) {
-                ++currentPointerState;
+                if (false !== touchTop && touchTop !== e.touches[0].clientY) {
+                    ++currentPointerState;
+                }
             }
             // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
             // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than

@@ -1699,7 +1699,7 @@
 
     function onPointerDownOption(e) {
         var $ = this;
-        focusTo($), getReference($)._event = e;
+        getReference($)._event = e;
         currentPointerState = 1; // Pointer is “down”
     }
 

@@ -49,9 +49,9 @@ block content
       p
         input(list='test-4' name='test-4' placeholder!='Test&hellip;')
       p
-        button(onclick='disableAll();' type='button') Disable All
+        button(onclick='disableAll(); this.disabled = true; this.nextElementSibling.disabled = false;' type='button') Disable All
         = ' '
-        button(onclick='enableAll();' type='button') Enable All
+        button(disabled onclick='enableAll(); this.disabled = true; this.previousElementSibling.disabled = false;' type='button') Enable All
         = ' '
         button(type='submit') Submit
   datalist(id='test-4')

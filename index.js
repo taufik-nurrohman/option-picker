@@ -1311,7 +1311,7 @@
             }
             exit = true;
             if (!getAria(mask, 'expanded')) {
-                picker.enter(exit);
+                picker.enter(exit).fit();
                 currentOption && focusTo(currentOption);
             } else if (strict && KEY_ENTER === key) {
                 // Automatically select the first option!
@@ -2152,6 +2152,7 @@
                     return $;
                 }
                 self.size = state.size = size;
+                console.log(size);
                 if (1 === size) {
                     letDatum(mask, 'size');
                     letStyle(options, 'max-height');
@@ -2377,7 +2378,6 @@
             // Re-assign some state value(s) using the setter to either normalize or reject the initial value
             $.max = isMultipleSelect ? max != null ? max : Infinity : 1;
             $.min = isInputSelf ? 0 : min != null ? min : 1;
-            $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             var _active = $._active,
                 _state2 = state,
                 options = _state2.options,
@@ -2413,6 +2413,8 @@
             }
             // After the initial value has been set, restore the previous `this._active` value
             $._active = _active;
+            // Must be set after option(s) are set
+            $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             // Force `id` attribute(s)
             setAria(mask, 'controls', getID(setID(maskOptions)));
             setAria(mask, 'labelledby', getID(setID(text)));

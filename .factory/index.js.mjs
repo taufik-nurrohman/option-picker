@@ -343,7 +343,7 @@ function onKeyDownTextInput(e) {
         }
         exit = true;
         if (!getAria(mask, 'expanded')) {
-            picker.enter(exit);
+            picker.enter(exit).fit();
             currentOption && focusTo(currentOption);
         } else if (strict && KEY_ENTER === key) {
             // Automatically select the first option!
@@ -1138,6 +1138,7 @@ setObjectAttributes(OptionPicker, {
                 return $;
             }
             self.size = state.size = size;
+            console.log(size);
             if (1 === size) {
                 letDatum(mask, 'size');
                 letStyle(options, 'max-height');
@@ -1344,7 +1345,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         // Re-assign some state value(s) using the setter to either normalize or reject the initial value
         $.max = isMultipleSelect ? (max ?? Infinity) : 1;
         $.min = isInputSelf ? 0 : (min ?? 1);
-        $.size = state.size ?? (isInputSelf ? 1 : self.size);
         let {_active} = $,
             {options} = state, selected;
         // Force the `this._active` value to `true` to set the initial value
@@ -1378,6 +1378,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         }
         // After the initial value has been set, restore the previous `this._active` value
         $._active = _active;
+        // Must be set after option(s) are set
+        $.size = state.size ?? (isInputSelf ? 1 : self.size);
         // Force `id` attribute(s)
         setAria(mask, 'controls', getID(setID(maskOptions)));
         setAria(mask, 'labelledby', getID(setID(text)));

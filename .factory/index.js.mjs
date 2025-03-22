@@ -379,7 +379,8 @@ function onKeyDownOption(e) {
         picker = getReference($),
         {_mask, _options, self} = picker,
         {hint, value} = _mask;
-    let optionNext, optionParent, optionPrev, valueCurrent;
+    let max = picker.max,
+        optionNext, optionParent, optionPrev, valueCurrent;
     picker._event = e;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
         exit = true;
@@ -389,7 +390,7 @@ function onKeyDownOption(e) {
             picker.exit(exit);
         }
     } else if (KEY_ENTER === key || KEY_ESCAPE === key || KEY_TAB === key || ' ' === key) {
-        if (picker.max > 1) {
+        if (max > 1) {
             if (KEY_ESCAPE === key) {
                 picker.exit(exit = true);
             } else if (KEY_TAB === key) {
@@ -434,7 +435,7 @@ function onKeyDownOption(e) {
         while (optionNext && (getAria(optionNext, 'disabled') || optionNext.hidden)) {
             optionNext = getNext(optionNext);
         }
-        if (keyIsShift) {
+        if (keyIsShift && max > 1) {
             if (optionNext) {
                 if (!getAria(optionNext, 'selected')) {
                     toggleToOption(optionNext, picker);
@@ -475,7 +476,7 @@ function onKeyDownOption(e) {
         while (optionPrev && (getAria(optionPrev, 'disabled') || optionPrev.hidden)) {
             optionPrev = getPrev(optionPrev);
         }
-        if (keyIsShift) {
+        if (keyIsShift && max > 1) {
             if (optionPrev) {
                 if (!getAria(optionPrev, 'selected')) {
                     toggleToOption(optionPrev, picker);
@@ -492,7 +493,7 @@ function onKeyDownOption(e) {
         exit = true;
         focusToOptionLast(picker);
     } else {
-        if (keyIsCtrl && 'a' === key && !isInput(self) && picker.max > 1) {
+        if (keyIsCtrl && 'a' === key && !isInput(self) && max > 1) {
             exit = true;
             forEachMap(_options, (v, k) => {
                 if (!getAria(v[2], 'disabled') && !v[2].hidden) {

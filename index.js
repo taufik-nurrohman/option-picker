@@ -561,9 +561,6 @@
     var hasAttribute = function hasAttribute(node, attribute) {
         return node.hasAttribute(attribute);
     };
-    var hasDatum = function hasDatum(node, datum) {
-        return hasAttribute(node, 'data-' + datum);
-    };
     var hasID = function hasID(node) {
         return hasAttribute(node, 'id');
     };
@@ -976,7 +973,6 @@
             state = $.state,
             options = _mask.options,
             strict = state.strict,
-            hasSize = getDatum(mask, 'size'),
             option;
         var count = _options.count();
         if (selectOnly) {
@@ -984,9 +980,6 @@
                 var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
                 if ("" !== q && q === text.slice(0, toCount(q)) && !getAria(v[2], 'disabled')) {
                     selectToOption(v[2], $);
-                    if (hasSize) {
-                        scrollTo(v[2]);
-                    }
                     return 0;
                 }
                 --count;
@@ -1009,7 +1002,6 @@
                 // Silently select the first option without affecting the currently typed query and focus/select state
                 if (count && (option = goToOptionFirst($))) {
                     setAria(option, 'selected', true);
-                    // setAttribute(option._[OPTION_SELF], 'selected', "");
                     option._[OPTION_SELF].selected = true;
                     setValue(self, b = getOptionValue(option));
                 } else {
@@ -1122,13 +1114,13 @@
 
     function focusToOptionFirst(picker, k) {
         var option;
-        if (option = goToOptionFirst(picker, k)) {
+        if (option = goToOptionFirst(picker)) {
             return focusToOption(option);
         }
     }
 
     function focusToOptionLast(picker) {
-        return focusToOptionFirst(picker, 'Last');
+        return focusToOptionFirst(picker);
     }
 
     function getOptionSelected($, strict) {
@@ -1210,10 +1202,10 @@
         }), selected;
     }
 
-    function goToOptionFirst(picker, k) {
+    function goToOptionFirst(picker) {
         var _options = picker._options,
             option;
-        if (option = toValuesFromMap(_options)['find' + (k || "")](function (v) {
+        if (option = toValuesFromMap(_options).find(function (v) {
                 return !getAria(v[2], 'disabled') && !v[2].hidden;
             })) {
             return option[2];
@@ -1349,10 +1341,10 @@
             picker = getReference($),
             _mask = picker._mask,
             _options = picker._options,
+            max = picker.max,
             self = picker.self,
             hint = _mask.hint,
-            value = _mask.value;
-        var max = picker.max,
+            value = _mask.value,
             optionNext,
             optionParent,
             optionPrev,
@@ -1415,6 +1407,20 @@
                 if (optionNext) {
                     if (!getAria(optionNext, 'selected')) {
                         toggleToOption(optionNext, picker);
+                    } else {
+                        if (optionPrev = getPrev($)) {
+                            if ('group' === getRole(optionPrev)) {
+                                optionPrev = false;
+                            } else {
+                                while (optionPrev && (getAria(optionPrev, 'disabled') || optionPrev.hidden)) {
+                                    optionPrev = getNext(optionPrev);
+                                }
+                            }
+                        }
+                        if (!optionPrev || !getAria(optionPrev, 'selected')) {
+                            // This removes the selection
+                            toggleToOption($, picker);
+                        }
                     }
                     focusToOption(optionNext);
                 }
@@ -1456,6 +1462,20 @@
                 if (optionPrev) {
                     if (!getAria(optionPrev, 'selected')) {
                         toggleToOption(optionPrev, picker);
+                    } else {
+                        if (optionNext = getNext($)) {
+                            if ('group' === getRole(optionNext)) {
+                                optionNext = false;
+                            } else {
+                                while (optionNext && (getAria(optionNext, 'disabled') || optionNext.hidden)) {
+                                    optionNext = getNext(optionNext);
+                                }
+                            }
+                        }
+                        if (!optionNext || !getAria(optionNext, 'selected')) {
+                            // This removes the selection
+                            toggleToOption($, picker);
+                        }
                     }
                     focusToOption(optionPrev);
                 }
@@ -1484,7 +1504,7 @@
                     if (isInput(self)) {
                         setStyle(hint, 'color', 'transparent');
                     } else {
-                        searchTerm += key; // Initialize search term, right before the exit
+                        searchTerm += key; // Initialize search term, right before exit
                     }
                 }!keyIsShift && picker.exit(!(exit = false));
             }
@@ -1498,15 +1518,16 @@
             key = e.key,
             keyIsAlt = e.altKey,
             keyIsCtrl = e.ctrlKey,
+            keyIsShift = e.shiftKey,
             picker = getReference($),
             _mask = picker._mask,
             _options = picker._options,
+            max = picker.max,
+            min = picker.min,
             self = picker.self,
             options = _mask.options,
             value = _mask.value,
             values = _mask.values,
-            max = picker.max,
-            min = picker.min,
             valueCurrent,
             valueNext,
             valuePrev;
@@ -1555,7 +1576,7 @@
                 if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                     letAria(valueCurrent[2], 'selected');
                     valueCurrent[3].selected = false;
-                    if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value') || (valuePrev = getNext($)) && hasDatum(valuePrev, 'value')) {
+                    if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values) || (valuePrev = getNext($)) && hasKeyInMap(valuePrev, values)) {
                         focusTo(_mask.value = valuePrev);
                         offEvent('keydown', $, onKeyDownValue);
                         offEvent('mousedown', $, onPointerDownValue);
@@ -1585,7 +1606,7 @@
                 if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                     letAria(valueCurrent[2], 'selected');
                     valueCurrent[3].selected = false;
-                    if ((valueNext = getNext($)) && hasDatum(valueNext, 'value') || (valueNext = getPrev($)) && hasDatum(valueNext, 'value')) {
+                    if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values) || (valueNext = getPrev($)) && hasKeyInMap(valueNext, values)) {
                         focusTo(_mask.value = valueNext);
                         offEvent('keydown', $, onKeyDownValue);
                         offEvent('mousedown', $, onPointerDownValue);
@@ -1616,41 +1637,68 @@
             picker.exit(exit = false);
         } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
             var focus = exit = true;
-            if (KEY_ENTER === key || "" === searchTerm && ' ' === key) {
+            if (KEY_ENTER === key) {
                 if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                     focus = false;
                     onAnimationsEnd(options, function () {
                         return focusTo(valueCurrent[2]);
                     }, scrollTo(valueCurrent[2]));
                 }
+            } else if (' ' === key) {
+                focus = false;
+                if (getAria($, 'selected')) {
+                    letAria($, 'selected');
+                } else {
+                    setAria($, 'selected', true);
+                }
             }
-            picker.enter(focus).fit();
+            if (1 === max) {
+                picker.enter(focus).fit();
+            }
         } else if (KEY_ARROW_LEFT === key) {
             exit = true;
-            if ((valuePrev = getPrev($)) && hasDatum(valuePrev, 'value')) {
+            if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values)) {
+                if (keyIsShift) {
+                    if (getAria(valuePrev, 'selected')) {
+                        letAria($, 'selected');
+                    } else {
+                        setAria($, 'selected', true);
+                        setAria(valuePrev, 'selected', true);
+                    }
+                }
                 focusTo(valuePrev);
             }
         } else if (KEY_ARROW_RIGHT === key) {
             exit = true;
-            if ((valueNext = getNext($)) && hasDatum(valueNext, 'value')) {
+            if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values)) {
+                if (keyIsShift) {
+                    if (getAria(valueNext, 'selected')) {
+                        letAria($, 'selected');
+                    } else {
+                        setAria($, 'selected', true);
+                        setAria(valueNext, 'selected', true);
+                    }
+                }
                 focusTo(valueNext);
             }
         } else if (1 === toCount(key) && !keyIsAlt) {
             if (keyIsCtrl && 'a' === key && max > 1) {
+                exit = true;
                 // Select all visually
                 setAria(valueCurrent = value, 'selected', true);
-                while ((valueNext = getNext(valueCurrent)) && hasDatum(valueNext, 'value')) {
+                while ((valueNext = getNext(valueCurrent)) && hasKeyInMap(valueNext, values)) {
                     setAria(valueCurrent = valueNext, 'selected', true);
                 }
-                while ((valuePrev = getPrev(valueCurrent)) && hasDatum(valuePrev, 'value')) {
+                while ((valuePrev = getPrev(valueCurrent)) && hasKeyInMap(valuePrev, values)) {
                     setAria(valueCurrent = valuePrev, 'selected', true);
                 }
-            } else {
+            } else if (!keyIsCtrl) {
+                exit = false;
                 searchTerm += key;
             }
         }
         if ("" !== searchTerm) {
-            filter(picker, searchTerm, _options, exit = true);
+            filter(picker, searchTerm, _options, true);
         }
         exit && offEventDefault(e);
     }
@@ -1659,10 +1707,9 @@
         offEventDefault(e);
         var $ = this,
             picker = getReference($),
-            _mask = picker._mask;
-        _mask.value;
-        var values = _mask.values,
-            max = picker.max;
+            _mask = picker._mask,
+            max = picker.max,
+            values = _mask.values;
         picker._event = e;
         // Clear all selection(s) on “click”
         forEachSet(values, function (v) {
@@ -1688,7 +1735,7 @@
     // device(s) and should not give a wrong result.
     var currentPointerState = 0,
         touchTop = false,
-        touchTopCurrent = 0;
+        touchTopCurrent = false;
 
     function onPointerDownMask(e) {
         // This is necessary for device(s) that support both pointer and touch control so that they will not execute both
@@ -1736,41 +1783,35 @@
             touchTop = e.touches[0].clientY;
         }
         var mask = picker.mask,
-            state = picker.state,
-            n = state.n,
             target = e.target;
         picker._event = e;
-        if (mask !== target && mask !== getParent(target, '.' + n)) {
-            if (getDatum(mask, 'size')) {
-                picker.blur();
-            } else {
-                letReference($), picker.exit();
-            }
+        if (mask !== target && mask !== getParent(target, '[role=combobox]')) {
+            letReference($), picker.exit();
         }
     }
 
     function onPointerMoveRoot(e) {
+        touchTopCurrent = 'touchmove' === e.type ? e.touches[0].clientY : false;
         var $ = this,
             picker = getReference($);
-        if (picker) {
-            picker._event = e;
-            var _mask = picker._mask,
-                lot = _mask.lot;
-            if (1 === currentPointerState) {
-                if (false !== touchTop && touchTop !== e.touches[0].clientY) {
-                    ++currentPointerState;
-                }
+        if (!picker) {
+            return;
+        }
+        picker._event = e;
+        var _mask = picker._mask,
+            lot = _mask.lot,
+            v;
+        if (false !== touchTop && false !== touchTopCurrent) {
+            if (1 === currentPointerState && touchTop !== touchTopCurrent) {
+                ++currentPointerState;
             }
-            // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event was
-            // disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is better than
-            // doing nothing :\
-            if ('touchmove' === e.type && false !== touchTop) {
-                touchTopCurrent = e.touches[0].clientY;
-                var scroll = getScroll(lot);
-                scroll[1] -= touchTopCurrent - touchTop;
-                setScroll(lot, scroll);
-                touchTop = touchTopCurrent;
-            }
+            // Programmatically re-enable the swipe feature in the option(s) list because the default `touchstart` event
+            // has been disabled. It does not have the innertia effect as in the native after-swipe reaction, but it is
+            // still better than doing nothing :\
+            v = getScroll(lot);
+            v[1] -= touchTopCurrent - touchTop;
+            setScroll(lot, v);
+            touchTop = touchTopCurrent;
         }
     }
     // The actual option selection happens when the pointer is released, to clearly identify whether we want to select an
@@ -1783,7 +1824,7 @@
         if (1 === currentPointerState) {
             if (!getAria($, 'disabled')) {
                 if (picker.max > 1) {
-                    toggleToOption($, picker);
+                    toggleToOption($, picker), focusTo($);
                 } else {
                     selectToOption($, picker), picker.exit(true);
                 }
@@ -1807,9 +1848,9 @@
     function onSubmitForm(e) {
         var $ = this,
             picker = getReference($),
-            count = toCount(getOptionsSelected(picker)),
             max = picker.max,
-            min = picker.min;
+            min = picker.min,
+            count = toCount(getOptionsSelected(picker));
         if (count < min) {
             picker.fire('min.options', [count, min]);
             offEventDefault(e);
@@ -1841,13 +1882,14 @@
             input = _mask.input,
             value = _mask.value;
         if (option) {
-            var a = getValue(self),
+            var optionReal = option._[OPTION_SELF],
+                a = getValue(self),
                 b;
             selectToOptionsNone(picker);
             setAria(option, 'selected', true);
-            setAttribute(option._[OPTION_SELF], 'selected', "");
+            setAttribute(optionReal, 'selected', "");
             setValue(self, b = getOptionValue(option));
-            option._[OPTION_SELF].selected = true;
+            optionReal.selected = true;
             if (isInput(self)) {
                 setAria(input, 'activedescendant', getID(option));
                 setStyle(hint, 'color', 'transparent');
@@ -1863,9 +1905,9 @@
         }
     }
 
-    function selectToOptionFirst(picker, k) {
+    function selectToOptionFirst(picker) {
         var option;
-        if (option = goToOptionFirst(picker, k)) {
+        if (option = goToOptionFirst(picker)) {
             return selectToOption(option, picker);
         }
     }
@@ -1898,31 +1940,30 @@
     function toggleToOption(option, picker) {
         var _mask = picker._mask,
             _options = picker._options,
+            max = picker.max,
+            min = picker.min,
             self = picker.self,
-            state = picker.state,
             value = _mask.value,
             values = _mask.values,
-            max = state.max,
-            min = state.min,
             selected,
             selectedFirst,
             valueCurrent,
             valueNext;
         if (option) {
-            var a = getOptionsValues(getOptionsSelected(picker)),
+            var optionReal = option._[OPTION_SELF],
+                a = getOptionsValues(getOptionsSelected(picker)),
                 b,
                 c;
-            if (getAria(option, 'selected')) {
+            if (getAria(option, 'selected') && optionReal.selected) {
                 if (min > 0 && (c = toCount(a)) <= min) {
                     picker.fire('min.options', [c, min]);
                 } else {
                     letAria(option, 'selected');
-                    option._[OPTION_SELF].selected = false;
+                    optionReal.selected = false;
                 }
             } else {
                 setAria(option, 'selected', true);
-                setAttribute(option._[OPTION_SELF], 'selected', "");
-                option._[OPTION_SELF].selected = true;
+                optionReal.selected = true;
             }
             if (!isInput(self)) {
                 b = getOptionsValues(getOptionsSelected(picker));
@@ -2072,14 +2113,9 @@
                     return $;
                 }
                 value = (Infinity === value || isInteger(value)) && value > 1 ? value : 1;
-                if (value > 1) {
-                    setAria(mask, 'multiselectable', self.multiple = true);
-                    state.max = value;
-                } else {
-                    letAria(mask, 'multiselectable');
-                    self.multiple = false;
-                    state.max = value;
-                }
+                self.multiple = value > 1;
+                state.max = value;
+                value > 1 ? setAria(mask, 'multiselectable', true) : letAria(mask, 'multiselectable');
                 return $;
             }
         },
@@ -2108,10 +2144,8 @@
             set: function set(options) {
                 var $ = this,
                     _active = $._active,
-                    _mask = $._mask;
-                $._options;
-                $.self;
-                var selected;
+                    _mask = $._mask,
+                    selected;
                 if (!_active) {
                     return $;
                 }
@@ -2156,7 +2190,6 @@
                     return $;
                 }
                 self.size = state.size = size;
-                console.log(size);
                 if (1 === size) {
                     letDatum(mask, 'size');
                     letStyle(options, 'max-height');
@@ -2417,7 +2450,8 @@
             }
             // After the initial value has been set, restore the previous `this._active` value
             $._active = _active;
-            // Must be set after option(s) are set
+            // Has to be set after the option(s) are set, because from that point on we want to get the computed size of the
+            // option to set the correct height for the option(s) based on the `size` attribute value.
             $.size = (_state$size = state.size) != null ? _state$size : isInputSelf ? 1 : self.size;
             // Force `id` attribute(s)
             setAria(mask, 'controls', getID(setID(maskOptions)));
@@ -2464,9 +2498,8 @@
                 mask = $.mask,
                 self = $.self,
                 state = $.state,
-                input = _mask.input;
-            _mask.options;
-            var value = _mask.value;
+                input = _mask.input,
+                value = _mask.value;
             var form = getParentForm(self);
             $._active = false;
             $._options = new OptionPickerOptions($);
@@ -2630,13 +2663,15 @@
         reset: function reset(focus, mode) {
             var $ = this,
                 _active = $._active,
-                _value = $._value;
-            $._values;
+                _value = $._value,
+                _values = $._values,
+                max = $.max;
             if (!_active) {
                 return $;
             }
-            if (picker.max > 1);
-            else {
+            if (max > 1) {
+                $.values = _values;
+            } else {
                 $.value = _value;
             }
             return focus ? $.focus(mode) : $;

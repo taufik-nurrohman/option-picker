@@ -15,7 +15,18 @@
   <body>
     <main>
       <form method="get" target="_blank">
-        <p><select multiple name="test[]">
+        <p><select multiple name="test-1[]">
+            <option>Option 1</option>
+            <option selected>Option 2</option>
+            <option>Option 3</option>
+            <option>Option 4</option>
+            <option selected>Option 5</option>
+            <option>Option 6</option>
+            <option>Option 7</option>
+            <option disabled>Option 8</option>
+            <option>Option 9</option>
+          </select></p>
+        <p><select multiple name="test-2[]" size="5">
             <option>Option 1</option>
             <option selected>Option 2</option>
             <option>Option 3</option>
@@ -31,12 +42,14 @@
     </main>
     <script src="../index.js"></script>
     <script>
-      const picker = new OptionPicker(document.querySelector('select'));
-      picker.on('max.options', function (count, max) {
-          alert('The maximum number of options to select is ' + max + ', your current selection is ' + count + '.');
-      });
-      picker.on('min.options', function (count, min) {
-          alert('The minimum number of options to select is ' + min + ', your current selection is ' + count + '.');
+      document.querySelectorAll('select').forEach(select => {
+          const picker = new OptionPicker(select);
+          picker.on('max.options', function (count, max) {
+              alert('The maximum number of options to select is ' + max + ', your current selection is ' + count + '.');
+          });
+          picker.on('min.options', function (count, min) {
+              alert('The minimum number of options to select is ' + min + ', your current selection is ' + count + '.');
+          });
       });
     </script>
   </body>

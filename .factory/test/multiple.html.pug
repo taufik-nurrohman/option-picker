@@ -7,14 +7,14 @@ block state
 
 block script
   script
-    | const picker = new OptionPicker(document.querySelector('select'));
-    |
-    | picker.on('max.options', function (count, max) {
-    |     alert('The maximum number of options to select is ' + max + ', your current selection is ' + count + '.');
-    | });
-    |
-    | picker.on('min.options', function (count, min) {
-    |     alert('The minimum number of options to select is ' + min + ', your current selection is ' + count + '.');
+    | document.querySelectorAll('select').forEach(select => {
+    |     const picker = new OptionPicker(select);
+    |     picker.on('max.options', function (count, max) {
+    |         alert('The maximum number of options to select is ' + max + ', your current selection is ' + count + '.');
+    |     });
+    |     picker.on('min.options', function (count, min) {
+    |         alert('The minimum number of options to select is ' + min + ', your current selection is ' + count + '.');
+    |     });
     | });
 
 block style
@@ -27,7 +27,18 @@ block content
   main
     form(method='get' target='_blank')
       p
-        select(multiple name='test[]')
+        select(multiple name='test-1[]')
+          option Option 1
+          option(selected) Option 2
+          option Option 3
+          option Option 4
+          option(selected) Option 5
+          option Option 6
+          option Option 7
+          option(disabled) Option 8
+          option Option 9
+      p
+        select(multiple name='test-2[]' size='5')
           option Option 1
           option(selected) Option 2
           option Option 3

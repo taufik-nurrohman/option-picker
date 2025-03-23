@@ -47,7 +47,9 @@ $name: 'option-picker';
     }
   }
   &[aria-expanded='true'] {
-    z-index: 9999;
+    &:not([data-size]):not([data-size='1']) {
+      z-index: 9999;
+    }
     .#{$name}__arrow {
       &::after {
         border: {

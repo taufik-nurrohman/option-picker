@@ -50,7 +50,7 @@
 .option-picker[aria-disabled=true] .option-picker__value[aria-selected=true] {
   background: rgba(0, 0, 255, 0.25);
 }
-.option-picker[aria-expanded=true] {
+.option-picker[aria-expanded=true]:not([data-size]):not([data-size="1"]) {
   z-index: 9999;
 }
 .option-picker[aria-expanded=true] .option-picker__arrow::after {

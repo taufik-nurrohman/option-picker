@@ -1114,13 +1114,13 @@
 
     function focusToOptionFirst(picker, k) {
         var option;
-        if (option = goToOptionFirst(picker)) {
+        if (option = goToOptionFirst(picker, k)) {
             return focusToOption(option);
         }
     }
 
     function focusToOptionLast(picker) {
-        return focusToOptionFirst(picker);
+        return focusToOptionFirst(picker, 'Last');
     }
 
     function getOptionSelected($, strict) {
@@ -1202,10 +1202,10 @@
         }), selected;
     }
 
-    function goToOptionFirst(picker) {
+    function goToOptionFirst(picker, k) {
         var _options = picker._options,
             option;
-        if (option = toValuesFromMap(_options).find(function (v) {
+        if (option = toValuesFromMap(_options)['find' + (k || "")](function (v) {
                 return !getAria(v[2], 'disabled') && !v[2].hidden;
             })) {
             return option[2];

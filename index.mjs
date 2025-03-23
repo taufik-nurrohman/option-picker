@@ -249,9 +249,9 @@ function getOptionsSelected($) {
     }), selected;
 }
 
-function goToOptionFirst(picker) {
+function goToOptionFirst(picker, k) {
     let {_options} = picker, option;
-    if (option = toValuesFromMap(_options).find(v => !getAria(v[2], 'disabled') && !v[2].hidden)) {
+    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !getAria(v[2], 'disabled') && !v[2].hidden)) {
         return option[2];
     }
 }

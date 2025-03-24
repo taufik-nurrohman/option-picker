@@ -1158,23 +1158,22 @@ setObjectAttributes(OptionPicker, {
                 {_active, _mask, mask, self, state} = $,
                 {options} = _mask,
                 size = !isInteger(value) || value < 1 ? 1 : value;
-            if (!_active || isInput(self)) {
+            if (isInput(self)) {
                 return $;
             }
             self.size = state.size = size;
             if (1 === size) {
                 letDatum(mask, 'size');
                 letStyle(options, 'max-height');
-                letReference(R);
+                _active && letReference(R);
             } else {
                 let option = goToOptionFirst($);
                 if (option) {
                     let optionsGap = getStyle(options, 'gap', false),
-                        optionsPaddingBottom = getStyle(options, 'padding-bottom', false),
                         optionHeight = getStyle(option, 'height', false) ?? getStyle(option, 'min-height', false) ?? getStyle(option, 'line-height', false);
                     setDatum(mask, 'size', size);
-                    setStyle(options, 'max-height', 'calc((' + optionHeight + ' + max(' + optionsGap + ',' + optionsPaddingBottom + '))*' + size + ')');
-                    setReference(R, $);
+                    setStyle(options, 'max-height', 'calc((' + optionHeight + '*' + size + ') + calc(' + optionsGap + '*' + size + '))');
+                    _active && setReference(R, $);
                 }
             }
             return $;

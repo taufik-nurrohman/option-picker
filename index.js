@@ -2186,24 +2186,23 @@
                     state = $.state,
                     options = _mask.options,
                     size = !isInteger(value) || value < 1 ? 1 : value;
-                if (!_active || isInput(self)) {
+                if (isInput(self)) {
                     return $;
                 }
                 self.size = state.size = size;
                 if (1 === size) {
                     letDatum(mask, 'size');
                     letStyle(options, 'max-height');
-                    letReference(R);
+                    _active && letReference(R);
                 } else {
                     var option = goToOptionFirst($);
                     if (option) {
                         var _ref, _getStyle;
                         var optionsGap = getStyle(options, 'gap'),
-                            optionsPaddingBottom = getStyle(options, 'padding-bottom'),
                             optionHeight = (_ref = (_getStyle = getStyle(option, 'height')) != null ? _getStyle : getStyle(option, 'min-height')) != null ? _ref : getStyle(option, 'line-height');
                         setDatum(mask, 'size', size);
-                        setStyle(options, 'max-height', 'calc((' + optionHeight + ' + max(' + optionsGap + ',' + optionsPaddingBottom + '))*' + size + ')');
-                        setReference(R, $);
+                        setStyle(options, 'max-height', 'calc((' + optionHeight + '*' + size + ') + calc(' + optionsGap + '*' + size + '))');
+                        _active && setReference(R, $);
                     }
                 }
                 return $;

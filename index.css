@@ -124,7 +124,9 @@
   display: none;
 }
 .option-picker__options-batch {
-  border: inherit;
+  border-color: inherit;
+  border-style: inherit;
+  border-width: 1px;
   flex-direction: column;
 }
 .option-picker__options-batch::before {
@@ -204,7 +206,4 @@
   padding-top: 0;
   position: static;
   visibility: visible;
-}
-.option-picker[data-size] .option-picker__options-batch {
-  border-width: 1px;
 }

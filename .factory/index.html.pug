@@ -1611,12 +1611,12 @@ block content
     p Shows the option picker’s options.
     pre: code
       | picker.enter(); // Show the option picker’s options
-      | picker.enter(true); // Show the option picker’s options and focus to the option picker’s input or mask
+      | picker.enter(true); // Show the option picker’s options and focus to the option picker’s input or value
     h4: code picker.exit(focus, mode = true)
     p Hides the option picker’s options.
     pre: code
       | picker.exit(); // Hide the option picker’s options
-      | picker.exit(true); // Hide the option picker’s options and focus to the option picker’s input or mask
+      | picker.exit(true); // Hide the option picker’s options and focus to the option picker’s input or value
     h4: code picker.fire(event, data, that)
     p Fires an event.
     pre: code
@@ -1648,7 +1648,7 @@ block content
     p Resets the option picker’s value or values to its initial value or values.
     pre: code
       | picker.reset(); // Reset the option picker’s value or values
-      | picker.reset(true); // Reset the option picker’s value or values and focus to the option picker’s input or mask
+      | picker.reset(true); // Reset the option picker’s value or values and focus to the option picker’s input or value
     h3 Static Methods
     p Static methods are methods available directly on the #[code OptionPicker] object.
     h4: code OptionPicker.from(self, state)
@@ -1684,9 +1684,19 @@ block content
     pre: code
       | picker.mask.classList.add(picker.state.n + '--dark');
     h4: code picker.max
-    P #[em TODO].
+    p Proxy that passes to the #[code picker.state.max] property, with additional actions that are executed while the value is being set.
+    p(role='note') #[b Note:] This does not apply to an option picker that is sourced from an #[code &lt;input&gt;] element.
+    pre: code
+      | console.log(picker.max); // Returns the `picker.state.max` value
+    pre: code
+      | picker.max = 4; // Add `multiple` attribute to the `&lt;select&gt;` element and allow the user to select up to 4 options. If the option picker is sourced from a `&lt;select multiple&gt;` element and it has more than 4 options selected, the form submission will be disabled and the `max.options` hook will be fired.
     h4: code picker.min
-    P #[em TODO].
+    p Proxy that passes to the #[code picker.state.min] property, with additional actions that are executed while the value is being set.
+    p(role='note') #[b Note:] If the value is set to #[code 0] and the option picker is sourced from a #[code &lt;select&gt;] element, it will allow the user to remove the only selection by focusing on the option picker value and then pressing the #[kbd Backspace] or #[kbd Delete] key, or by focusing on the selected option and then clicking/tapping or pressing the #[kbd Space] key on it to remove the selection.
+    pre: code
+      | console.log(picker.min); // Returns the `picker.state.min` value
+    pre: code
+      | picker.min = 4; // If the option picker is sourced from a `&lt;select multiple&gt;` element and it has less than 4 options selected, the form submission will be disabled and the `min.options` hook will be fired.
     h4: code picker.options
     p Gets the current options list data, or sets (overwrites) the current options list with new data.
     pre: code

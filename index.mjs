@@ -598,6 +598,10 @@ function onKeyDownValue(e) {
                 } else {
                     letDatum(_mask.value = $, 'value');
                     setHTML($, "");
+                    // No option(s) selected
+                    if (0 === min) {
+                        selectToOptionsNone(picker, 1);
+                    }
                 }
             }
         } else {
@@ -628,6 +632,10 @@ function onKeyDownValue(e) {
                 } else {
                     letDatum(_mask.value = $, 'value');
                     setHTML($, "");
+                    // No option(s) selected
+                    if (0 === min) {
+                        selectToOptionsNone(picker, 1);
+                    }
                 }
             }
         } else {
@@ -879,22 +887,37 @@ function scrollTo(node) {
 }
 
 function selectToOption(option, picker) {
-    let {_mask, self} = picker,
+    let {_mask, min, self} = picker,
         {hint, input, value} = _mask;
     if (option) {
-        let optionReal = option._[OPTION_SELF], a = getValue(self), b;
+        let optionReal = option._[OPTION_SELF],
+            optionWasSelected = getAria(option, 'selected'), a = getValue(self), b;
         selectToOptionsNone(picker);
-        setAria(option, 'selected', true);
-        setAttribute(optionReal, 'selected', "");
-        setValue(self, b = getOptionValue(option));
-        optionReal.selected = true;
-        if (isInput(self)) {
-            setAria(input, 'activedescendant', getID(option));
-            setStyle(hint, 'color', 'transparent');
-            setText(input, getText(option));
+        // This removes the selection
+        if (0 === min && optionWasSelected) {
+            setValue(self, b = "");
+            if (isInput(self)) {
+                letAria(input, 'activedescendant');
+                letStyle(hint, 'color');
+                setText(input, b);
+            } else {
+                letDatum(value, 'value');
+                setHTML(value, "");
+            }
+        // This switches the selection
         } else {
-            setDatum(value, 'value', b);
-            setHTML(value, getHTML(option));
+            optionReal.selected = true;
+            setAria(option, 'selected', true);
+            setValue(self, b = getOptionValue(option));
+            optionReal.selected = true;
+            if (isInput(self)) {
+                setAria(input, 'activedescendant', getID(option));
+                setStyle(hint, 'color', 'transparent');
+                setText(input, getText(option));
+            } else {
+                setDatum(value, 'value', b);
+                setHTML(value, getHTML(option));
+            }
         }
         if (a !== b) {
             picker.fire('change', ["" !== b ? b : null]);
@@ -1087,8 +1110,9 @@ setObjectAttributes(OptionPicker, {
     max: {
         get: function () {
             let $ = this,
-                {self, state} = $;
-            return !isInput(self) && self.multiple ? state.max : 1;
+                {state} = $,
+                {max} = state;
+            return !isInteger(max) || max < 1 ? 1 : max;
         },
         set: function (value) {
             let $ = this,
@@ -1096,7 +1120,7 @@ setObjectAttributes(OptionPicker, {
             if (!_active || isInput(self)) {
                 return $;
             }
-            value = (Infinity === value || isInteger(value)) && value > 1 ? value : 1;
+            value = (Infinity === value || isInteger(value)) && value > 0 ? value : 0;
             self.multiple = value > 1;
             state.max = value;
             value > 1 ? setAria(mask, 'multiselectable', true) : letAria(mask, 'multiselectable');

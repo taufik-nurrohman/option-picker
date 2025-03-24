@@ -134,7 +134,11 @@ $name: 'option-picker';
     }
     &-batch {
       @extend %items;
-      border: inherit;
+      border: {
+        color: inherit;
+        style: inherit;
+        width: 1px;
+      }
       flex-direction: column;
       &::before {
         @extend %item;
@@ -226,9 +230,6 @@ $name: 'option-picker';
       padding-top: 0;
       position: static;
       visibility: visible;
-      &-batch {
-        border-width: 1px;
-      }
     }
   }
 }

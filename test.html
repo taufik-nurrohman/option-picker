@@ -23,6 +23,12 @@
     <script src="index.min.js"></script>
     <script>
       const picker = new OptionPicker(document.querySelector('select'));
+      picker.on('max.options', function (count, max) {
+          console.error('The maximum number of options to select is ' + max + ', your current selection is ' + count + '.');
+      });
+      picker.on('min.options', function (count, min) {
+          console.error('The minimum number of options to select is ' + min + ', your current selection is ' + count + '.');
+      });
     </script>
   </body>
 </html>

@@ -618,10 +618,8 @@
     </datalist>
     <script src="../index.min.js"></script>
     <script>
-      const picker_1 = new OptionPicker(document.querySelector('input[name=zone]'));
-      const picker_2 = new OptionPicker(document.querySelector('input[name=zone-strict]'), {
-          strict: true
-      });
+      const picker = new OptionPicker(document.querySelector('input[name=zone]'));
+      const pickerStrict = new OptionPicker(document.querySelector('input[name=zone-strict]'), true);
     </script>
   </body>
 </html>

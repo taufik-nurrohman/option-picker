@@ -33,7 +33,7 @@ const OPTION_SELF = 0;
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
         q = toCaseLower(query),
-        {_mask, mask, state} = $,
+        {_mask, mask, self, state} = $,
         {options} = _mask,
         {strict} = state, option;
     let count = _options.count();
@@ -58,8 +58,8 @@ const filter = debounce(($, input, _options, selectOnly) => {
         });
         options.hidden = !count;
         let a = getValue(self), b;
+        selectToOptionsNone($);
         if (strict) {
-            selectToOptionsNone($);
             // Silently select the first option without affecting the currently typed query and focus/select state
             if (count && (option = goToOptionFirst($))) {
                 setAria(option, 'selected', true);
@@ -894,22 +894,15 @@ function selectToOption(option, picker) {
             optionWasSelected = getAria(option, 'selected'), a = getValue(self), b;
         selectToOptionsNone(picker);
         // This removes the selection
-        if (0 === min && optionWasSelected) {
+        if (0 === min && optionWasSelected && !isInput(self)) {
             setValue(self, b = "");
-            if (isInput(self)) {
-                letAria(input, 'activedescendant');
-                letStyle(hint, 'color');
-                setText(input, b);
-            } else {
-                letDatum(value, 'value');
-                setHTML(value, "");
-            }
+            letDatum(value, 'value');
+            setHTML(value, "");
         // This switches the selection
         } else {
             optionReal.selected = true;
             setAria(option, 'selected', true);
             setValue(self, b = getOptionValue(option));
-            optionReal.selected = true;
             if (isInput(self)) {
                 setAria(input, 'activedescendant', getID(option));
                 setStyle(hint, 'color', 'transparent');

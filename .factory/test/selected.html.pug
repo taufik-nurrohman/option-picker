@@ -7,7 +7,7 @@ block state
 
 block script
   script
-    | const picker = new OptionPicker(document.querySelector('select'));
+    | document.querySelectorAll('input[list], select').forEach(v => new OptionPicker(v));
 
 block style
   style
@@ -22,3 +22,25 @@ block content
         option Option 1
         option(selected) Option 2
         option Option 3
+    p
+      select(multiple)
+        option Option 1
+        option(selected) Option 2
+        option(selected) Option 3
+        option Option 4
+        option Option 5
+    p
+      select(multiple size='3')
+        option Option 1
+        option(selected) Option 2
+        option(selected) Option 3
+        option Option 4
+        option Option 5
+    p
+      input(list='options' type='text' value='Option 2')
+  datalist#options
+    option Option 1
+    option Option 2
+    option Option 3
+    option Option 4
+    option Option 5

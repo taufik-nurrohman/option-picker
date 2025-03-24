@@ -19,10 +19,31 @@
           <option selected>Option 2</option>
           <option>Option 3</option>
         </select></p>
-    </main>
+      <p><select multiple>
+          <option>Option 1</option>
+          <option selected>Option 2</option>
+          <option selected>Option 3</option>
+          <option>Option 4</option>
+          <option>Option 5</option>
+        </select></p>
+      <p><select multiple size="3">
+          <option>Option 1</option>
+          <option selected>Option 2</option>
+          <option selected>Option 3</option>
+          <option>Option 4</option>
+          <option>Option 5</option>
+        </select></p>
+      <p><input list="options" type="text" value="Option 2"></p>
+    </main><datalist id="options">
+      <option>Option 1</option>
+      <option>Option 2</option>
+      <option>Option 3</option>
+      <option>Option 4</option>
+      <option>Option 5</option>
+    </datalist>
     <script src="../index.min.js"></script>
     <script>
-      const picker = new OptionPicker(document.querySelector('select'));
+      document.querySelectorAll('input[list], select').forEach(v => new OptionPicker(v));
     </script>
   </body>
 </html>

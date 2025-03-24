@@ -1105,7 +1105,7 @@ setObjectAttributes(OptionPicker, {
             let $ = this,
                 {state} = $,
                 {max} = state;
-            return !isInteger(max) || max < 1 ? 1 : max;
+            return Infinity === max || isInteger(max) && max > 0 ? max : 1;
         },
         set: function (value) {
             let $ = this,

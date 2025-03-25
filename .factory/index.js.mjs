@@ -1088,13 +1088,13 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active, self} = $,
+                {self} = $,
                 v = !!value;
-            if (!_active || !isInput(self)) {
+            if (!isInput(self)) {
                 return $;
             }
-            $._fix = v;
-            self.readOnly = !v;
+            $._active = !v;
+            $._fix = self.readOnly = v;
             return $.detach().attach();
         }
     },
@@ -1730,6 +1730,10 @@ setObjectMethods(OptionPickerOptions, {
         } else {}
         if (hasState(value[1], '&')) {
             optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
+            optionGroupReal = getElement('optgroup[label="' + value[1]['&'].replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
+                'label': value[1]['&'],
+                'title': getState(value[1], 'title') ?? false
+            });
             if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
                 setChildLast(lot, optionGroup = setElement('span', {
                     'class': n + 's-batch',
@@ -1739,10 +1743,7 @@ setObjectMethods(OptionPickerOptions, {
                     'role': 'group',
                     'title': getState(value[1], 'title') ?? false
                 }));
-                setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
-                    'label': value[1]['&'],
-                    'title': getState(value[1], 'title') ?? false
-                }));
+                setChildLast(itemsParent, optionGroupReal);
                 if (classes = getState(value[1], 'class')) {
                     setClasses(optionGroup, classes);
                     setClasses(optionGroupReal, classes);

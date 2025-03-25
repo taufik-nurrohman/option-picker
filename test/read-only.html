@@ -16,7 +16,7 @@
     <main>
       <form method="get" target="_blank">
         <p><input list="options" name="test" readonly type="text" value="Option 1"></p>
-        <p><label><input checked onchange="picker.self.readOnly = this.checked; picker.detach().attach();" type="checkbox"> <span>Read-Only</span></label></p>
+        <p><label><input checked onchange="picker.fix = this.checked;" type="checkbox"> <span>Read-Only</span></label></p>
         <p><button type="submit">Submit</button> <button onclick="picker.options.set('Option 4'), picker.focus();" type="button">Add &ldquo;Option 4&rdquo; Option</button> <button onclick="picker.options.let('Option 4'), picker.focus();" type="button">Remove &ldquo;Option 4&rdquo; Option</button> <button onclick="picker.enter(true);" type="button">Show Options</button></p>
       </form>
     </main><datalist id="options">

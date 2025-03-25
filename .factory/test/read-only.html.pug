@@ -21,7 +21,7 @@ block content
       p: input(list='options' name='test' readonly type='text' value='Option 1')
       p
         label
-          input(checked onchange='picker.self.readOnly = this.checked; picker.detach().attach();' type='checkbox')
+          input(checked onchange='picker.fix = this.checked;' type='checkbox')
           = ' '
           span Read-Only
       p

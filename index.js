@@ -2101,14 +2101,13 @@
             },
             set: function set(value) {
                 var $ = this,
-                    _active = $._active,
                     self = $.self,
                     v = !!value;
-                if (!_active || !isInput(self)) {
+                if (!isInput(self)) {
                     return $;
                 }
-                $._fix = v;
-                self.readOnly = !v;
+                $._active = !v;
+                $._fix = self.readOnly = v;
                 return $.detach().attach();
             }
         },
@@ -2842,21 +2841,23 @@
                 // `picker.options.set('asdf', [ … ])`
             } else;
             if (hasState(value[1], '&')) {
+                var _getState;
                 optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
+                optionGroupReal = getElement('optgroup[label="' + value[1]['&'].replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
+                    'label': value[1]['&'],
+                    'title': (_getState = getState(value[1], 'title')) != null ? _getState : false
+                });
                 if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
-                    var _getState, _getState2;
+                    var _getState2;
                     setChildLast(lot, optionGroup = setElement('span', {
                         'class': n + 's-batch',
                         'data': {
                             'value': value[1]['&']
                         },
                         'role': 'group',
-                        'title': (_getState = getState(value[1], 'title')) != null ? _getState : false
-                    }));
-                    setChildLast(itemsParent, optionGroupReal = setElement('optgroup', {
-                        'label': value[1]['&'],
                         'title': (_getState2 = getState(value[1], 'title')) != null ? _getState2 : false
                     }));
+                    setChildLast(itemsParent, optionGroupReal);
                     if (classes = getState(value[1], 'class')) {
                         setClasses(optionGroup, classes);
                         setClasses(optionGroupReal, classes);

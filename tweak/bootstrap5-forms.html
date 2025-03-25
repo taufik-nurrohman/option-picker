@@ -114,7 +114,21 @@
         color: var(--bs-dropdown-color);
         font-size: var(--bs-dropdown-font-size);
         gap: 0;
+        margin: 2px 0;
         padding: var(--bs-dropdown-padding-y) var(--bs-dropdown-padding-x);
+      }
+      .option-picker__options-batch {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        gap: 0;
+      }
+      .option-picker__options-batch::before {
+        padding: var(--bs-dropdown-header-padding-y) var(--bs-dropdown-header-padding-x);
+        font-size: 0.875rem;
+        color: var(--bs-dropdown-header-color);
+        border: 0;
+        margin: 0;
       }
       .option-picker__text,
       .option-picker__text:focus,
@@ -154,11 +168,19 @@
       <form method="get" target="_blank">
         <div class="row">
           <div class="col-md-3"><select class="form-select" name="test-1">
-              <option>Option 1</option>
-              <option>Option 2</option>
-              <option disabled>Option 3</option>
-              <option>Option 4</option>
-              <option>Option 5</option>
+              <optgroup label="Option Group 1">
+                <option>Option 1</option>
+                <option>Option 2</option>
+                <option disabled>Option 3</option>
+                <option>Option 4</option>
+                <option>Option 5</option>
+              </optgroup>
+              <optgroup label="Option Group 2">
+                <option>Option 6</option>
+                <option>Option 7</option>
+                <option disabled>Option 8</option>
+                <option>Option 9</option>
+              </optgroup>
             </select></div>
           <div class="col-md-3 mt-4 mt-md-0"><select class="form-select" disabled multiple name="test-2">
               <option>Option 1</option>

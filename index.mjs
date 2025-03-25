@@ -670,9 +670,7 @@ function onKeyDownValue(e) {
                 setAria($, 'selected', true);
             }
         }
-        if (1 === max) {
-            picker.enter(focus).fit();
-        }
+        picker.enter(focus).fit();
     } else if (KEY_ARROW_LEFT === key) {
         exit = true;
         if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values)) {
@@ -786,17 +784,17 @@ function onPointerDownOption(e) {
 }
 
 function onPointerDownRoot(e) {
+    if ('touchstart' === e.type) {
+        touchTop = e.touches[0].clientY;
+    }
     let $ = this,
         picker = getReference($);
     if (!picker) {
         return;
     }
-    if ('touchstart' === e.type) {
-        touchTop = e.touches[0].clientY;
-    }
+    picker._event = e;
     let {mask} = picker,
         {target} = e;
-    picker._event = e;
     if (mask !== target && mask !== getParent(target, '[role=combobox]')) {
         letReference($), picker.exit();
     }

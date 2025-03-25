@@ -157,11 +157,18 @@ block content
       .row
         .col-md-3
           select.form-select(name='test-1')
-            option Option 1
-            option Option 2
-            option(disabled) Option 3
-            option Option 4
-            option Option 5
+            optgroup(label='Option Group 1')
+              option Option 1
+              option Option 2
+              option(disabled) Option 3
+              option Option 4
+              option Option 5
+            optgroup(label='Option Group 2')
+              option Option 1
+              option Option 2
+              option(disabled) Option 3
+              option Option 4
+              option Option 5
         .col-md-3.mt-4.mt-md-0
           select.form-select(disabled multiple name='test-2')
             option Option 1

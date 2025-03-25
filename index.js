@@ -2088,11 +2088,18 @@
             },
             set: function set(value) {
                 var $ = this,
-                    self = $.self,
-                    v = !!value;
-                $._active = v;
-                self.disabled = !v;
-                return $.detach().attach();
+                    _mask = $._mask,
+                    mask = $.mask,
+                    self = $.self;
+                _mask.input;
+                var v = !!value;
+                self.disabled = !($._active = v);
+                if (v) {
+                    setAria(mask, 'disabled', true);
+                } else {
+                    letAria(mask, 'disabled');
+                }
+                return $;
             }
         },
         fix: {
@@ -2101,14 +2108,27 @@
             },
             set: function set(value) {
                 var $ = this,
+                    _mask = $._mask,
+                    mask = $.mask,
                     self = $.self,
+                    input = _mask.input,
                     v = !!value;
                 if (!isInput(self)) {
                     return $;
                 }
-                $._active = !v;
-                $._fix = self.readOnly = v;
-                return $.detach().attach();
+                $._active = !($._fix = self.readOnly = v);
+                if (v) {
+                    letAttribute(input, 'contenteditable');
+                    setAria(input, 'readonly', true);
+                    setAria(mask, 'readonly', true);
+                    setAttribute(input, 'tabindex', 0);
+                } else {
+                    letAria(input, 'readonly');
+                    letAria(mask, 'readonly');
+                    letAttribute(input, 'tabindex');
+                    setAttribute(input, 'contenteditable', "");
+                }
+                return $;
             }
         },
         max: {
@@ -2532,6 +2552,8 @@
             }
             if (value) {
                 offEvent('keydown', value, onKeyDownValue);
+                offEvent('mousedown', value, onPointerDownValue);
+                offEvent('touchstart', value, onPointerDownValue);
             }
             offEvent('focus', self, onFocusSelf);
             offEvent('mousedown', R, onPointerDownRoot);

@@ -1075,11 +1075,22 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {self} = $,
+                {_mask, mask, self} = $,
+                {input} = _mask,
                 v = !!value;
-            $._active = v;
-            self.disabled = !v;
-            return $.detach().attach();
+            self.disabled = !($._active = v);
+            if (v) {
+                setAria(mask, 'disabled', true);
+                if (input) {
+                    // TODO
+                }
+            } else {
+                letAria(mask, 'disabled');
+                if (input) {
+                    // TODO
+                }
+            }
+            return $;
         }
     },
     fix: {
@@ -1088,14 +1099,25 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {self} = $,
+                {_mask, mask, self} = $,
+                {input} = _mask,
                 v = !!value;
             if (!isInput(self)) {
                 return $;
             }
-            $._active = !v;
-            $._fix = self.readOnly = v;
-            return $.detach().attach();
+            $._active = !($._fix = self.readOnly = v);
+            if (v) {
+                letAttribute(input, 'contenteditable');
+                setAria(input, 'readonly', true);
+                setAria(mask, 'readonly', true);
+                setAttribute(input, 'tabindex', 0);
+            } else {
+                letAria(input, 'readonly');
+                letAria(mask, 'readonly');
+                letAttribute(input, 'tabindex');
+                setAttribute(input, 'contenteditable', "");
+            }
+            return $;
         }
     },
     max: {
@@ -1478,6 +1500,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         }
         if (value) {
             offEvent('keydown', value, onKeyDownValue);
+            offEvent('mousedown', value, onPointerDownValue);
+            offEvent('touchstart', value, onPointerDownValue);
         }
         offEvent('focus', self, onFocusSelf);
         offEvent('mousedown', R, onPointerDownRoot);

@@ -511,7 +511,7 @@ function onKeyDownOption(e) {
         exit = true;
         focusToOptionLast(picker);
     } else {
-        if (keyIsCtrl && 'a' === key && !isInput(self) && max > 1) {
+        if (keyIsCtrl && !keyIsShift && 'a' === key && !isInput(self) && max > 1) {
             exit = true;
             forEachMap(_options, (v, k) => {
                 if (!getAria(v[2], 'disabled') && !v[2].hidden) {
@@ -657,13 +657,11 @@ function onKeyDownValue(e) {
         picker.exit(exit = false);
     } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
         let focus = exit = true;
-        if (KEY_ENTER === key) {
+        if (KEY_ENTER === key || ' ' === key) {
             if (valueCurrent = getValueInMap(getOptionValue($, 1), _options.values)) {
                 focus = false;
                 onAnimationsEnd(options, () => focusTo(valueCurrent[2]), scrollTo(valueCurrent[2]));
             }
-        } else if (' ' === key) {
-            focus = false;
             if (getAria($, 'selected')) {
                 letAria($, 'selected');
             } else {
@@ -698,8 +696,10 @@ function onKeyDownValue(e) {
             focusTo(valueNext);
         }
     } else if (1 === toCount(key) && !keyIsAlt) {
-        if (keyIsCtrl && 'a' === key && max > 1) {
-            exit = true;
+        exit = true;
+        if (keyIsCtrl && !keyIsShift && 'r' === key) {
+            exit = false; // Native reload :(
+        } else if (keyIsCtrl && !keyIsShift && 'a' === key && max > 1) {
             // Select all visually
             setAria(valueCurrent = value, 'selected', true);
             while ((valueNext = getNext(valueCurrent)) && hasKeyInMap(valueNext, values)) {
@@ -709,7 +709,6 @@ function onKeyDownValue(e) {
                 setAria(valueCurrent = valuePrev, 'selected', true);
             }
         } else if (!keyIsCtrl) {
-            exit = false;
             searchTerm += key;
         }
     }

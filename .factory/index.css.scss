@@ -60,7 +60,6 @@ $name: 'option-picker';
       }
     }
     .#{$name}__options {
-      max-height: 0;
       visibility: visible;
     }
   }
@@ -121,6 +120,7 @@ $name: 'option-picker';
     }
     left: -1px;
     margin: 0;
+    max-height: 0;
     min-width: calc(100% + 2px);
     position: absolute;
     top: 100%;

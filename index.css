@@ -59,7 +59,6 @@
   border-top-width: 0;
 }
 .option-picker[aria-expanded=true] .option-picker__options {
-  max-height: 0;
   visibility: visible;
 }
 .option-picker__arrow,
@@ -111,6 +110,7 @@
   flex-wrap: nowrap;
   left: -1px;
   margin: 0;
+  max-height: 0;
   min-width: calc(100% + 2px);
   position: absolute;
   top: 100%;

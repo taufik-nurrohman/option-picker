@@ -386,6 +386,7 @@ function onKeyDownOption(e) {
             } else if (KEY_TAB === key) {
                 picker.exit(exit = false);
             } else {
+                exit = true;
                 toggleToOption($, picker);
             }
         } else {
@@ -567,7 +568,7 @@ function onKeyDownValue(e) {
                         }
                     }
                     focusTo(_mask.value = v);
-                } else {
+                } else if (getAria(v, 'selected')) {
                     if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
                         letAria(valueCurrent[2], 'selected');
                         valueCurrent[3].selected = false;
@@ -890,13 +891,13 @@ function selectToOption(option, picker) {
         let optionReal = option._[OPTION_SELF],
             optionWasSelected = getAria(option, 'selected'), a = getValue(self), b;
         selectToOptionsNone(picker);
-        // This removes the selection
-        if (0 === min && optionWasSelected && !isInput(self)) {
-            setValue(self, b = "");
-            letDatum(value, 'value');
-            setHTML(value, "");
-        // This switches the selection
-        } else {
+        // // This removes the selection
+        // if (0 === min && optionWasSelected && !isInput(self)) {
+        //     setValue(self, b = "");
+        //     letDatum(value, 'value');
+        //     setHTML(value, "");
+        // // This switches the selection
+        // } else {
             optionReal.selected = true;
             setAria(option, 'selected', true);
             setValue(self, b = getOptionValue(option));
@@ -908,7 +909,7 @@ function selectToOption(option, picker) {
                 setDatum(value, 'value', b);
                 setHTML(value, getHTML(option));
             }
-        }
+        // }
         if (a !== b) {
             picker.fire('change', ["" !== b ? b : null]);
         }
@@ -1075,18 +1076,24 @@ setObjectAttributes(OptionPicker, {
         set: function (value) {
             let $ = this,
                 {_mask, mask, self} = $,
-                {input} = _mask,
+                {input, value: inputReadOnly} = _mask,
                 v = !!value;
             self.disabled = !($._active = v);
-            if (v) {
+            if (!v) {
                 setAria(mask, 'disabled', true);
                 if (input) {
-                    // TODO
+                    setAria(input, 'disabled', true);
+                    letAttribute(input, 'contenteditable');
+                } else if (inputReadOnly) {
+                    letAttribute(inputReadOnly, 'tabindex');
                 }
             } else {
                 letAria(mask, 'disabled');
                 if (input) {
-                    // TODO
+                    letAria(input, 'disabled');
+                    setAttribute(input, 'contenteditable', "");
+                } else if (inputReadOnly) {
+                    setAttribute(inputReadOnly, 'tabindex', 0);
                 }
             }
             return $;
@@ -1162,7 +1169,7 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (options) {
             let $ = this,
-                {_active, _mask} = $, selected;
+                {_active, _mask, max} = $, selected;
             if (!_active) {
                 return $;
             }
@@ -1170,9 +1177,9 @@ setObjectAttributes(OptionPicker, {
                 options = [options];
             }
             if (toCount(selected = createOptionsFrom($, options, _mask.options))) {
-                $.value = $._value = selected[0];
-                $.values = $._values = selected;
-                $.fire('change', [$['value' + ($.max > 1 ? 's' : "")]]);
+                let isMultipleSelect = max > 1;
+                $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
+                $.fire('change', [$['value' + (isMultipleSelect ? 's' : "")]]);
             }
             let values = [];
             forEachMap($._options, v => values.push(getOptionValue(v[2])));
@@ -1414,24 +1421,21 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 options.then(options => {
                     letAria(mask, 'busy');
                     if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
-                        $.value = $._value = selected[0];
-                        $.values = $._values = selected;
+                        $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                     } else if (selected = getOptionSelected($, 1)) {
-                        $.value = $._value = selected = getOptionValue(selected);
-                        $.values = $._values = [selected];
+                        selected = getOptionValue(selected);
+                        $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? [selected] : selected;
                     }
                     $.fire('load', [null, $.values])[$.options.open ? 'enter' : 'exit']().fit();
                 });
             } else {
                 if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
-                    $.value = $._value = selected[0];
-                    $.values = $._values = selected;
+                    $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                 }
             }
         } else {
             if (toCount(selected = createOptionsFrom($, options || getOptions(self), maskOptions))) {
-                $.value = $._value = selected[0];
-                $.values = $._values = selected;
+                $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
             }
         }
         // After the initial value has been set, restore the previous `this._active` value
@@ -1537,7 +1541,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     enter: function (focus, mode) {
         let $ = this, option,
             {_active, _mask, _options, mask, self} = $,
-            {input, lot, options, values} = _mask;
+            {input, lot, options, value, values} = _mask;
         if (!_active) {
             return $;
         }
@@ -1557,6 +1561,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 onAnimationsEnd(options, () => focusTo(option[2]), scrollTo(option[2]));
             } else if (option = goToOptionFirst($)) {
                 onAnimationsEnd(options, () => focusTo(option), scrollTo(option));
+            } else {
+                focusTo(value);
             }
         }
         return $;

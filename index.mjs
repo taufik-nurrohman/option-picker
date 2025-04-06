@@ -334,7 +334,7 @@ function onKeyDownTextInput(e) {
         }
         exit = true;
         if (!getAria(mask, 'expanded')) {
-            picker.enter(exit).fit();
+            picker.enter(false).fit();
             currentOption && focusTo(currentOption);
         } else if (strict && KEY_ENTER === key) {
             // Automatically select the first option!
@@ -669,6 +669,7 @@ function onKeyDownValue(e) {
                 setAria($, 'selected', true);
             }
         }
+        setStyle(options, 'max-height', 0);
         picker.enter(focus).fit();
     } else if (KEY_ARROW_LEFT === key) {
         exit = true;
@@ -757,7 +758,8 @@ function onPointerDownMask(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {_options, self} = picker,
+        {_mask, _options, self} = picker,
+        {options} = _mask,
         {target} = e;
     picker._event = e;
     if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
@@ -768,6 +770,7 @@ function onPointerDownMask(e) {
         return;
     }
     forEachMap(_options, v => v[2].hidden = false);
+    setStyle(options, 'max-height', 0);
     picker[getReference(R) !== picker ? 'enter' : 'exit'](true).fit();
 }
 

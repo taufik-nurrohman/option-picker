@@ -1304,7 +1304,7 @@
             }
             exit = true;
             if (!getAria(mask, 'expanded')) {
-                picker.enter(exit).fit();
+                picker.enter(false).fit();
                 currentOption && focusTo(currentOption);
             } else if (strict && KEY_ENTER === key) {
                 // Automatically select the first option!
@@ -1660,6 +1660,7 @@
                     setAria($, 'selected', true);
                 }
             }
+            setStyle(options, 'max-height', 0);
             picker.enter(focus).fit();
         } else if (KEY_ARROW_LEFT === key) {
             exit = true;
@@ -1751,8 +1752,10 @@
         offEventDefault(e);
         var $ = this,
             picker = getReference($),
+            _mask = picker._mask,
             _options = picker._options,
             self = picker.self,
+            options = _mask.options,
             target = e.target;
         picker._event = e;
         if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
@@ -1765,6 +1768,7 @@
         forEachMap(_options, function (v) {
             return v[2].hidden = false;
         });
+        setStyle(options, 'max-height', 0);
         picker[getReference(R) !== picker ? 'enter' : 'exit'](true).fit();
     }
 

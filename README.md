@@ -12,8 +12,6 @@ Accessible custom `<select>` (and `<input list>`) element.
   <img alt="Option Picker" src="https://github.com/user-attachments/assets/503ff380-fe53-4188-aeee-0006af534d60">
 </picture>
 
-[Demo and Documentation](https://taufik-nurrohman.github.io/option-picker "View Demo")
-
 Contribute
 ----------
 

@@ -970,6 +970,15 @@ function toggleToOption(option, picker) {
                         setAria(v[2], 'disabled', true);
                     }
                 });
+            } else if (c > max) {
+                letAria(option, 'selected');
+                optionReal.selected = false;
+                forEachMap(_options, (v, k) => {
+                    if (!getAria(v[2], 'selected')) {
+                        letAttribute(v[2], 'tabindex');
+                        setAria(v[2], 'disabled', true);
+                    }
+                });
                 picker.fire('max.options', [c, max]);
             } else {
                 forEachMap(_options, (v, k) => {
@@ -1210,10 +1219,12 @@ setObjectAttributes(OptionPicker, {
             } else {
                 let option = goToOptionFirst($);
                 if (option) {
-                    let optionsGap = getStyle(options, 'gap', false),
+                    let optionsBorderBottom = getStyle(options, 'border-bottom-width', false),
+                        optionsBorderTop = getStyle(options, 'border-top-width', false),
+                        optionsGap = getStyle(options, 'gap', false),
                         optionHeight = getStyle(option, 'height', false) ?? getStyle(option, 'min-height', false) ?? getStyle(option, 'line-height', false);
                     setDatum(mask, 'size', size);
-                    setStyle(options, 'max-height', 'calc((' + optionHeight + '*' + size + ') + calc(' + optionsGap + '*' + size + '))');
+                    setStyle(options, 'max-height', 'calc(' + optionsBorderTop + ' + ' + optionsBorderBottom + ' + (' + optionHeight + '*' + size + ') + calc(' + optionsGap + '*' + size + '))');
                     _active && setReference(R, $);
                 }
             }

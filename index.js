@@ -1989,6 +1989,15 @@
                             setAria(v[2], 'disabled', true);
                         }
                     });
+                } else if (c > max) {
+                    letAria(option, 'selected');
+                    optionReal.selected = false;
+                    forEachMap(_options, function (v, k) {
+                        if (!getAria(v[2], 'selected')) {
+                            letAttribute(v[2], 'tabindex');
+                            setAria(v[2], 'disabled', true);
+                        }
+                    });
                     picker.fire('max.options', [c, max]);
                 } else {
                     forEachMap(_options, function (v, k) {
@@ -2245,10 +2254,12 @@
                     var option = goToOptionFirst($);
                     if (option) {
                         var _ref, _getStyle;
-                        var optionsGap = getStyle(options, 'gap'),
+                        var optionsBorderBottom = getStyle(options, 'border-bottom-width'),
+                            optionsBorderTop = getStyle(options, 'border-top-width'),
+                            optionsGap = getStyle(options, 'gap'),
                             optionHeight = (_ref = (_getStyle = getStyle(option, 'height')) != null ? _getStyle : getStyle(option, 'min-height')) != null ? _ref : getStyle(option, 'line-height');
                         setDatum(mask, 'size', size);
-                        setStyle(options, 'max-height', 'calc((' + optionHeight + '*' + size + ') + calc(' + optionsGap + '*' + size + '))');
+                        setStyle(options, 'max-height', 'calc(' + optionsBorderTop + ' + ' + optionsBorderBottom + ' + (' + optionHeight + '*' + size + ') + calc(' + optionsGap + '*' + size + '))');
                         _active && setReference(R, $);
                     }
                 }

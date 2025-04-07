@@ -225,9 +225,8 @@ $name: 'option-picker';
       display: none;
     }
     .#{$name}__options {
-      border-width: 0;
+      border-width: 1px 0 0;
       min-width: 0;
-      padding-top: 0;
       position: static;
       visibility: visible;
     }

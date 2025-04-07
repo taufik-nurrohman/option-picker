@@ -201,9 +201,8 @@
   display: none;
 }
 .option-picker[data-size] .option-picker__options {
-  border-width: 0;
+  border-width: 1px 0 0;
   min-width: 0;
-  padding-top: 0;
   position: static;
   visibility: visible;
 }

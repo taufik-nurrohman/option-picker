@@ -61,7 +61,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         selectToOptionsNone($);
         if (strict) {
             // Silently select the first option without affecting the currently typed query and focus/select state
-            if (count && (option = goToOptionFirst($))) {
+            if (count && "" !== q && (option = goToOptionFirst($))) {
                 setAria(option, 'selected', true);
                 option._[OPTION_SELF].selected = true;
                 setValue(self, b = getOptionValue(option));
@@ -374,7 +374,7 @@ function onKeyDownOption(e) {
     picker._event = e;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
         exit = true;
-        if (valueCurrent = getElement('[data-value="' + getOptionValue($).replace(/"/g, '\\"') + '"]', getParent(value))) {
+        if (value && (valueCurrent = getElement('[data-value="' + getOptionValue($).replace(/"/g, '\\"') + '"]', getParent(value)))) {
             focusTo(valueCurrent);
         } else {
             picker.exit(exit);
@@ -669,7 +669,9 @@ function onKeyDownValue(e) {
                 setAria($, 'selected', true);
             }
         }
-        setStyle(options, 'max-height', 0);
+        if (picker.size < 2) {
+            setStyle(options, 'max-height', 0);
+        }
         picker.enter(focus).fit();
     } else if (KEY_ARROW_LEFT === key) {
         exit = true;
@@ -770,7 +772,9 @@ function onPointerDownMask(e) {
         return;
     }
     forEachMap(_options, v => v[2].hidden = false);
-    setStyle(options, 'max-height', 0);
+    if (picker.size < 2) {
+        setStyle(options, 'max-height', 0);
+    }
     picker[getReference(R) !== picker ? 'enter' : 'exit'](true).fit();
 }
 
@@ -839,7 +843,7 @@ function onPointerUpOption(e) {
             if (picker.max > 1) {
                 toggleToOption($, picker), focusTo($);
             } else {
-                selectToOption($, picker), picker.exit(true);
+                selectToOption($, picker), (picker.size < 2 ? picker.exit(true) : focusTo($));
             }
         }
     } else {
@@ -892,27 +896,19 @@ function selectToOption(option, picker) {
         {hint, input, value} = _mask;
     if (option) {
         let optionReal = option._[OPTION_SELF],
-            optionWasSelected = getAria(option, 'selected'), a = getValue(self), b;
+            a = getValue(self), b;
         selectToOptionsNone(picker);
-        // // This removes the selection
-        // if (0 === min && optionWasSelected && !isInput(self)) {
-        //     setValue(self, b = "");
-        //     letDatum(value, 'value');
-        //     setHTML(value, "");
-        // // This switches the selection
-        // } else {
-            optionReal.selected = true;
-            setAria(option, 'selected', true);
-            setValue(self, b = getOptionValue(option));
-            if (isInput(self)) {
-                setAria(input, 'activedescendant', getID(option));
-                setStyle(hint, 'color', 'transparent');
-                setText(input, getText(option));
-            } else {
-                setDatum(value, 'value', b);
-                setHTML(value, getHTML(option));
-            }
-        // }
+        optionReal.selected = true;
+        setAria(option, 'selected', true);
+        setValue(self, b = getOptionValue(option));
+        if (isInput(self)) {
+            setAria(input, 'activedescendant', getID(option));
+            setStyle(hint, 'color', 'transparent');
+            setText(input, getText(option));
+        } else {
+            setDatum(value, 'value', b);
+            setHTML(value, getHTML(option));
+        }
         if (a !== b) {
             picker.fire('change', ["" !== b ? b : null]);
         }
@@ -1082,21 +1078,21 @@ setObjectAttributes(OptionPicker, {
                 {input, value: inputReadOnly} = _mask,
                 v = !!value;
             self.disabled = !($._active = v);
-            if (!v) {
-                setAria(mask, 'disabled', true);
-                if (input) {
-                    setAria(input, 'disabled', true);
-                    letAttribute(input, 'contenteditable');
-                } else if (inputReadOnly) {
-                    letAttribute(inputReadOnly, 'tabindex');
-                }
-            } else {
+            if (v) {
                 letAria(mask, 'disabled');
                 if (input) {
                     letAria(input, 'disabled');
                     setAttribute(input, 'contenteditable', "");
                 } else if (inputReadOnly) {
                     setAttribute(inputReadOnly, 'tabindex', 0);
+                }
+            } else {
+                setAria(mask, 'disabled', true);
+                if (input) {
+                    setAria(input, 'disabled', true);
+                    letAttribute(input, 'contenteditable');
+                } else if (inputReadOnly) {
+                    letAttribute(inputReadOnly, 'tabindex');
                 }
             }
             return $;
@@ -1182,7 +1178,6 @@ setObjectAttributes(OptionPicker, {
             if (toCount(selected = createOptionsFrom($, options, _mask.options))) {
                 let isMultipleSelect = max > 1;
                 $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
-                $.fire('change', [$['value' + (isMultipleSelect ? 's' : "")]]);
             }
             let values = [];
             forEachMap($._options, v => values.push(getOptionValue(v[2])));
@@ -1676,8 +1671,7 @@ setObjectMethods(OptionPickerOptions, {
             return false;
         }
         if (!isSet(key)) {
-            // TODO: Do not trigger `change`
-            forEachMap(map, (v, k) => $.let(k, 0));
+            forEachMap(map, (v, k) => $.delete(k, 0, 0));
             selectToOptionsNone(of, _fireValue);
             options.hidden = true;
             return _fireHook && of.fire('let.options', [[]]) && 0 === $.count();
@@ -1795,9 +1789,6 @@ setObjectMethods(OptionPickerOptions, {
             optionGroup = optionGroupReal = false;
         }
         let {disabled, selected, value: v} = value[1];
-        // if (isDisabled(self)) {
-        //     disabled = true;
-        // }
         v = fromValue(v || key);
         option = value[2] || setElement('span', fromValue(value[0]), {
             'aria': {

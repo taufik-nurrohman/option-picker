@@ -1307,7 +1307,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             isDisabledSelf = isDisabled(self),
             isInputSelf = isInput(self),
             isMultipleSelect = max && max > 1 || (!isInputSelf && self.multiple),
-            isReadOnlySelf = isReadOnly(self);
+            isReadOnlySelf = isReadOnly(self),
+            theInputPlaceholder = self.placeholder;
         $._active = !isDisabledSelf && !isReadOnlySelf;
         $._fix = isInputSelf && isReadOnlySelf;
         const arrow = setElement('span', {
@@ -1317,7 +1318,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         const form = getParentForm(self);
         const mask = setElement('div', {
             'aria': {
-                'disabled': isDisabled(self) ? 'true' : false,
+                'disabled': isDisabledSelf ? 'true' : false,
                 'expanded': 'false',
                 'haspopup': 'listbox',
                 'multiselectable': isMultipleSelect ? 'true' : false,
@@ -1348,7 +1349,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 'autocomplete': 'list',
                 'disabled': isDisabledSelf ? 'true' : false,
                 'multiline': 'false',
-                'placeholder': isInputSelf ? self.placeholder : false,
+                'placeholder': isInputSelf ? theInputPlaceholder : false,
                 'readonly': isReadOnlySelf ? 'true' : false,
             },
             'autocapitalize': 'off',
@@ -1357,7 +1358,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'spellcheck': !isInputSelf ? false : 'false',
             'tabindex': isReadOnlySelf && isInputSelf ? 0 : false
         });
-        const textInputHint = setElement('span', isInputSelf ? self.placeholder + "" : "", {
+        const textInputHint = setElement('span', isInputSelf ? theInputPlaceholder + "" : "", {
             'role': 'none'
         });
         setChildLast(mask, maskFlex);
@@ -1721,8 +1722,8 @@ setObjectMethods(OptionPickerOptions, {
     },
     get: function (key) {
         let $ = this,
-            {values: map} = $,
-            value = getValueInMap(toValue(key), map), parent;
+            {values} = $,
+            value = getValueInMap(toValue(key), values), parent;
         if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
             return [getElementIndex(value[2]), getElementIndex(parent)];
         }

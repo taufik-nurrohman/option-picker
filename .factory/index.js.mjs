@@ -1403,16 +1403,17 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         onEvent('touchstart', mask, onPointerDownMask);
         self.tabIndex = -1;
         setReference(mask, $);
-        let _mask = {};
-        _mask.arrow = arrow;
-        _mask.flex = maskFlex;
-        _mask.hint = isInputSelf ? textInputHint : null;
-        _mask.input = isInputSelf ? textInput : null;
-        _mask.lot = maskOptionsLot;
-        _mask.of = self;
-        _mask.options = maskOptions;
-        _mask.self = mask;
-        _mask.values = new Set;
+        let _mask = {
+            arrow: arrow,
+            flex: maskFlex,
+            hint: isInputSelf ? textInputHint : null,
+            input: isInputSelf ? textInput : null,
+            lot: maskOptionsLot,
+            of: self,
+            options: maskOptions,
+            self: mask,
+            values: new Set
+        };
         _mask[isInputSelf ? 'text' : 'value'] = text;
         if (!isInputSelf) {
             _mask.values.add(text); // Add the only value to the set

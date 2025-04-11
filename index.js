@@ -2406,7 +2406,9 @@
                 'tabindex': isReadOnlySelf && isInputSelf ? 0 : false
             });
             var textInputHint = setElement('span', isInputSelf ? theInputPlaceholder + "" : "", {
-                'role': 'none'
+                'aria': {
+                    'hidden': 'true'
+                }
             });
             setChildLast(mask, maskFlex);
             setChildLast(mask, maskOptions);

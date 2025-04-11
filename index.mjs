@@ -1359,7 +1359,9 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'tabindex': isReadOnlySelf && isInputSelf ? 0 : false
         });
         const textInputHint = setElement('span', isInputSelf ? theInputPlaceholder + "" : "", {
-            'role': 'none'
+            'aria': {
+                'hidden': 'true'
+            }
         });
         setChildLast(mask, maskFlex);
         setChildLast(mask, maskOptions);

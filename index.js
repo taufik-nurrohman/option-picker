@@ -2430,6 +2430,7 @@
             }
             setClass(self, n + '__self');
             setNext(self, mask);
+            setChildLast(mask, self);
             if (form) {
                 onEvent('reset', form, onResetForm);
                 onEvent('submit', form, onSubmitForm);
@@ -2601,6 +2602,7 @@
             self.tabIndex = null;
             letAria(self, 'hidden');
             letClass(self, state.n + '__self');
+            setNext(mask, self);
             letElement(mask);
             $._mask = {
                 of: self
@@ -2768,7 +2770,7 @@
             }
             var $ = this,
                 of = $.of,
-                map = $.values,
+                values = $.values,
                 _active = of._active,
                 _mask = of._mask,
                 self = of.self,
@@ -2780,7 +2782,7 @@
                 return false;
             }
             if (!isSet(key)) {
-                forEachMap(map, function (v, k) {
+                forEachMap(values, function (v, k) {
                     return $.delete(k, 0, 0);
                 });
                 selectToOptionsNone(of, _fireValue);
@@ -2789,7 +2791,7 @@
                     []
                 ]) && 0 === $.count();
             }
-            if (!(r = getValueInMap(key = _toValue(key), map))) {
+            if (!(r = getValueInMap(key = _toValue(key), values))) {
                 return _fireHook && of.fire('not.option', [key]), false;
             }
             var parent = getParent(r[2]),
@@ -2803,7 +2805,7 @@
             offEvent('touchend', r[2], onPointerUpOption);
             offEvent('touchstart', r[2], onPointerDownOption);
             letElement(r[2]), letElement(r[3]);
-            r = letValueInMap(key, map);
+            r = letValueInMap(key, values);
             // Remove empty group(s)
             parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
             parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
@@ -2817,7 +2819,7 @@
                 value === valueReal && selectToOptionFirst(of);
             }
             if (!isFunction(state.options)) {
-                state.options = map;
+                state.options = values;
             }
             return _fireHook && of.fire('let.option', [key]), r;
         },
@@ -2847,7 +2849,7 @@
             }
             var $ = this,
                 of = $.of,
-                map = $.values,
+                values = $.values,
                 _active = of._active;
             if (!_active) {
                 return false;
@@ -2975,9 +2977,9 @@
             setReference(option, of);
             value[2] = option;
             value[3] = optionReal;
-            setValueInMap(key, value, map);
+            setValueInMap(key, value, values);
             if (!isFunction(state.options)) {
-                state.options = map;
+                state.options = values;
             }
             return _fireHook && of.fire('set.option', [key]), true;
         }

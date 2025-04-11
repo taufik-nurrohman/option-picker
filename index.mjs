@@ -1383,6 +1383,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         }
         setClass(self, n + '__self');
         setNext(self, mask);
+        setChildLast(mask, self);
         if (form) {
             onEvent('reset', form, onResetForm);
             onEvent('submit', form, onSubmitForm);
@@ -1541,6 +1542,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         self.tabIndex = null;
         letAria(self, 'hidden');
         letClass(self, state.n + '__self');
+        setNext(mask, self);
         letElement(mask);
         $._mask = {
             of: self
@@ -1676,19 +1678,19 @@ setObjectMethods(OptionPickerOptions, {
     },
     delete: function (key, _fireValue = 1, _fireHook = 1) {
         let $ = this,
-            {of, values: map} = $,
+            {of, values} = $,
             {_active, _mask, self, state} = of,
             {lot, options} = _mask, r;
         if (!_active) {
             return false;
         }
         if (!isSet(key)) {
-            forEachMap(map, (v, k) => $.delete(k, 0, 0));
+            forEachMap(values, (v, k) => $.delete(k, 0, 0));
             selectToOptionsNone(of, _fireValue);
             options.hidden = true;
             return _fireHook && of.fire('let.options', [[]]) && 0 === $.count();
         }
-        if (!(r = getValueInMap(key = toValue(key), map))) {
+        if (!(r = getValueInMap(key = toValue(key), values))) {
             return (_fireHook && of.fire('not.option', [key])), false;
         }
         let parent = getParent(r[2]),
@@ -1702,7 +1704,7 @@ setObjectMethods(OptionPickerOptions, {
         offEvent('touchend', r[2], onPointerUpOption);
         offEvent('touchstart', r[2], onPointerDownOption);
         letElement(r[2]), letElement(r[3]);
-        r = letValueInMap(key, map);
+        r = letValueInMap(key, values);
         // Remove empty group(s)
         parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
         parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
@@ -1716,7 +1718,7 @@ setObjectMethods(OptionPickerOptions, {
             value === valueReal && selectToOptionFirst(of);
         }
         if (!isFunction(state.options)) {
-            state.options = map;
+            state.options = values;
         }
         return (_fireHook && of.fire('let.option', [key])), r;
     },
@@ -1737,7 +1739,7 @@ setObjectMethods(OptionPickerOptions, {
     },
     set: function (key, value, _fireHook = 1) {
         let $ = this,
-            {of, values: map} = $,
+            {of, values} = $,
             {_active} = of;
         if (!_active) {
             return false;
@@ -1851,9 +1853,9 @@ setObjectMethods(OptionPickerOptions, {
         setReference(option, of);
         value[2] = option;
         value[3] = optionReal;
-        setValueInMap(key, value, map);
+        setValueInMap(key, value, values);
         if (!isFunction(state.options)) {
-            state.options = map;
+            state.options = values;
         }
         return (_fireHook && of.fire('set.option', [key])), true;
     }

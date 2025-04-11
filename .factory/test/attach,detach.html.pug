@@ -18,11 +18,15 @@ block style
 block content
   main
     form(method='get' target='_blank')
+      p asdf
       p
+        = 'asdf '
         select(name='test')
           option Option 1
           option Option 2
           option(value='3') Option 3
+        = ' asdf'
+      p asdf
       p
         button(onclick='this.disabled = true; this.nextElementSibling.disabled = false; picker.detach(); return false;' type='button') Detach
         = ' '

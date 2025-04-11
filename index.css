@@ -81,6 +81,7 @@
 }
 .option-picker__flex {
   flex: 1;
+  overflow: hidden;
 }
 .option-picker__option {
   display: block;

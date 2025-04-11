@@ -87,6 +87,7 @@ $name: 'option-picker';
   &__flex {
     @extend %items;
     flex: 1;
+    overflow: hidden;
   }
   &__option {
     @extend %item;

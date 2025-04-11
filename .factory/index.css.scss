@@ -179,7 +179,7 @@ $name: 'option-picker';
       z-index: 1;
       &:empty {
         &::after {
-          content: '‌'; // `\u200c`
+          content: '\200c';
         }
       }
       * {
@@ -212,7 +212,7 @@ $name: 'option-picker';
     }
     &:empty {
       &::after {
-        content: '‌'; // `\u200c`
+        content: '\200c';
       }
     }
     &:focus {

@@ -1,10 +1,10 @@
+import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
 import {R, W, getAria, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
-import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
 import {forEachArray, forEachMap, forEachObject, forEachSet, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, onAnimationsEnd, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toValuesFromMap, toValueFirstFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
-import {getScroll, setScroll} from '@taufik-nurrohman/rect';
 import {getRect} from '@taufik-nurrohman/rect';
+import {getScroll, setScroll} from '@taufik-nurrohman/rect';
 import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isBoolean, isFloat, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';
@@ -57,22 +57,18 @@ const filter = debounce(($, input, _options, selectOnly) => {
             }
         });
         options.hidden = !count;
-        let a = getValue(self), b;
         selectToOptionsNone($);
         if (strict) {
             // Silently select the first option without affecting the currently typed query and focus/select state
             if (count && "" !== q && (option = goToOptionFirst($))) {
                 setAria(option, 'selected', true);
                 option._[OPTION_SELF].selected = true;
-                setValue(self, b = getOptionValue(option));
+                setValue(self, getOptionValue(option));
             } else {
-                setValue(self, b = "");
+                setValue(self, "");
             }
         } else {
-            setValue(self, b = query);
-        }
-        if (a !== b) {
-            $.fire('change', ["" !== b ? b : null]);
+            setValue(self, query);
         }
     }
     $.fire('search', [query = "" !== query ? query : null]);
@@ -83,55 +79,19 @@ const filter = debounce(($, input, _options, selectOnly) => {
         call = call.call($, query);
         if (isInstance(call, Promise)) {
             call.then(v => {
-                createOptionsFrom($, v, options);
+                createOptions($, v);
                 letAria(mask, 'busy');
                 $.fire('load', [query, $.values])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
             });
         } else {
-            createOptionsFrom($, call, options);
+            createOptions($, call);
         }
     }
 }, FILTER_COMMIT_TIME);
 
 const name = 'OptionPicker';
 
-function createOptions($, options, values) {
-    let items, itemsParent, key, selected = [],
-        {_options, self, state} = $,
-        {n} = state,
-        value = getValue(self);
-    n += '__option';
-    if (isInput(self)) {
-        items = (itemsParent = self.list) ? getChildren(itemsParent) : [];
-    } else {
-        items = getChildren(itemsParent = self);
-    }
-    // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
-    _options.delete(null, 0, 0);
-    forEachMap(values, (v, k) => {
-        if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
-            selected.push(toValue(v[1].value ?? k));
-        }
-        // Set the option data, but do not fire the `set.option` hook
-        _options.set(toValue(isArray(v) && v[1] ? (v[1].value ?? k) : k), v, 0);
-    });
-    if (!isFunction(state.options)) {
-        state.options = values;
-    }
-    if (0 === toCount(selected)) {
-        // If there is no selected option(s), get it from the current value
-        if (hasKeyInMap(key = toValue(value), values)) {
-            return [key];
-        }
-        // Or get it from the first option
-        if (key = getOptionSelected($)) {
-            return [getOptionValue(key, 1)];
-        }
-    }
-    return selected;
-}
-
-function createOptionsFrom($, options, maskOptions) {
+function createOptions($, options) {
     const map = isInstance(options, Map) ? options : new Map;
     if (isArray(options)) {
         forEachArray(options, option => {
@@ -154,7 +114,33 @@ function createOptionsFrom($, options, maskOptions) {
             }
         });
     }
-    return createOptions($, maskOptions, map);
+    let {_options, self, state} = $,
+        {n} = state,
+        key, r = [], value = getValue(self);
+    n += '__option';
+    // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
+    _options.delete(null, 0, 0);
+    forEachMap(map, (v, k) => {
+        if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
+            r.push(toValue(v[1].value ?? k));
+        }
+        // Set the option data, but do not fire the `set.option` hook
+        _options.set(toValue(isArray(v) && v[1] ? (v[1].value ?? k) : k), v, 0);
+    });
+    if (!isFunction(state.options)) {
+        state.options = map;
+    }
+    if (0 === toCount(r)) {
+        // If there is no selected option(s), get it from the current value
+        if (hasKeyInMap(key = toValue(value), map)) {
+            return [key];
+        }
+        // Or get it from the first option
+        if (key = getOptionSelected($)) {
+            return [getOptionValue(key, 1)];
+        }
+    }
+    return r;
 }
 
 function focusTo(node) {
@@ -198,10 +184,6 @@ function getOptionValue(option, parseValue) {
     return getDatum(option, 'value', parseValue);
 }
 
-function getOptionsValues(options, parseValue) {
-    return options.map(v => getOptionValue(v, parseValue));
-}
-
 function getOptions(self) {
     const map = new Map;
     let item, items, itemsParent, selected = [],
@@ -238,6 +220,10 @@ function getOptions(self) {
         setValueInMap(value, item, map);
     }
     return map;
+}
+
+function getOptionsValues(options, parseValue) {
+    return options.map(v => getOptionValue(v, parseValue));
 }
 
 function getOptionsSelected($) {
@@ -281,14 +267,10 @@ function onCutTextInput(e) {
         picker = getReference($),
         {_mask, self, strict} = picker,
         {hint} = _mask;
-    let a = getValue(self), b;
     delay(() => {
         getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
         if (strict) {} else {
-            if (a !== (b = getText($))) {
-                setValue(self, b);
-                picker.fire('change', ["" !== b ? b : null]);
-            }
+            setValue(self, getText($));
         }
     }, 1)();
 }
@@ -893,26 +875,22 @@ function scrollTo(node) {
 
 function selectToOption(option, picker) {
     let {_mask, min, self} = picker,
-        {hint, input, value} = _mask;
+        {hint, input, value} = _mask, optionReal, v;
     if (option) {
-        let optionReal = option._[OPTION_SELF],
-            a = getValue(self), b;
+        optionReal = option._[OPTION_SELF];
         selectToOptionsNone(picker);
         optionReal.selected = true;
         setAria(option, 'selected', true);
-        setValue(self, b = getOptionValue(option));
+        setValue(self, v = getOptionValue(option));
         if (isInput(self)) {
             setAria(input, 'activedescendant', getID(option));
             setStyle(hint, 'color', 'transparent');
             setText(input, getText(option));
         } else {
-            setDatum(value, 'value', b);
+            setDatum(value, 'value', v);
             setHTML(value, getHTML(option));
         }
-        if (a !== b) {
-            picker.fire('change', ["" !== b ? b : null]);
-        }
-        return option;
+        return picker.fire('change', ["" !== v ? v : null]), option;
     }
 }
 
@@ -1016,10 +994,7 @@ function toggleToOption(option, picker) {
                 });
             }
         }
-        if (a.sort().join('\n') !== b.sort().join('\n')) {
-            picker.fire('change', [b]);
-        }
-        return option;
+        return picker.fire('change', [b]), option;
     }
 }
 
@@ -1047,7 +1022,7 @@ function OptionPickerOptions(of, options) {
     $.of = of;
     $.values = new Map;
     if (options) {
-        createOptionsFrom(of, options, of._mask.options);
+        createOptions(of, options);
     }
     return $;
 }
@@ -1184,7 +1159,7 @@ setObjectAttributes(OptionPicker, {
             if (isFloat(options) || isInteger(options) || isString(options)) {
                 options = [options];
             }
-            if (toCount(selected = createOptionsFrom($, options, _mask.options))) {
+            if (toCount(selected = createOptions($, options))) {
                 let isMultipleSelect = max > 1;
                 $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
             }
@@ -1434,7 +1409,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             if (isInstance(options, Promise)) {
                 options.then(options => {
                     letAria(mask, 'busy');
-                    if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
+                    if (toCount(selected = createOptions($, options))) {
                         $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                     } else if (selected = getOptionSelected($, 1)) {
                         selected = getOptionValue(selected);
@@ -1443,12 +1418,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                     $.fire('load', [null, $.values])[$.options.open ? 'enter' : 'exit']().fit();
                 });
             } else {
-                if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
+                if (toCount(selected = createOptions($, options))) {
                     $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                 }
             }
         } else {
-            if (toCount(selected = createOptionsFrom($, options || getOptions(self), maskOptions))) {
+            if (toCount(selected = createOptions($, options || getOptions(self)))) {
                 $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
             }
         }
@@ -1679,7 +1654,7 @@ setObjectMethods(OptionPickerOptions, {
     count: function () {
         return toMapCount(this.values);
     },
-    delete: function (key, _fireValue = 1, _fireHook = 1) {
+    delete: function (key, _fireHook = 1, _fireValue = 1) {
         let $ = this,
             {of, values} = $,
             {_active, _mask, self, state} = of,
@@ -1738,7 +1713,7 @@ setObjectMethods(OptionPickerOptions, {
         return hasKeyInMap(toValue(key), this.values);
     },
     let: function (key, _fireHook = 1) {
-        return this.delete(key, 1, _fireHook);
+        return this.delete(key, _fireHook, 1);
     },
     set: function (key, value, _fireHook = 1) {
         let $ = this,

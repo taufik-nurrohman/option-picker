@@ -734,26 +734,6 @@
         return node.value = _fromValue(value), node;
     };
     var theID = {};
-    var debounce = function debounce(then, time) {
-        var timer;
-        return function () {
-            var _arguments = arguments,
-                _this = this;
-            timer && clearTimeout(timer);
-            timer = setTimeout(function () {
-                return then.apply(_this, _arguments);
-            }, time);
-        };
-    };
-    var delay = function delay(then, time) {
-        return function () {
-            var _arguments2 = arguments,
-                _this2 = this;
-            setTimeout(function () {
-                return then.apply(_this2, _arguments2);
-            }, time);
-        };
-    };
     var _getSelection = function _getSelection() {
         return D.getSelection();
     };
@@ -855,6 +835,26 @@
             return restoreSelection(node, range, selection);
         }
         return selection.addRange(range), selection;
+    };
+    var debounce = function debounce(then, time) {
+        var timer;
+        return function () {
+            var _arguments = arguments,
+                _this = this;
+            timer && clearTimeout(timer);
+            timer = setTimeout(function () {
+                return then.apply(_this, _arguments);
+            }, time);
+        };
+    };
+    var delay = function delay(then, time) {
+        return function () {
+            var _arguments2 = arguments,
+                _this2 = this;
+            setTimeout(function () {
+                return then.apply(_this2, _arguments2);
+            }, time);
+        };
     };
     var getRect = function getRect(node) {
         var h, rect, w, x, y, X, Y;
@@ -996,23 +996,18 @@
                 }
             });
             options.hidden = !count;
-            var a = getValue(self),
-                b;
             selectToOptionsNone($);
             if (strict) {
                 // Silently select the first option without affecting the currently typed query and focus/select state
                 if (count && "" !== q && (option = goToOptionFirst($))) {
                     setAria(option, 'selected', true);
                     option._[OPTION_SELF].selected = true;
-                    setValue(self, b = getOptionValue(option));
+                    setValue(self, getOptionValue(option));
                 } else {
-                    setValue(self, b = "");
+                    setValue(self, "");
                 }
             } else {
-                setValue(self, b = query);
-            }
-            if (a !== b) {
-                $.fire('change', ["" !== b ? b : null]);
+                setValue(self, query);
             }
         }
         $.fire('search', [query = "" !== query ? query : null]);
@@ -1023,59 +1018,18 @@
             call = call.call($, query);
             if (isInstance(call, Promise)) {
                 call.then(function (v) {
-                    createOptionsFrom($, v, options);
+                    createOptions($, v);
                     letAria(mask, 'busy');
                     $.fire('load', [query, $.values])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
                 });
             } else {
-                createOptionsFrom($, call, options);
+                createOptions($, call);
             }
         }
     }, FILTER_COMMIT_TIME);
     var name = 'OptionPicker';
 
-    function createOptions($, options, values) {
-        var itemsParent,
-            key,
-            selected = [],
-            _options = $._options,
-            self = $.self,
-            state = $.state;
-        state.n;
-        var value = getValue(self);
-        if (isInput(self)) {
-            (itemsParent = self.list) ? getChildren(itemsParent): [];
-        } else {
-            getChildren(itemsParent = self);
-        }
-        // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
-        _options.delete(null, 0, 0);
-        forEachMap(values, function (v, k) {
-            var _v$1$value2;
-            if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
-                var _v$1$value;
-                selected.push(_toValue((_v$1$value = v[1].value) != null ? _v$1$value : k));
-            }
-            // Set the option data, but do not fire the `set.option` hook
-            _options.set(_toValue(isArray(v) && v[1] ? (_v$1$value2 = v[1].value) != null ? _v$1$value2 : k : k), v, 0);
-        });
-        if (!isFunction(state.options)) {
-            state.options = values;
-        }
-        if (0 === toCount(selected)) {
-            // If there is no selected option(s), get it from the current value
-            if (hasKeyInMap(key = _toValue(value), values)) {
-                return [key];
-            }
-            // Or get it from the first option
-            if (key = getOptionSelected($)) {
-                return [getOptionValue(key, 1)];
-            }
-        }
-        return selected;
-    }
-
-    function createOptionsFrom($, options, maskOptions) {
+    function createOptions($, options) {
         var map = isInstance(options, Map) ? options : new Map();
         if (isArray(options)) {
             forEachArray(options, function (option) {
@@ -1091,16 +1045,47 @@
         } else if (isObject(options, 0)) {
             forEachObject(options, function (v, k) {
                 if (isArray(v)) {
-                    var _v$, _v$2, _v$1$value3;
+                    var _v$, _v$2, _v$1$value;
                     options[k][0] = (_v$ = v[0]) != null ? _v$ : "";
                     options[k][1] = (_v$2 = v[1]) != null ? _v$2 : {};
-                    setValueInMap(_toValue((_v$1$value3 = v[1].value) != null ? _v$1$value3 : k), v, map);
+                    setValueInMap(_toValue((_v$1$value = v[1].value) != null ? _v$1$value : k), v, map);
                 } else {
                     setValueInMap(_toValue(k), [v, {}], map);
                 }
             });
         }
-        return createOptions($, maskOptions, map);
+        var _options = $._options,
+            self = $.self,
+            state = $.state;
+        state.n;
+        var key,
+            r = [],
+            value = getValue(self);
+        // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
+        _options.delete(null, 0, 0);
+        forEachMap(map, function (v, k) {
+            var _v$1$value3;
+            if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
+                var _v$1$value2;
+                r.push(_toValue((_v$1$value2 = v[1].value) != null ? _v$1$value2 : k));
+            }
+            // Set the option data, but do not fire the `set.option` hook
+            _options.set(_toValue(isArray(v) && v[1] ? (_v$1$value3 = v[1].value) != null ? _v$1$value3 : k : k), v, 0);
+        });
+        if (!isFunction(state.options)) {
+            state.options = map;
+        }
+        if (0 === toCount(r)) {
+            // If there is no selected option(s), get it from the current value
+            if (hasKeyInMap(key = _toValue(value), map)) {
+                return [key];
+            }
+            // Or get it from the first option
+            if (key = getOptionSelected($)) {
+                return [getOptionValue(key, 1)];
+            }
+        }
+        return r;
     }
 
     function focusTo(node) {
@@ -1146,12 +1131,6 @@
         return getDatum(option, 'value', parseValue);
     }
 
-    function getOptionsValues(options, parseValue) {
-        return options.map(function (v) {
-            return getOptionValue(v, parseValue);
-        });
-    }
-
     function getOptions(self) {
         var map = new Map();
         var item,
@@ -1191,6 +1170,12 @@
             setValueInMap(value, item, map);
         }
         return map;
+    }
+
+    function getOptionsValues(options, parseValue) {
+        return options.map(function (v) {
+            return getOptionValue(v, parseValue);
+        });
     }
 
     function getOptionsSelected($) {
@@ -1242,16 +1227,11 @@
             self = picker.self,
             strict = picker.strict,
             hint = _mask.hint;
-        var a = getValue(self),
-            b;
         delay(function () {
             getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
             if (strict);
             else {
-                if (a !== (b = getText($))) {
-                    setValue(self, b);
-                    picker.fire('change', ["" !== b ? b : null]);
-                }
+                setValue(self, getText($));
             }
         }, 1)();
     }
@@ -1896,27 +1876,24 @@
         var self = picker.self,
             hint = _mask.hint,
             input = _mask.input,
-            value = _mask.value;
+            value = _mask.value,
+            optionReal,
+            v;
         if (option) {
-            var optionReal = option._[OPTION_SELF],
-                a = getValue(self),
-                b;
+            optionReal = option._[OPTION_SELF];
             selectToOptionsNone(picker);
             optionReal.selected = true;
             setAria(option, 'selected', true);
-            setValue(self, b = getOptionValue(option));
+            setValue(self, v = getOptionValue(option));
             if (isInput(self)) {
                 setAria(input, 'activedescendant', getID(option));
                 setStyle(hint, 'color', 'transparent');
                 setText(input, getText(option));
             } else {
-                setDatum(value, 'value', b);
+                setDatum(value, 'value', v);
                 setHTML(value, getHTML(option));
             }
-            if (a !== b) {
-                picker.fire('change', ["" !== b ? b : null]);
-            }
-            return option;
+            return picker.fire('change', ["" !== v ? v : null]), option;
         }
     }
 
@@ -2035,10 +2012,7 @@
                     });
                 }
             }
-            if (a.sort().join('\n') !== b.sort().join('\n')) {
-                picker.fire('change', [b]);
-            }
-            return option;
+            return picker.fire('change', [b]), option;
         }
     }
 
@@ -2066,7 +2040,7 @@
         $.of = of;
         $.values = new Map();
         if (options) {
-            createOptionsFrom(of, options, of._mask.options);
+            createOptions(of, options);
         }
         return $;
     }
@@ -2199,9 +2173,9 @@
             },
             set: function set(options) {
                 var $ = this,
-                    _active = $._active,
-                    _mask = $._mask,
-                    max = $.max,
+                    _active = $._active;
+                $._mask;
+                var max = $.max,
                     selected;
                 if (!_active) {
                     return $;
@@ -2209,7 +2183,7 @@
                 if (isFloat(options) || isInteger(options) || isString(options)) {
                     options = [options];
                 }
-                if (toCount(selected = createOptionsFrom($, options, _mask.options))) {
+                if (toCount(selected = createOptions($, options))) {
                     var isMultipleSelect = max > 1;
                     $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                 }
@@ -2489,7 +2463,7 @@
                 if (isInstance(options, Promise)) {
                     options.then(function (options) {
                         letAria(mask, 'busy');
-                        if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
+                        if (toCount(selected = createOptions($, options))) {
                             $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                         } else if (selected = getOptionSelected($, 1)) {
                             selected = getOptionValue(selected);
@@ -2498,12 +2472,12 @@
                         $.fire('load', [null, $.values])[$.options.open ? 'enter' : 'exit']().fit();
                     });
                 } else {
-                    if (toCount(selected = createOptionsFrom($, options, maskOptions))) {
+                    if (toCount(selected = createOptions($, options))) {
                         $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                     }
                 }
             } else {
-                if (toCount(selected = createOptionsFrom($, options || getOptions(self), maskOptions))) {
+                if (toCount(selected = createOptions($, options || getOptions(self)))) {
                     $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                 }
             }
@@ -2764,12 +2738,12 @@
         count: function count() {
             return toMapCount(this.values);
         },
-        delete: function _delete(key, _fireValue, _fireHook) {
-            if (_fireValue === void 0) {
-                _fireValue = 1;
-            }
+        delete: function _delete(key, _fireHook, _fireValue) {
             if (_fireHook === void 0) {
                 _fireHook = 1;
+            }
+            if (_fireValue === void 0) {
+                _fireValue = 1;
             }
             var $ = this,
                 of = $.of,
@@ -2843,7 +2817,7 @@
             if (_fireHook === void 0) {
                 _fireHook = 1;
             }
-            return this.delete(key, 1, _fireHook);
+            return this.delete(key, _fireHook, 1);
         },
         set: function set(key, value, _fireHook) {
             var _getState3, _getState4, _getState5;

@@ -29,6 +29,10 @@ const KEY_PAGE_UP = 'PageUp';
 const KEY_TAB = 'Tab';
 
 const OPTION_SELF = 0;
+const OPTION_TEXT = 1;
+
+const VALUE_SELF = 0;
+const VALUE_TEXT = 1;
 
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
@@ -546,7 +550,7 @@ function onKeyDownValue(e) {
                             letAria(valueCurrent[2], 'selected');
                             valueCurrent[3].selected = false;
                             letDatum(v, 'value');
-                            setHTML(v, "");
+                            setHTML(v._[VALUE_TEXT], "");
                         }
                     }
                     focusTo(_mask.value = v);
@@ -580,7 +584,7 @@ function onKeyDownValue(e) {
                 // Do not remove the only option value
                 } else {
                     letDatum(_mask.value = $, 'value');
-                    setHTML($, "");
+                    setHTML($._[VALUE_TEXT], "");
                     // No option(s) selected
                     if (0 === min) {
                         selectToOptionsNone(picker, 1);
@@ -614,7 +618,7 @@ function onKeyDownValue(e) {
                 // Do not remove the only option value
                 } else {
                     letDatum(_mask.value = $, 'value');
-                    setHTML($, "");
+                    setHTML($._[VALUE_TEXT], "");
                     // No option(s) selected
                     if (0 === min) {
                         selectToOptionsNone(picker, 1);
@@ -888,7 +892,7 @@ function selectToOption(option, picker) {
             setText(input, getText(option));
         } else {
             setDatum(value, 'value', v);
-            setHTML(value, getHTML(option));
+            setHTML(value._[VALUE_TEXT], getHTML(option._[OPTION_TEXT]));
         }
         return picker.fire('change', ["" !== v ? v : null]), option;
     }
@@ -916,14 +920,15 @@ function selectToOptionsNone(picker, fireValue) {
             setText(input, "");
         } else {
             letDatum(value, 'value');
-            setHTML(value, v);
+            setHTML(value._[VALUE_TEXT], v);
         }
     }
 }
 
 function toggleToOption(option, picker) {
-    let {_mask, _options, max, min, self} = picker,
+    let {_mask, _options, max, min, self, state} = picker,
         {value, values} = _mask,
+        {n} = state,
         selected, selectedFirst, valueCurrent, valueNext;
     if (option) {
         let optionReal = option._[OPTION_SELF],
@@ -970,7 +975,7 @@ function toggleToOption(option, picker) {
             selectedFirst = selected.shift();
             if (selectedFirst) {
                 setDatum(value, 'value', getOptionValue(selectedFirst));
-                setHTML(value, getHTML(selectedFirst));
+                setHTML(value._[VALUE_TEXT], getHTML(selectedFirst._[OPTION_TEXT]));
                 letValueInMap(value, values);
                 forEachSet(values, v => {
                     offEvent('keydown', v, onKeyDownValue);
@@ -983,12 +988,15 @@ function toggleToOption(option, picker) {
                 forEachArray(selected, (v, k) => {
                     valueNext = setID(letID(value.cloneNode(true)));
                     valueNext.tabIndex = -1;
+                    valueNext._ = {};
+                    valueNext._[VALUE_SELF] = null;
+                    valueNext._[VALUE_TEXT] = getElement('.' + n + '__value-text', valueNext);
                     onEvent('keydown', valueNext, onKeyDownValue);
                     onEvent('mousedown', valueNext, onPointerDownValue);
                     onEvent('touchstart', valueNext, onPointerDownValue);
                     letAria(valueNext, 'selected');
                     setDatum(valueNext, 'value', getOptionValue(v));
-                    setHTML(valueNext, getHTML(v));
+                    setHTML(valueNext._[VALUE_TEXT], getHTML(v._[OPTION_TEXT]));
                     setReference(valueNext, picker), values.add(setNext(valueCurrent, valueNext));
                     valueCurrent = valueNext;
                 });
@@ -1319,6 +1327,14 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'class': n + '__' + (isInputSelf ? 'text' : 'value'),
             'tabindex': isInputSelf ? false : 0
         });
+        if (!isInputSelf) {
+            text._ = {};
+            text._[VALUE_SELF] = null;
+            setChildLast(text, text._[VALUE_TEXT] = setElement('span', {
+                'class': n + '__value-text',
+                'role': 'none'
+            }));
+        }
         const textInput = setElement('span', {
             'aria': {
                 'autocomplete': 'list',
@@ -1728,7 +1744,7 @@ setObjectMethods(OptionPickerOptions, {
         let {_mask, self, state} = of,
             {lot, options} = _mask,
             {n} = state,
-            classes, items, itemsParent, option, optionGroup, optionGroupReal, optionReal, styles;
+            classes, items, itemsParent, option, optionGroup, optionGroupReal, optionReal, optionText, styles;
         n += '__option';
         if (isInput(self)) {
             items = (itemsParent = self.list) ? getChildren(itemsParent) : [];
@@ -1782,7 +1798,7 @@ setObjectMethods(OptionPickerOptions, {
         }
         let {disabled, selected, value: v} = value[1];
         v = fromValue(v || key);
-        option = value[2] || setElement('span', fromValue(value[0]), {
+        option = value[2] || setElement('span', {
             'aria': {
                 'disabled': disabled ? 'true' : false,
                 'selected': selected ? 'true' : false
@@ -1802,6 +1818,10 @@ setObjectMethods(OptionPickerOptions, {
             'title': getState(value[1], 'title') ?? false,
             'value': v
         });
+        optionText = value[2] ? value[2]._[OPTION_TEXT] : setElement('span', fromValue(value[0]), {
+            'class': n + '-text',
+            'role': 'none'
+        });
         if (classes = getState(value[1], 'class')) {
             setClasses(option, classes);
             setClasses(optionReal, classes);
@@ -1818,6 +1838,7 @@ setObjectMethods(OptionPickerOptions, {
         setID(optionReal);
         option._ = {};
         option._[OPTION_SELF] = optionReal;
+        option._[OPTION_TEXT] = optionText;
         if (!disabled && !value[2]) {
             onEvent('focus', option, onFocusOption);
             onEvent('keydown', option, onKeyDownOption);
@@ -1826,6 +1847,7 @@ setObjectMethods(OptionPickerOptions, {
             onEvent('touchend', option, onPointerUpOption);
             onEvent('touchstart', option, onPointerDownOption);
         }
+        setChildLast(option, optionText);
         setChildLast(optionGroup || lot, option);
         setChildLast(optionGroupReal || itemsParent, optionReal);
         setReference(option, of);

@@ -28,6 +28,7 @@ block style
     | .option-picker__text,
     | .option-picker__value {
     |   border-width: 0;
+    |   gap: 0;
     |   padding: 0 0.5em;
     | }
     | .option-picker:focus-within {
@@ -42,6 +43,7 @@ block style
     | }
     | .option-picker__option {
     |   border: 0;
+    |   gap: 0;
     |   padding: 0 0.5em;
     | }
     | .option-picker__option:focus,
@@ -78,16 +80,13 @@ block style
     |   padding: 0;
     | }
     | .option-picker__options-batch:not(:first-child) {
-    |   border-top: 1px solid;
+    |   border-top: 2px solid;
     |   border-top-color: inherit;
     | }
     | .option-picker__options-batch::before {
     |   background: #eef;
     |   border: 0;
     |   padding: 0 0.5em;
-    | }
-    | .option-picker__options-batch .option-picker__option {
-    |   padding-left: 1em;
     | }
     | .option-picker__values {
     |   padding: 0;

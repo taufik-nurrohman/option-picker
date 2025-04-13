@@ -91,7 +91,6 @@ $name: 'option-picker';
   }
   &__option {
     @extend %item;
-    display: block;
     user-select: none;
     &[hidden] {
       display: none;
@@ -99,12 +98,12 @@ $name: 'option-picker';
     &[aria-disabled='true'] {
       color: rgb(128, 128, 128);
       cursor: not-allowed;
+      &[aria-selected='true'] {
+        background: rgba(0, 0, 255, 0.25);
+      }
     }
     &[aria-selected='true'] {
       background: rgba(0, 0, 255, 0.5);
-      &[aria-disabled='true'] {
-        background: rgba(0, 0, 255, 0.25);
-      }
     }
     &:focus,
     &:where(:not([aria-disabled='true'])):hover {
@@ -219,11 +218,13 @@ $name: 'option-picker';
   &__value {
     flex: 1;
     user-select: none;
-    &[aria-selected='true'] {
-      background: rgba(0, 0, 255, 0.5);
-      &[aria-disabled='true'] {
+    &[aria-disabled='true'] {
+      &[aria-selected='true'] {
         background: rgba(0, 0, 255, 0.25);
       }
+    }
+    &[aria-selected='true'] {
+      background: rgba(0, 0, 255, 0.5);
     }
     &:empty {
       &::after {

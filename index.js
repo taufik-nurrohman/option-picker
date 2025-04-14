@@ -1004,7 +1004,7 @@
                 // Silently select the first option without affecting the currently typed query and focus/select state
                 if (count && "" !== q && (option = goToOptionFirst($))) {
                     setAria(option, 'selected', true);
-                    option._[OPTION_SELF].selected = true;
+                    option.$[OPTION_SELF].selected = true;
                     setValue(self, getOptionValue(option));
                 } else {
                     setValue(self, "");
@@ -1534,7 +1534,7 @@
                                 letAria(valueCurrent[2], 'selected');
                                 valueCurrent[3].selected = false;
                                 letDatum(v, 'value');
-                                setHTML(v._[VALUE_TEXT], "");
+                                setHTML(v.$[VALUE_TEXT], "");
                             }
                         }
                         focusTo(_mask.value = v);
@@ -1570,7 +1570,7 @@
                         // Do not remove the only option value
                     } else {
                         letDatum(_mask.value = $, 'value');
-                        setHTML($._[VALUE_TEXT], "");
+                        setHTML($.$[VALUE_TEXT], "");
                         // No option(s) selected
                         if (0 === min) {
                             selectToOptionsNone(picker, 1);
@@ -1604,7 +1604,7 @@
                         // Do not remove the only option value
                     } else {
                         letDatum(_mask.value = $, 'value');
-                        setHTML($._[VALUE_TEXT], "");
+                        setHTML($.$[VALUE_TEXT], "");
                         // No option(s) selected
                         if (0 === min) {
                             selectToOptionsNone(picker, 1);
@@ -1883,7 +1883,7 @@
             optionReal,
             v;
         if (option) {
-            optionReal = option._[OPTION_SELF];
+            optionReal = option.$[OPTION_SELF];
             selectToOptionsNone(picker);
             optionReal.selected = true;
             setAria(option, 'selected', true);
@@ -1894,7 +1894,7 @@
                 setText(input, getText(option));
             } else {
                 setDatum(value, 'value', v);
-                setHTML(value._[VALUE_TEXT], getHTML(option._[OPTION_TEXT]));
+                setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));
             }
             return picker.fire('change', ["" !== v ? v : null]), option;
         }
@@ -1927,7 +1927,7 @@
                 setText(input, "");
             } else {
                 letDatum(value, 'value');
-                setHTML(value._[VALUE_TEXT], v);
+                setHTML(value.$[VALUE_TEXT], v);
             }
         }
     }
@@ -1947,7 +1947,7 @@
             valueCurrent,
             valueNext;
         if (option) {
-            var optionReal = option._[OPTION_SELF],
+            var optionReal = option.$[OPTION_SELF],
                 a = getOptionsValues(getOptionsSelected(picker)),
                 b,
                 c;
@@ -1993,7 +1993,7 @@
                 selectedFirst = selected.shift();
                 if (selectedFirst) {
                     setDatum(value, 'value', getOptionValue(selectedFirst));
-                    setHTML(value._[VALUE_TEXT], getHTML(selectedFirst._[OPTION_TEXT]));
+                    setHTML(value.$[VALUE_TEXT], getHTML(selectedFirst.$[OPTION_TEXT]));
                     letValueInMap(value, values);
                     forEachSet(values, function (v) {
                         offEvent('keydown', v, onKeyDownValue);
@@ -2006,15 +2006,15 @@
                     forEachArray(selected, function (v, k) {
                         valueNext = setID(letID(value.cloneNode(true)));
                         valueNext.tabIndex = -1;
-                        valueNext._ = {};
-                        valueNext._[VALUE_SELF] = null;
-                        valueNext._[VALUE_TEXT] = getElement('.' + n + '__value-text', valueNext);
+                        valueNext.$ = {};
+                        valueNext.$[VALUE_SELF] = null;
+                        valueNext.$[VALUE_TEXT] = getElement('.' + n + '__v', valueNext);
                         onEvent('keydown', valueNext, onKeyDownValue);
                         onEvent('mousedown', valueNext, onPointerDownValue);
                         onEvent('touchstart', valueNext, onPointerDownValue);
                         letAria(valueNext, 'selected');
                         setDatum(valueNext, 'value', getOptionValue(v));
-                        setHTML(valueNext._[VALUE_TEXT], getHTML(v._[OPTION_TEXT]));
+                        setHTML(valueNext.$[VALUE_TEXT], getHTML(v.$[OPTION_TEXT]));
                         setReference(valueNext, picker), values.add(setNext(valueCurrent, valueNext));
                         valueCurrent = valueNext;
                     });
@@ -2374,10 +2374,10 @@
                 'tabindex': isInputSelf ? false : 0
             });
             if (!isInputSelf) {
-                text._ = {};
-                text._[VALUE_SELF] = null;
-                setChildLast(text, text._[VALUE_TEXT] = setElement('span', {
-                    'class': n + '__value-text',
+                text.$ = {};
+                text.$[VALUE_SELF] = null;
+                setChildLast(text, text.$[VALUE_TEXT] = setElement('span', {
+                    'class': n + '__v',
                     'role': 'none'
                 }));
             }
@@ -2747,7 +2747,7 @@
             }
         }
     });
-    setObjectMethods(OptionPickerOptions, {
+    OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         at: function at(key) {
             return getValueInMap(_toValue(key), this.values);
         },
@@ -2864,7 +2864,6 @@
                 optionReal,
                 optionText,
                 styles;
-            n += '__option';
             if (isInput(self)) {
                 (itemsParent = self.list) ? getChildren(itemsParent): [];
             } else {
@@ -2883,7 +2882,7 @@
             } else;
             if (hasState(value[1], '&')) {
                 var _getState;
-                optionGroup = getElement('.' + n + 's-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
+                optionGroup = getElement('.' + n + '__options-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
                 optionGroupReal = getElement('optgroup[label="' + value[1]['&'].replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
                     'label': value[1]['&'],
                     'title': (_getState = getState(value[1], 'title')) != null ? _getState : false
@@ -2891,7 +2890,7 @@
                 if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
                     var _getState2;
                     setChildLast(lot, optionGroup = setElement('span', {
-                        'class': n + 's-batch',
+                        'class': n + '__options-batch',
                         'data': {
                             'value': value[1]['&']
                         },
@@ -2927,7 +2926,7 @@
                     'disabled': disabled ? 'true' : false,
                     'selected': selected ? 'true' : false
                 },
-                'class': n,
+                'class': n + '__option',
                 'data': {
                     'batch': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false,
                     'value': v
@@ -2942,8 +2941,8 @@
                 'title': (_getState5 = getState(value[1], 'title')) != null ? _getState5 : false,
                 'value': v
             });
-            optionText = value[2] ? value[2]._[OPTION_TEXT] : setElement('span', _fromValue(value[0]), {
-                'class': n + '-text',
+            optionText = value[2] ? value[2].$[OPTION_TEXT] : setElement('span', _fromValue(value[0]), {
+                'class': n + '__v',
                 'role': 'none'
             });
             if (classes = getState(value[1], 'class')) {
@@ -2960,9 +2959,9 @@
             // Force `id` attribute(s)
             setID(option);
             setID(optionReal);
-            option._ = {};
-            option._[OPTION_SELF] = optionReal;
-            option._[OPTION_TEXT] = optionText;
+            option.$ = {};
+            option.$[OPTION_SELF] = optionReal;
+            option.$[OPTION_TEXT] = optionText;
             if (!disabled && !value[2]) {
                 onEvent('focus', option, onFocusOption);
                 onEvent('keydown', option, onKeyDownOption);

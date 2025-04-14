@@ -194,6 +194,9 @@
   white-space: nowrap;
   z-index: 0;
 }
+.option-picker__v:empty::after {
+  content: "‌";
+}
 .option-picker__value {
   flex: 1;
   user-select: none;
@@ -203,9 +206,6 @@
 }
 .option-picker__value[aria-selected=true] {
   background: rgba(0, 0, 255, 0.5);
-}
-.option-picker__value:empty::after {
-  content: "‌";
 }
 .option-picker__value:focus {
   outline: 1px solid;

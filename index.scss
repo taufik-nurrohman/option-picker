@@ -215,6 +215,13 @@ $name: 'option-picker';
       }
     }
   }
+  &__v {
+    &:empty {
+      &::after {
+        content: '\200c';
+      }
+    }
+  }
   &__value {
     flex: 1;
     user-select: none;
@@ -225,11 +232,6 @@ $name: 'option-picker';
     }
     &[aria-selected='true'] {
       background: rgba(0, 0, 255, 0.5);
-    }
-    &:empty {
-      &::after {
-        content: '\200c';
-      }
     }
     &:focus {
       outline: 1px solid;

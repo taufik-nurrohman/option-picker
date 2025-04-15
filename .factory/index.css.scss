@@ -142,7 +142,7 @@ $name: 'option-picker';
       flex-direction: column;
       &::before {
         @extend %item;
-        content: attr(data-value);
+        content: attr(value);
         font-weight: bold;
         user-select: none;
       }

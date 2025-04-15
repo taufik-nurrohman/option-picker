@@ -130,7 +130,7 @@
   flex-direction: column;
 }
 .option-picker__options-batch::before {
-  content: attr(data-value);
+  content: attr(value);
   font-weight: bold;
   user-select: none;
 }

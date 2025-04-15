@@ -741,6 +741,7 @@
         return D.createRange();
     };
     // <https://stackoverflow.com/a/6691294/1163000>
+    // The `node` parameter is currently not in use
     var insertAtSelection = function insertAtSelection(node, content, mode, selection) {
         selection = selection || _getSelection();
         var from, range, to;

@@ -185,7 +185,7 @@ function getOptionSelected($, strict) {
 }
 
 function getOptionValue(option, parseValue) {
-    return getDatum(option, 'value', parseValue);
+    return getValue(option, parseValue);
 }
 
 function getOptions(self) {
@@ -360,7 +360,7 @@ function onKeyDownOption(e) {
     picker._event = e;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
         exit = true;
-        if (value && (valueCurrent = getElement('[data-value="' + getOptionValue($).replace(/"/g, '\\"') + '"]', getParent(value)))) {
+        if (value && (valueCurrent = getElement('[value="' + (getOptionValue($) + "").replace(/"/g, '\\"') + '"]', getParent(value)))) {
             focusTo(valueCurrent);
         } else {
             picker.exit(exit);
@@ -548,8 +548,8 @@ function onKeyDownValue(e) {
                     if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
                         if (min < 1) {
                             letAria(valueCurrent[2], 'selected');
+                            letAttribute(v, 'value');
                             valueCurrent[3].selected = false;
-                            letDatum(v, 'value');
                             setHTML(v.$[VALUE_TEXT], "");
                         }
                     }
@@ -583,7 +583,7 @@ function onKeyDownValue(e) {
                     letValueInMap($, values), letElement($);
                 // Do not remove the only option value
                 } else {
-                    letDatum(_mask.value = $, 'value');
+                    letAttribute(_mask.value = $, 'value');
                     setHTML($.$[VALUE_TEXT], "");
                     // No option(s) selected
                     if (0 === min) {
@@ -617,7 +617,7 @@ function onKeyDownValue(e) {
                     letValueInMap($, values), letElement($);
                 // Do not remove the only option value
                 } else {
-                    letDatum(_mask.value = $, 'value');
+                    letAttribute(_mask.value = $, 'value');
                     setHTML($.$[VALUE_TEXT], "");
                     // No option(s) selected
                     if (0 === min) {
@@ -891,8 +891,8 @@ function selectToOption(option, picker) {
             setStyle(hint, 'color', 'transparent');
             setText(input, getText(option));
         } else {
-            setDatum(value, 'value', v);
             setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));
+            setValue(value, v);
         }
         return picker.fire('change', ["" !== v ? v : null]), option;
     }
@@ -919,7 +919,7 @@ function selectToOptionsNone(picker, fireValue) {
             letStyle(hint, 'color');
             setText(input, "");
         } else {
-            letDatum(value, 'value');
+            letAttribute(value, 'value');
             setHTML(value.$[VALUE_TEXT], v);
         }
     }
@@ -974,8 +974,8 @@ function toggleToOption(option, picker) {
             selected = getOptionsSelected(picker);
             selectedFirst = selected.shift();
             if (selectedFirst) {
-                setDatum(value, 'value', getOptionValue(selectedFirst));
                 setHTML(value.$[VALUE_TEXT], getHTML(selectedFirst.$[OPTION_TEXT]));
+                setValue(value, getOptionValue(selectedFirst));
                 letValueInMap(value, values);
                 forEachSet(values, v => {
                     offEvent('keydown', v, onKeyDownValue);
@@ -995,9 +995,9 @@ function toggleToOption(option, picker) {
                     onEvent('mousedown', valueNext, onPointerDownValue);
                     onEvent('touchstart', valueNext, onPointerDownValue);
                     letAria(valueNext, 'selected');
-                    setDatum(valueNext, 'value', getOptionValue(v));
                     setHTML(valueNext.$[VALUE_TEXT], getHTML(v.$[OPTION_TEXT]));
                     setReference(valueNext, picker), values.add(setNext(valueCurrent, valueNext));
+                    setValue(valueNext, getOptionValue(v));
                     valueCurrent = valueNext;
                 });
             }
@@ -1295,8 +1295,10 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         $._active = !isDisabledSelf && !isReadOnlySelf;
         $._fix = isInputSelf && isReadOnlySelf;
         const arrow = setElement('span', {
-            'class': n + '__arrow',
-            'role': 'none'
+            'aria': {
+                'hidden': 'true'
+            },
+            'class': n + '__arrow'
         });
         const form = getParentForm(self);
         const mask = setElement('div', {
@@ -1323,7 +1325,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'class': n + '__options-lot',
             'role': 'none'
         });
-        const text = setElement('span', {
+        const text = setElement(isInputSelf ? 'span' : 'data', {
             'class': n + '__' + (isInputSelf ? 'text' : 'value'),
             'tabindex': isInputSelf ? false : 0
         });
@@ -1762,19 +1764,17 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         // `picker.options.set('asdf', [ … ])`
         } else {}
         if (hasState(value[1], '&')) {
-            optionGroup = getElement('.' + n + '__options-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
-            optionGroupReal = getElement('optgroup[label="' + value[1]['&'].replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
+            optionGroup = getElement('.' + n + '__options-batch[value="' + fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', lot);
+            optionGroupReal = getElement('optgroup[label="' + fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
                 'label': value[1]['&'],
                 'title': getState(value[1], 'title') ?? false
             });
             if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
-                setChildLast(lot, optionGroup = setElement('span', {
+                setChildLast(lot, optionGroup = setElement('data', {
                     'class': n + '__options-batch',
-                    'data': {
-                        'value': value[1]['&']
-                    },
                     'role': 'group',
-                    'title': getState(value[1], 'title') ?? false
+                    'title': getState(value[1], 'title') ?? false,
+                    'value': value[1]['&']
                 }));
                 setChildLast(itemsParent, optionGroupReal);
                 if (classes = getState(value[1], 'class')) {
@@ -1797,7 +1797,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         }
         let {disabled, selected, value: v} = value[1];
         v = fromValue(v || key);
-        option = value[2] || setElement('span', {
+        option = value[2] || setElement('data', {
             'aria': {
                 'disabled': disabled ? 'true' : false,
                 'selected': selected ? 'true' : false
@@ -1805,11 +1805,11 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
             'class': n + '__option',
             'data': {
                 'batch': getState(value[1], '&') ?? false,
-                'value': v
             },
             'role': 'option',
             'tabindex': disabled ? false : -1,
-            'title': getState(value[1], 'title') ?? false
+            'title': getState(value[1], 'title') ?? false,
+            'value': v
         });
         optionReal = value[3] || setElement('option', fromValue(value[0]), {
             'disabled': disabled ? "" : false,

@@ -555,7 +555,7 @@
     };
     var getValue = function getValue(node, parseValue) {
         var value = (node.value || "").replace(/\r?\n|\r/g, '\n');
-        value = value;
+        value = parseValue ? _toValue(value) : value;
         return "" !== value ? value : null;
     };
     var hasAttribute = function hasAttribute(node, attribute) {
@@ -1131,7 +1131,7 @@
     }
 
     function getOptionValue(option, parseValue) {
-        return getDatum(option, 'value', parseValue);
+        return getValue(option, parseValue);
     }
 
     function getOptions(self) {
@@ -1336,7 +1336,7 @@
         picker._event = e;
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
             exit = true;
-            if (value && (valueCurrent = getElement('[data-value="' + getOptionValue($).replace(/"/g, '\\"') + '"]', getParent(value)))) {
+            if (value && (valueCurrent = getElement('[value="' + (getOptionValue($) + "").replace(/"/g, '\\"') + '"]', getParent(value)))) {
                 focusTo(valueCurrent);
             } else {
                 picker.exit(exit);
@@ -1532,8 +1532,8 @@
                         if (valueCurrent = getValueInMap(getOptionValue(v, 1), _options.values)) {
                             if (min < 1) {
                                 letAria(valueCurrent[2], 'selected');
+                                letAttribute(v, 'value');
                                 valueCurrent[3].selected = false;
-                                letDatum(v, 'value');
                                 setHTML(v.$[VALUE_TEXT], "");
                             }
                         }
@@ -1569,7 +1569,7 @@
                         letValueInMap($, values), letElement($);
                         // Do not remove the only option value
                     } else {
-                        letDatum(_mask.value = $, 'value');
+                        letAttribute(_mask.value = $, 'value');
                         setHTML($.$[VALUE_TEXT], "");
                         // No option(s) selected
                         if (0 === min) {
@@ -1603,7 +1603,7 @@
                         letValueInMap($, values), letElement($);
                         // Do not remove the only option value
                     } else {
-                        letDatum(_mask.value = $, 'value');
+                        letAttribute(_mask.value = $, 'value');
                         setHTML($.$[VALUE_TEXT], "");
                         // No option(s) selected
                         if (0 === min) {
@@ -1893,8 +1893,8 @@
                 setStyle(hint, 'color', 'transparent');
                 setText(input, getText(option));
             } else {
-                setDatum(value, 'value', v);
                 setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));
+                setValue(value, v);
             }
             return picker.fire('change', ["" !== v ? v : null]), option;
         }
@@ -1926,7 +1926,7 @@
                 letStyle(hint, 'color');
                 setText(input, "");
             } else {
-                letDatum(value, 'value');
+                letAttribute(value, 'value');
                 setHTML(value.$[VALUE_TEXT], v);
             }
         }
@@ -1992,8 +1992,8 @@
                 selected = getOptionsSelected(picker);
                 selectedFirst = selected.shift();
                 if (selectedFirst) {
-                    setDatum(value, 'value', getOptionValue(selectedFirst));
                     setHTML(value.$[VALUE_TEXT], getHTML(selectedFirst.$[OPTION_TEXT]));
+                    setValue(value, getOptionValue(selectedFirst));
                     letValueInMap(value, values);
                     forEachSet(values, function (v) {
                         offEvent('keydown', v, onKeyDownValue);
@@ -2013,9 +2013,9 @@
                         onEvent('mousedown', valueNext, onPointerDownValue);
                         onEvent('touchstart', valueNext, onPointerDownValue);
                         letAria(valueNext, 'selected');
-                        setDatum(valueNext, 'value', getOptionValue(v));
                         setHTML(valueNext.$[VALUE_TEXT], getHTML(v.$[OPTION_TEXT]));
                         setReference(valueNext, picker), values.add(setNext(valueCurrent, valueNext));
+                        setValue(valueNext, getOptionValue(v));
                         valueCurrent = valueNext;
                     });
                 }
@@ -2341,8 +2341,10 @@
             $._active = !isDisabledSelf && !isReadOnlySelf;
             $._fix = isInputSelf && isReadOnlySelf;
             var arrow = setElement('span', {
-                'class': n + '__arrow',
-                'role': 'none'
+                'aria': {
+                    'hidden': 'true'
+                },
+                'class': n + '__arrow'
             });
             var form = getParentForm(self);
             var mask = setElement('div', {
@@ -2369,7 +2371,7 @@
                 'class': n + '__options-lot',
                 'role': 'none'
             });
-            var text = setElement('span', {
+            var text = setElement(isInputSelf ? 'span' : 'data', {
                 'class': n + '__' + (isInputSelf ? 'text' : 'value'),
                 'tabindex': isInputSelf ? false : 0
             });
@@ -2882,20 +2884,18 @@
             } else;
             if (hasState(value[1], '&')) {
                 var _getState;
-                optionGroup = getElement('.' + n + '__options-batch[data-value="' + value[1]['&'].replace(/"/g, '\\"') + '"]', lot);
-                optionGroupReal = getElement('optgroup[label="' + value[1]['&'].replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
+                optionGroup = getElement('.' + n + '__options-batch[value="' + _fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', lot);
+                optionGroupReal = getElement('optgroup[label="' + _fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
                     'label': value[1]['&'],
                     'title': (_getState = getState(value[1], 'title')) != null ? _getState : false
                 });
                 if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
                     var _getState2;
-                    setChildLast(lot, optionGroup = setElement('span', {
+                    setChildLast(lot, optionGroup = setElement('data', {
                         'class': n + '__options-batch',
-                        'data': {
-                            'value': value[1]['&']
-                        },
                         'role': 'group',
-                        'title': (_getState2 = getState(value[1], 'title')) != null ? _getState2 : false
+                        'title': (_getState2 = getState(value[1], 'title')) != null ? _getState2 : false,
+                        'value': value[1]['&']
                     }));
                     setChildLast(itemsParent, optionGroupReal);
                     if (classes = getState(value[1], 'class')) {
@@ -2921,19 +2921,19 @@
                 selected = _value$.selected,
                 v = _value$.value;
             v = _fromValue(v || key);
-            option = value[2] || setElement('span', {
+            option = value[2] || setElement('data', {
                 'aria': {
                     'disabled': disabled ? 'true' : false,
                     'selected': selected ? 'true' : false
                 },
                 'class': n + '__option',
                 'data': {
-                    'batch': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false,
-                    'value': v
+                    'batch': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false
                 },
                 'role': 'option',
                 'tabindex': disabled ? false : -1,
-                'title': (_getState4 = getState(value[1], 'title')) != null ? _getState4 : false
+                'title': (_getState4 = getState(value[1], 'title')) != null ? _getState4 : false,
+                'value': v
             });
             optionReal = value[3] || setElement('option', _fromValue(value[0]), {
                 'disabled': disabled ? "" : false,

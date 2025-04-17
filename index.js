@@ -952,6 +952,7 @@
     };
     var FILTER_COMMIT_TIME = 10;
     var SEARCH_CLEAR_TIME = 500;
+    var KEY_A = 'a';
     var KEY_ARROW_DOWN = 'ArrowDown';
     var KEY_ARROW_LEFT = 'ArrowLeft';
     var KEY_ARROW_RIGHT = 'ArrowRight';
@@ -964,6 +965,7 @@
     var KEY_ESCAPE = 'Escape';
     var KEY_PAGE_DOWN = 'PageDown';
     var KEY_PAGE_UP = 'PageUp';
+    var KEY_R = 'r';
     var KEY_TAB = 'Tab';
     var OPTION_SELF = 0;
     var OPTION_TEXT = 1;
@@ -1474,7 +1476,7 @@
             exit = true;
             focusToOptionLast(picker);
         } else {
-            if (keyIsCtrl && !keyIsShift && 'a' === key && !isInput(self) && max > 1) {
+            if (keyIsCtrl && !keyIsShift && KEY_A === key && !isInput(self) && max > 1) {
                 exit = true;
                 forEachMap(_options, function (v, k) {
                     if (!getAria(v[2], 'disabled') && !v[2].hidden) {
@@ -1674,9 +1676,9 @@
             }
         } else if (1 === toCount(key) && !keyIsAlt) {
             exit = true;
-            if (keyIsCtrl && !keyIsShift && 'r' === key) {
+            if (keyIsCtrl && !keyIsShift && KEY_R === key) {
                 exit = false; // Native reload :(
-            } else if (keyIsCtrl && !keyIsShift && 'a' === key && max > 1) {
+            } else if (keyIsCtrl && !keyIsShift && KEY_A === key && max > 1) {
                 // Select all visually
                 setAria(valueCurrent = value, 'selected', true);
                 while ((valueNext = getNext(valueCurrent)) && hasKeyInMap(valueNext, values)) {

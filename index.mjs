@@ -14,6 +14,7 @@ import {toCaseLower, toCount, toMapCount, toSetCount, toValue} from '@taufik-nur
 const FILTER_COMMIT_TIME = 10;
 const SEARCH_CLEAR_TIME = 500;
 
+const KEY_A = 'a';
 const KEY_ARROW_DOWN = 'ArrowDown';
 const KEY_ARROW_LEFT = 'ArrowLeft';
 const KEY_ARROW_RIGHT = 'ArrowRight';
@@ -26,6 +27,7 @@ const KEY_ENTER = 'Enter';
 const KEY_ESCAPE = 'Escape';
 const KEY_PAGE_DOWN = 'PageDown';
 const KEY_PAGE_UP = 'PageUp';
+const KEY_R = 'r';
 const KEY_TAB = 'Tab';
 
 const OPTION_SELF = 0;
@@ -499,7 +501,7 @@ function onKeyDownOption(e) {
         exit = true;
         focusToOptionLast(picker);
     } else {
-        if (keyIsCtrl && !keyIsShift && 'a' === key && !isInput(self) && max > 1) {
+        if (keyIsCtrl && !keyIsShift && KEY_A === key && !isInput(self) && max > 1) {
             exit = true;
             forEachMap(_options, (v, k) => {
                 if (!getAria(v[2], 'disabled') && !v[2].hidden) {
@@ -687,9 +689,9 @@ function onKeyDownValue(e) {
         }
     } else if (1 === toCount(key) && !keyIsAlt) {
         exit = true;
-        if (keyIsCtrl && !keyIsShift && 'r' === key) {
+        if (keyIsCtrl && !keyIsShift && KEY_R === key) {
             exit = false; // Native reload :(
-        } else if (keyIsCtrl && !keyIsShift && 'a' === key && max > 1) {
+        } else if (keyIsCtrl && !keyIsShift && KEY_A === key && max > 1) {
             // Select all visually
             setAria(valueCurrent = value, 'selected', true);
             while ((valueNext = getNext(valueCurrent)) && hasKeyInMap(valueNext, values)) {

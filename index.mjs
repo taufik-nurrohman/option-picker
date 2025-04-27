@@ -14,19 +14,50 @@ import {toCaseLower, toCount, toMapCount, toSetCount, toValue} from '@taufik-nur
 const FILTER_COMMIT_TIME = 10;
 const SEARCH_CLEAR_TIME = 500;
 
+const EVENT_DOWN = 'down';
+const EVENT_MOVE = 'move';
+const EVENT_UP = 'up';
+
+const EVENT_BLUR = 'blur';
+const EVENT_CUT = 'cut';
+const EVENT_FOCUS = 'focus';
+const EVENT_KEY = 'key';
+const EVENT_KEY_DOWN = EVENT_KEY + EVENT_DOWN;
+const EVENT_KEY_UP = EVENT_KEY + EVENT_UP;
+const EVENT_MOUSE = 'mouse';
+const EVENT_MOUSE_DOWN = EVENT_MOUSE + EVENT_DOWN;
+const EVENT_MOUSE_MOVE = EVENT_MOUSE + EVENT_MOVE;
+const EVENT_MOUSE_UP = EVENT_MOUSE + EVENT_UP;
+const EVENT_PASTE = 'paste';
+const EVENT_RESET = 'reset';
+const EVENT_RESIZE = 'resize';
+const EVENT_SCROLL = 'scroll';
+const EVENT_SUBMIT = 'submit';
+const EVENT_TOUCH = 'touch';
+const EVENT_TOUCH_END = EVENT_TOUCH + 'end';
+const EVENT_TOUCH_MOVE = EVENT_TOUCH + EVENT_MOVE;
+const EVENT_TOUCH_START = EVENT_TOUCH + 'start';
+
+const KEY_DOWN = 'Down';
+const KEY_LEFT = 'Left';
+const KEY_RIGHT = 'Right';
+const KEY_UP = 'Up';
+
 const KEY_A = 'a';
-const KEY_ARROW_DOWN = 'ArrowDown';
-const KEY_ARROW_LEFT = 'ArrowLeft';
-const KEY_ARROW_RIGHT = 'ArrowRight';
-const KEY_ARROW_UP = 'ArrowUp';
+const KEY_ARROW = 'Arrow';
+const KEY_ARROW_DOWN = KEY_ARROW + KEY_DOWN;
+const KEY_ARROW_LEFT = KEY_ARROW + KEY_LEFT;
+const KEY_ARROW_RIGHT = KEY_ARROW + KEY_RIGHT;
+const KEY_ARROW_UP = KEY_ARROW + KEY_UP;
 const KEY_BEGIN = 'Home';
 const KEY_DELETE_LEFT = 'Backspace';
 const KEY_DELETE_RIGHT = 'Delete';
 const KEY_END = 'End';
 const KEY_ENTER = 'Enter';
 const KEY_ESCAPE = 'Escape';
-const KEY_PAGE_DOWN = 'PageDown';
-const KEY_PAGE_UP = 'PageUp';
+const KEY_PAGE = 'Page';
+const KEY_PAGE_DOWN = KEY_PAGE + KEY_DOWN;
+const KEY_PAGE_UP = KEY_PAGE + KEY_UP;
 const KEY_R = 'r';
 const KEY_TAB = 'Tab';
 
@@ -561,9 +592,9 @@ function onKeyDownValue(e) {
                         letAria(valueCurrent[2], 'selected');
                         valueCurrent[3].selected = false;
                     }
-                    offEvent('keydown', v, onKeyDownValue);
-                    offEvent('mousedown', v, onPointerDownValue);
-                    offEvent('touchstart', v, onPointerDownValue);
+                    offEvent(EVENT_KEY_DOWN, v, onKeyDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, v, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, v, onPointerDownValue);
                     letValueInMap(v, values), letElement(v);
                 }
                 ++index;
@@ -579,9 +610,9 @@ function onKeyDownValue(e) {
                 valueCurrent[3].selected = false;
                 if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values) || (valuePrev = getNext($)) && hasKeyInMap(valuePrev, values)) {
                     focusTo(_mask.value = valuePrev);
-                    offEvent('keydown', $, onKeyDownValue);
-                    offEvent('mousedown', $, onPointerDownValue);
-                    offEvent('touchstart', $, onPointerDownValue);
+                    offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
                     letValueInMap($, values), letElement($);
                 // Do not remove the only option value
                 } else {
@@ -613,9 +644,9 @@ function onKeyDownValue(e) {
                 valueCurrent[3].selected = false;
                 if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values) || (valueNext = getPrev($)) && hasKeyInMap(valueNext, values)) {
                     focusTo(_mask.value = valueNext);
-                    offEvent('keydown', $, onKeyDownValue);
-                    offEvent('mousedown', $, onPointerDownValue);
-                    offEvent('touchstart', $, onPointerDownValue);
+                    offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
                     letValueInMap($, values), letElement($);
                 // Do not remove the only option value
                 } else {
@@ -974,9 +1005,9 @@ function toggleToOption(option, picker) {
                 setValue(value, getOptionValue(selectedFirst));
                 letValueInMap(value, values);
                 forEachSet(values, v => {
-                    offEvent('keydown', v, onKeyDownValue);
-                    offEvent('mousedown', v, onPointerDownValue);
-                    offEvent('touchstart', v, onPointerDownValue);
+                    offEvent(EVENT_KEY_DOWN, v, onKeyDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, v, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, v, onPointerDownValue);
                     letReference(v, picker), letElement(v);
                     return -1; // Remove
                 });
@@ -987,9 +1018,9 @@ function toggleToOption(option, picker) {
                     valueNext.$ = {};
                     valueNext.$[VALUE_SELF] = null;
                     valueNext.$[VALUE_TEXT] = getElement('.' + n + '__v', valueNext);
-                    onEvent('keydown', valueNext, onKeyDownValue);
-                    onEvent('mousedown', valueNext, onPointerDownValue);
-                    onEvent('touchstart', valueNext, onPointerDownValue);
+                    onEvent(EVENT_KEY_DOWN, valueNext, onKeyDownValue);
+                    onEvent(EVENT_MOUSE_DOWN, valueNext, onPointerDownValue);
+                    onEvent(EVENT_TOUCH_START, valueNext, onPointerDownValue);
                     letAria(valueNext, 'selected');
                     setHTML(valueNext.$[VALUE_TEXT], getHTML(v.$[OPTION_TEXT]));
                     setReference(valueNext, picker), values.add(setNext(valueCurrent, valueNext));
@@ -1357,40 +1388,40 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setChildLast(maskFlex, text);
         setChildLast(maskFlex, arrow);
         if (isInputSelf) {
-            onEvent('blur', textInput, onBlurTextInput);
-            onEvent('cut', textInput, onCutTextInput);
-            onEvent('focus', textInput, onFocusTextInput);
-            onEvent('keydown', textInput, onKeyDownTextInput);
-            onEvent('paste', textInput, onPasteTextInput);
+            onEvent(EVENT_BLUR, textInput, onBlurTextInput);
+            onEvent(EVENT_CUT, textInput, onCutTextInput);
+            onEvent(EVENT_FOCUS, textInput, onFocusTextInput);
+            onEvent(EVENT_KEY_DOWN, textInput, onKeyDownTextInput);
+            onEvent(EVENT_PASTE, textInput, onPasteTextInput);
             setChildLast(text, textInput);
             setChildLast(text, textInputHint);
             setReference(textInput, $);
         } else {
-            onEvent('keydown', text, onKeyDownValue);
-            onEvent('mousedown', text, onPointerDownValue);
-            onEvent('touchstart', text, onPointerDownValue);
+            onEvent(EVENT_KEY_DOWN, text, onKeyDownValue);
+            onEvent(EVENT_MOUSE_DOWN, text, onPointerDownValue);
+            onEvent(EVENT_TOUCH_START, text, onPointerDownValue);
             setReference(text, $);
         }
         setClass(self, n + '__self');
         setNext(self, mask);
         setChildLast(mask, self);
         if (form) {
-            onEvent('reset', form, onResetForm);
-            onEvent('submit', form, onSubmitForm);
+            onEvent(EVENT_RESET, form, onResetForm);
+            onEvent(EVENT_SUBMIT, form, onSubmitForm);
             setID(form);
             setReference(form, $);
         }
-        onEvent('focus', self, onFocusSelf);
-        onEvent('mousedown', R, onPointerDownRoot);
-        onEvent('mousedown', mask, onPointerDownMask);
-        onEvent('mousemove', R, onPointerMoveRoot);
-        onEvent('mouseup', R, onPointerUpRoot);
-        onEvent('resize', W, onResizeWindow, {passive: true});
-        onEvent('scroll', W, onScrollWindow, {passive: true});
-        onEvent('touchend', R, onPointerUpRoot);
-        onEvent('touchmove', R, onPointerMoveRoot, {passive: true});
-        onEvent('touchstart', R, onPointerDownRoot);
-        onEvent('touchstart', mask, onPointerDownMask);
+        onEvent(EVENT_FOCUS, self, onFocusSelf);
+        onEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
+        onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+        onEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
+        onEvent(EVENT_MOUSE_UP, R, onPointerUpRoot);
+        onEvent(EVENT_RESIZE, W, onResizeWindow, {passive: true});
+        onEvent(EVENT_SCROLL, W, onScrollWindow, {passive: true});
+        onEvent(EVENT_TOUCH_END, R, onPointerUpRoot);
+        onEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot, {passive: true});
+        onEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
+        onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
         self.tabIndex = -1;
         setReference(mask, $);
         let _mask = {
@@ -1493,32 +1524,32 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         $._value = null;
         $._values = [];
         if (form) {
-            offEvent('reset', form, onResetForm);
-            offEvent('submit', form, onSubmitForm);
+            offEvent(EVENT_RESET, form, onResetForm);
+            offEvent(EVENT_SUBMIT, form, onSubmitForm);
         }
         if (input) {
-            offEvent('blur', input, onBlurTextInput);
-            offEvent('cut', input, onCutTextInput);
-            offEvent('focus', input, onFocusTextInput);
-            offEvent('keydown', input, onKeyDownTextInput);
-            offEvent('paste', input, onPasteTextInput);
+            offEvent(EVENT_BLUR, input, onBlurTextInput);
+            offEvent(EVENT_CUT, input, onCutTextInput);
+            offEvent(EVENT_FOCUS, input, onFocusTextInput);
+            offEvent(EVENT_KEY_DOWN, input, onKeyDownTextInput);
+            offEvent(EVENT_PASTE, input, onPasteTextInput);
         }
         if (value) {
-            offEvent('keydown', value, onKeyDownValue);
-            offEvent('mousedown', value, onPointerDownValue);
-            offEvent('touchstart', value, onPointerDownValue);
+            offEvent(EVENT_KEY_DOWN, value, onKeyDownValue);
+            offEvent(EVENT_MOUSE_DOWN, value, onPointerDownValue);
+            offEvent(EVENT_TOUCH_START, value, onPointerDownValue);
         }
-        offEvent('focus', self, onFocusSelf);
-        offEvent('mousedown', R, onPointerDownRoot);
-        offEvent('mousedown', mask, onPointerDownMask);
-        offEvent('mousemove', R, onPointerMoveRoot);
-        offEvent('mouseup', R, onPointerUpRoot);
-        offEvent('resize', W, onResizeWindow);
-        offEvent('scroll', W, onScrollWindow);
-        offEvent('touchend', R, onPointerUpRoot);
-        offEvent('touchmove', R, onPointerMoveRoot);
-        offEvent('touchstart', R, onPointerDownRoot);
-        offEvent('touchstart', mask, onPointerDownMask);
+        offEvent(EVENT_FOCUS, self, onFocusSelf);
+        offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
+        offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+        offEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
+        offEvent(EVENT_MOUSE_UP, R, onPointerUpRoot);
+        offEvent(EVENT_RESIZE, W, onResizeWindow);
+        offEvent(EVENT_SCROLL, W, onScrollWindow);
+        offEvent(EVENT_TOUCH_END, R, onPointerUpRoot);
+        offEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot);
+        offEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
+        offEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
         // Detach extension(s)
         if (isArray(state.with)) {
             forEachArray(state.with, (v, k) => {
@@ -1688,12 +1719,12 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
             parentReal = getParent(r[3]),
             value = getOptionValue(r[2]),
             valueReal = of.value;
-        offEvent('focus', r[2], onFocusOption);
-        offEvent('keydown', r[2], onKeyDownOption);
-        offEvent('mousedown', r[2], onPointerDownOption);
-        offEvent('mouseup', r[2], onPointerUpOption);
-        offEvent('touchend', r[2], onPointerUpOption);
-        offEvent('touchstart', r[2], onPointerDownOption);
+        offEvent(EVENT_FOCUS, r[2], onFocusOption);
+        offEvent(EVENT_KEY_DOWN, r[2], onKeyDownOption);
+        offEvent(EVENT_MOUSE_DOWN, r[2], onPointerDownOption);
+        offEvent(EVENT_MOUSE_UP, r[2], onPointerUpOption);
+        offEvent(EVENT_TOUCH_END, r[2], onPointerUpOption);
+        offEvent(EVENT_TOUCH_START, r[2], onPointerDownOption);
         letElement(r[2]), letElement(r[3]);
         r = letValueInMap(key, values);
         // Remove empty group(s)
@@ -1834,12 +1865,12 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         option.$[OPTION_SELF] = optionReal;
         option.$[OPTION_TEXT] = optionText;
         if (!disabled && !value[2]) {
-            onEvent('focus', option, onFocusOption);
-            onEvent('keydown', option, onKeyDownOption);
-            onEvent('mousedown', option, onPointerDownOption);
-            onEvent('mouseup', option, onPointerUpOption);
-            onEvent('touchend', option, onPointerUpOption);
-            onEvent('touchstart', option, onPointerDownOption);
+            onEvent(EVENT_FOCUS, option, onFocusOption);
+            onEvent(EVENT_KEY_DOWN, option, onKeyDownOption);
+            onEvent(EVENT_MOUSE_DOWN, option, onPointerDownOption);
+            onEvent(EVENT_MOUSE_UP, option, onPointerUpOption);
+            onEvent(EVENT_TOUCH_END, option, onPointerUpOption);
+            onEvent(EVENT_TOUCH_START, option, onPointerDownOption);
         }
         setChildLast(option, optionText);
         setChildLast(optionGroup || lot, option);

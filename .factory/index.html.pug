@@ -1379,11 +1379,13 @@ block content
         = ' '
         button(type='reset') Reset
     h2#usage
-      a(href='#usage') #
+      a(aria-hidden='true' href='#usage') #
       = ' Usage'
     div(role='note')
       p #[strong Note:] CSS variables have been removed since version 2.0.0. From now on, I will only provide a minimal style just to make viable interaction. Expect it to look ugly by default. The main goal of this application is to be able to integrate it seamlessly into your web design. By providing a minimal style, it is easy to add other styles to it to adapt it to your own web design. Have a look at the source code on this page to see how I adapted the style to resemble the default style of the previous version.
-    h3 Browser
+    h3#browser
+      a(aria-hidden='true' href='#browser') #
+      = ' Browser'
     pre: code
       | &lt;!DOCTYPE html&gt;
       | &lt;html dir="ltr"&gt;
@@ -1419,20 +1421,26 @@ block content
       |     &lt;/script&gt;
       |   &lt;/body&gt;
       | &lt;/html&gt;
-    h3 Node.js
+    h3#node-js
+      a(aria-hidden='true' href='#node-js') #
+      = ' Node.js'
     p Functions and methods in this application are mostly native JavaScript and are intended for use by the browser. Node.js doesn’t know about the DOM, so this kind of practice will probably be used more often to build new browser packages than to be used directly in the Node.js server.
-    h4 CommonJS
+    h4#cjs
+      a(aria-hidden='true' href='#cjs') #
+      = ' CommonJS'
     pre: code
       | const OptionPicker = require('@taufik-nurrohman/option-picker').default;
       |
       | const picker = new OptionPicker(document.querySelector('select'));
-    h4 ECMAScript
+    h4#mjs
+      a(aria-hidden='true' href='#mjs') #
+      = ' ECMAScript'
     pre: code
       | import OptionPicker from '@taufik-nurrohman/option-picker';
       |
       | const picker = new OptionPicker(document.querySelector('select'));
     h2#tests
-      a(href='#tests') #
+      a(aria-hidden='true' href='#tests') #
       = ' Tests'
     ul
       li: a(href='test.html' target='_blank') No Idea?
@@ -1454,14 +1462,14 @@ block content
       li: a(href='test/selected.html' target='_blank') Selected State
       li: a(href='test/size.html' target='_blank') Visible Options
     h2#tweaks
-      a(href='#tweaks') #
+      a(aria-hidden='true' href='#tweaks') #
       = ' Tweaks'
     ul
       li: a(href='tweak/animation-fade.html' target='_blank') Fade Animation
       li: a(href='tweak/bar.html' target='_blank') Header in Options
       li: a(href='tweak/animation-slide.html' target='_blank') Slide Animation
     h2#constructor
-      a(href='#constructor') #
+      a(aria-hidden='true' href='#constructor') #
       = ' Constructor'
     pre: code
       | const picker = new OptionPicker(self, strict = false);
@@ -1475,19 +1483,37 @@ block content
       |     with: []
       | });
     h2#parameters
-      a(href='#parameters') #
+      a(aria-hidden='true' href='#parameters') #
       = ' Parameters'
-    h3: code self
+    h3#parameter-self
+      a(aria-hidden='true' href='#parameter-self') #
+      = ' '
+      code self
     p The #[code &lt;input&gt;] or #[code &lt;select&gt;] element.
-    h3: code strict
+    h3#parameter-strict
+      a(aria-hidden='true' href='#parameter-strict') #
+      = ' '
+      code strict
     p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
-    h3: code state
+    h3#parameter-state
+      a(aria-hidden='true' href='#parameter-state') #
+      = ' '
+      code state
     p The configuration data.
-    h4: code state.max
+    h4#parameter-state-max
+      a(aria-hidden='true' href='#parameter-state-max') #
+      = ' '
+      code state.max
     p Determines the maximum number of options that can be selected on the option picker that are sourced from a #[code &lt;select multiple&gt;] element. It has a default value set to #[code Infinity]. If the source element is an #[code &lt;input&gt;] element, then its default value will be #[code 1]. This means that the multiple selection feature will apply only to #[code &lt;select&gt;] element.
-    h4: code state.min
+    h4#parameter-state-min
+      a(aria-hidden='true' href='#parameter-state-min') #
+      = ' '
+      code state.min
     p Determines the minimum number of options that can be selected on the option picker. If the source element is a #[code &lt;select&gt;] element, the default value will be #[code 1]; if the source element is an #[code &lt;input&gt;] element, the default value will be #[code 0].
-    h4: code state.options
+    h4#parameter-state-options
+      a(aria-hidden='true' href='#parameter-state-options') #
+      = ' '
+      code state.options
     p A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.
     p #[strong Array] is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an #[code &lt;option&gt;] element without a #[code value] attribute.
     pre: code
@@ -1581,55 +1607,93 @@ block content
       | };
       |
       | const picker = new OptionPicker(document.querySelector('select'), {options});
-    h4: code state.size
+    h4#parameter-state-size
+      a(aria-hidden='true' href='#parameter-state-size') #
+      = ' '
+      code state.size
     p Set the value to an integer greater than #[code 1] to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a #[code &lt;select&gt;] element when given the #[code size] attribute. It has a default value of #[code null]. If #[code self] is a #[code &lt;select&gt;] element, then the application will try to use the #[code size] attribute value of that element. This does not apply if #[code self] is an #[code &lt;input&gt;] element, because #[code size] attribute on an #[code &lt;input&gt;] element has different semantics. #[sup #[a(href='https://html.spec.whatwg.org#attr-input-size' rel='nofollow' target='_blank') 1]] #[sup #[a(href='https://html.spec.whatwg.org#attr-select-size' rel='nofollow' target='_blank') 2]]
-    h4: code state.strict
+    h4#parameter-state-strict
+      a(aria-hidden='true' href='#parameter-state-strict') #
+      = ' '
+      code state.strict
     p Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the #[kbd Tab] key will automatically select the first active option.
-    h4: code state.with
+    h4#parameter-state-with
+      a(aria-hidden='true' href='#parameter-state-with') #
+      = ' '
+      code state.with
     p List of callable functions or objects containing an #[code attach()] method to be invoked each time the application is initialized. A very simple “plugin” system.
     h2#methods
-      a(href='#methods') #
+      a(aria-hidden='true' href='#methods') #
       = ' Methods'
-    h3 Instance Methods
+    h3#instance-methods
+      a(aria-hidden='true' href='#instance-methods') #
+      = ' Instance Methods'
     p Instance methods are methods available through the results of an #[code OptionPicker] construct.
-    h4: code picker.attach(self, state)
+    h4#instance-method-attach
+      a(aria-hidden='true' href='#instance-method-attach') #
+      = ' '
+      code picker.attach(self, state)
     p Re-initializes the application and its extensions after it has been detached.
     pre: code
       | picker.attach();
-    h4: code picker.blur()
+    h4#instance-method-blur
+      a(aria-hidden='true' href='#instance-method-blur') #
+      = ' '
+      code picker.blur()
     p Blurs from the option picker’s input or self.
     pre: code
       | picker.blur();
-    h4: code picker.detach()
+    h4#instance-method-detach
+      a(aria-hidden='true' href='#instance-method-detach') #
+      = ' '
+      code picker.detach()
     p Disables the application methods (except for the #[code attach()] method) and executes the #[code detach()] method of the extensions, if they are present.
     pre: code
       | picker.detach();
-    h4: code picker.enter(focus, mode = true)
+    h4#instance-method-enter
+      a(aria-hidden='true' href='#instance-method-enter') #
+      = ' '
+      code picker.enter(focus, mode = true)
     p Shows the option picker’s options.
     pre: code
       | picker.enter(); // Show the option picker’s options
       | picker.enter(true); // Show the option picker’s options and focus to the option picker’s input or value
-    h4: code picker.exit(focus, mode = true)
+    h4#instance-method-exit
+      a(aria-hidden='true' href='#instance-method-exit') #
+      = ' '
+      code picker.exit(focus, mode = true)
     p Hides the option picker’s options.
     pre: code
       | picker.exit(); // Hide the option picker’s options
       | picker.exit(true); // Hide the option picker’s options and focus to the option picker’s input or value
-    h4: code picker.fire(event, data, that)
+    h4#instance-method-fire
+      a(aria-hidden='true' href='#instance-method-fire') #
+      = ' '
+      code picker.fire(event, data, that)
     p Fires an event.
     pre: code
       | picker.fire('change', []);
-    h4: code picker.focus(mode = true)
+    h4#instance-method-focus
+      a(aria-hidden='true' href='#instance-method-focus') #
+      = ' '
+      code picker.focus(mode = true)
     p Focuses to the option picker’s input or value.
     pre: code
       | picker.focus(); // Focus and select the text
       | picker.focus(-1); // Focus and put the caret to the start of the text
       | picker.focus(+1); // Focus and put the caret to the end of the text
-    h4: code picker.off(event, task)
+    h4#instance-method-off
+      a(aria-hidden='true' href='#instance-method-off') #
+      = ' '
+      code picker.off(event, task)
     p Removes an event.
     pre: code
       | picker.off('change'); // Remove all events from the `change` event container
       | picker.off('change', onChange); // Remove `onChange` event from the `change` event container
-    h4: code picker.on(event, task)
+    h4#instance-method-on
+      a(aria-hidden='true' href='#instance-method-on') #
+      = ' '
+      code picker.on(event, task)
     p Adds a new event.
     pre: code
       | picker.on('change', function () {
@@ -1641,60 +1705,94 @@ block content
       | }
       |
       | picker.on('change', onChange);
-    h4: code picker.reset(focus, mode = true)
+    h4#instance-method-reset
+      a(aria-hidden='true' href='#instance-method-reset') #
+      = ' '
+      code picker.reset(focus, mode = true)
     p Resets the option picker’s value or values to its initial value or values.
     pre: code
       | picker.reset(); // Reset the option picker’s value or values
       | picker.reset(true); // Reset the option picker’s value or values and focus to the option picker’s input or value
-    h3 Static Methods
+    h3#static-methods
+      a(aria-hidden='true' href='#static-methods') #
+      = ' Static Methods'
     p Static methods are methods available directly on the #[code OptionPicker] object.
-    h4: code OptionPicker.from(self, state)
+    h4#static-method-from
+      a(aria-hidden='true' href='#static-method-from') #
+      = ' '
+      code OptionPicker.from(self, state)
     p Creates a new #[code OptionPicker] instance.
     pre: code
       | const picker = OptionPicker.from(document.querySelector('select'));
-    h4: code OptionPicker.of(self)
+    h4#static-method-of
+      a(aria-hidden='true' href='#static-method-of') #
+      = ' '
+      code OptionPicker.of(self)
     p Gets #[code OptionPicker] instance of an element.
     pre: code
       | document.querySelectorAll('input[list], select').forEach(self =&gt; {
       |     const picker = OptionPicker.of(self);
       | });
     h2#properties
-     a(href='#properties') #
+     a(aria-hidden='true' href='#properties') #
      = ' Properties'
-    h3 Instance Properties
+    h3#instance-properties
+      a(aria-hidden='true' href='#instance-properties') #
+      = ' Instance Properties'
     p Instance properties are properties available through the results of an #[code OptionPicker] construct.
-    h4: code picker.active
+    h4#instance-property-active
+      a(aria-hidden='true' href='#instance-property-active') #
+      = ' '
+      code picker.active
     p Gets or sets the active state of the option picker. By setting the value to #[code false] or #[code true], the disabled state of the source element will also be set automatically.
     pre: code
       | picker.active = false; // Disable option picker
       | picker.active = true; // Enable option picker
-    h4: code picker.fix
+    h4#instance-property-fix
+      a(aria-hidden='true' href='#instance-property-fix') #
+      = ' '
+      code picker.fix
     p Gets or sets the read-only state of the option picker. By setting the value to #[code false] or #[code true], the read-only state of the source element will also be set automatically. This only applies to the option picker that is sourced from an #[code &lt;input&gt;] element.
     pre: code
       | picker.fix = true; // Make the option picker “read-only”
-    h4: code picker.hooks
+    h4#instance-property-hooks
+      a(aria-hidden='true' href='#instance-property-hooks') #
+      = ' '
+      code picker.hooks
     p Returns the events data.
     pre: code
       | console.log(picker.hooks);
-    h4: code picker.mask
+    h4#instance-property-mask
+      a(aria-hidden='true' href='#instance-property-mask') #
+      = ' '
+      code picker.mask
     p Returns the option picker’s mask.
     pre: code
       | picker.mask.classList.add(picker.state.n + '--dark');
-    h4: code picker.max
+    h4#instance-property-max
+      a(aria-hidden='true' href='#instance-property-max') #
+      = ' '
+      code picker.max
     p Proxy that passes to the #[code picker.state.max] property, with additional actions that are executed while the value is being set.
     p(role='note') #[b Note:] This does not apply to an option picker that is sourced from an #[code &lt;input&gt;] element.
     pre: code
       | console.log(picker.max); // Returns the `picker.state.max` value
     pre: code
       | picker.max = 4; // Add `multiple` attribute to the `&lt;select&gt;` element and allow the user to select up to 4 options. If the option picker is sourced from a `&lt;select multiple&gt;` element and it has more than 4 options selected, the form submission will be disabled and the `max.options` hook will be fired.
-    h4: code picker.min
+    h4#instance-property-min
+      a(aria-hidden='true' href='#instance-property-min') #
+      = ' '
+      code picker.min
     p Proxy that passes to the #[code picker.state.min] property, with additional actions that are executed while the value is being set.
     p(role='note') #[b Note:] If the value is set to #[code 0] and the option picker is sourced from a #[code &lt;select&gt;] element, it will allow the user to remove the only selection by focusing on the option picker value and then pressing the #[kbd Backspace] or #[kbd Delete] key, or by focusing on the selected option and then clicking/tapping or pressing the #[kbd Space] key on it to remove the selection.
     pre: code
       | console.log(picker.min); // Returns the `picker.state.min` value
     pre: code
       | picker.min = 4; // If the option picker is sourced from a `&lt;select multiple&gt;` element and it has less than 4 options selected, the form submission will be disabled and the `min.options` hook will be fired.
-    h4: code picker.options
+    h4#instance-property-options
+      a(aria-hidden='true' href='#instance-property-options') #
+      = ' '
+      code picker.options
     p Gets the current options list data, or sets (overwrites) the current options list with new data.
     pre: code
       | console.log(picker.options);
@@ -1792,25 +1890,40 @@ block content
       | }]);
       |
       | picker.options = options;
-    h4: code picker.self
+    h4#instance-property-self
+      a(aria-hidden='true' href='#instance-property-self') #
+      = ' '
+      code picker.self
     p Returns the #[code &lt;input&gt;] or #[code &lt;select&gt;] element.
     pre: code
       | console.log(picker.self.getAttribute('name'));
-    h4: code picker.size
+    h4#instance-property-size
+      a(aria-hidden='true' href='#instance-property-size') #
+      = ' '
+      code picker.size
     p Changes the layout of a drop-down select box to a scrollable area select box. This is valid only if the value is an integer greater than #[code 1]. Otherwise, it will be considered as an invalid value and will revert the layout to its default layout, which is a drop-down select box.
     pre: code
       | picker.size = 5;
-    h4: code picker.state
+    h4#instance-property-state
+      a(aria-hidden='true' href='#instance-property-state') #
+      = ' '
+      code picker.state
     p Returns the application states if any.
     pre: code
       | console.log(picker.state);
-    h4: code picker.text
+    h4#instance-property-text
+      a(aria-hidden='true' href='#instance-property-text') #
+      = ' '
+      code picker.text
     p Gets or sets the current text in the “loose” option picker’s input.
     pre: code
       | console.log(picker.text);
     pre: code
       | picker.text = 'Option 3';
-    h4: code picker.value
+    h4#instance-property-value
+      a(aria-hidden='true' href='#Instance-property-value') #
+      = ' '
+      code picker.value
     p Proxy that passes to the #[code picker.self.value] property, with additional actions that are executed while the value is being set.
     pre: code
       | console.log(picker.value);
@@ -1820,9 +1933,14 @@ block content
       | });
       |
       | picker.value = '3';
-    h3 Static Properties
+    h3#static-properties
+      a(aria-hidden='true' href='#static-properties') #
+      = ' Static Properties'
     p Static properties are properties available directly on the #[code OptionPicker] object.
-    h4: code OptionPicker._
+    h4#static-property-prototype
+      a(aria-hidden='true' href='#static-property-prototype') #
+      = ' '
+      code OptionPicker._
     p Alias for #[code OptionPicker.prototype].
     pre: code
       | OptionPicker._.clear = function () {
@@ -1835,7 +1953,10 @@ block content
       | const picker = new OptionPicker(document.querySelector('input'));
       |
       | picker.clear(); // Clear value
-    h4: code OptionPicker.state
+    h4#static-property-state
+      a(aria-hidden='true' href='#static-property-state') #
+      = ' '
+      code OptionPicker.state
     p Returns the default values of #[code picker.state].
     pre: code
       | const picker = new OptionPicker(document.querySelector('select'), {
@@ -1843,12 +1964,17 @@ block content
       | });
       |
       | console.log([OptionPicker.state, picker.state]);
-    h4: code OptionPicker.version
+    h4#static-property-version
+      a(aria-hidden='true' href='#static-property-version') #
+      = ' '
+      code OptionPicker.version
     p Returns the application version.
     h2#extensions
-      a(href='#extensions') #
+      a(aria-hidden='true' href='#extensions') #
       = ' Extensions'
-    h3 Anatomy of an Extension
+    h3#anatomy-of-an-extension
+      a(aria-hidden='true' href='#anatomy-of-an-extension') #
+      = ' Anatomy of an Extension'
     p Extension as a function:
     pre: code
       | function Extension(self, state = {}) {
@@ -1867,7 +1993,9 @@ block content
       |     detach: function (self, state = {}) {},
       |     name: 'Extension'
       | };
-    h3 Usage of an Extension
+    h3#usage-of-an-extension
+      a(aria-hidden='true' href='#usage-of-an-extension') #
+      = ' Usage of an Extension'
     p As a core extension:
     pre: code
       | OptionPicker.state.with.push(Extension);
@@ -1876,13 +2004,15 @@ block content
       | const picker = new OptionPicker(document.querySelector('select'), {
       |     with: [Extension]
       | });
-    h3 List of Extensions
+    h3#list-of-extensions
+      a(aria-hidden='true' href='#list-of-extensions') #
+      = ' List of Extensions'
     ul
       li: a(aria-disabled='true') Clear Feature
       li: a(aria-disabled='true') Custom Scroll Bar
       li: a(aria-disabled='true') Highlight Search Term
     h2#license
-      a(href='#license') #
+      a(aria-hidden='true' href='#license') #
       = ' License'
     p Use it for free, pay if you get paid. So, you’ve just benefited financially after using this project? It’s a good idea to #[a(href='https://paypal.me/tatautaufik' target='_blank') share a little financial support] with this open source project too. Your support will motivate me to do any further development, as well as to provide voluntary support to overcome problems related to this project.
     p Thank you! ❤️

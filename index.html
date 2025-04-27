@@ -1397,11 +1397,11 @@
             </optgroup>
           </select> <button type="submit">Submit</button> <button type="reset">Reset</button></p>
       </form>
-      <h2 id="usage"><a href="#usage">#</a> Usage</h2>
+      <h2 id="usage"><a aria-hidden="true" href="#usage">#</a> Usage</h2>
       <div role="note">
         <p><strong>Note:</strong> CSS variables have been removed since version 2.0.0. From now on, I will only provide a minimal style just to make viable interaction. Expect it to look ugly by default. The main goal of this application is to be able to integrate it seamlessly into your web design. By providing a minimal style, it is easy to add other styles to it to adapt it to your own web design. Have a look at the source code on this page to see how I adapted the style to resemble the default style of the previous version.</p>
       </div>
-      <h3>Browser</h3>
+      <h3 id="browser"><a aria-hidden="true" href="#browser">#</a> Browser</h3>
       <pre><code>&lt;!DOCTYPE html&gt;
 &lt;html dir="ltr"&gt;
   &lt;head&gt;
@@ -1436,17 +1436,17 @@
     &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
-      <h3>Node.js</h3>
+      <h3 id="node-js"><a aria-hidden="true" href="#node-js">#</a> Node.js</h3>
       <p>Functions and methods in this application are mostly native JavaScript and are intended for use by the browser. Node.js doesn’t know about the DOM, so this kind of practice will probably be used more often to build new browser packages than to be used directly in the Node.js server.</p>
-      <h4>CommonJS</h4>
+      <h4 id="cjs"><a aria-hidden="true" href="#cjs">#</a> CommonJS</h4>
       <pre><code>const OptionPicker = require('@taufik-nurrohman/option-picker').default;
 
 const picker = new OptionPicker(document.querySelector('select'));</code></pre>
-      <h4>ECMAScript</h4>
+      <h4 id="mjs"><a aria-hidden="true" href="#mjs">#</a> ECMAScript</h4>
       <pre><code>import OptionPicker from '@taufik-nurrohman/option-picker';
 
 const picker = new OptionPicker(document.querySelector('select'));</code></pre>
-      <h2 id="tests"><a href="#tests">#</a> Tests</h2>
+      <h2 id="tests"><a aria-hidden="true" href="#tests">#</a> Tests</h2>
       <ul>
         <li><a href="test.html" target="_blank">No Idea?</a></li>
         <li><a href="test/attach,detach.html" target="_blank">Attach, Detach</a></li>
@@ -1467,13 +1467,13 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
         <li><a href="test/selected.html" target="_blank">Selected State</a></li>
         <li><a href="test/size.html" target="_blank">Visible Options</a></li>
       </ul>
-      <h2 id="tweaks"><a href="#tweaks">#</a> Tweaks</h2>
+      <h2 id="tweaks"><a aria-hidden="true" href="#tweaks">#</a> Tweaks</h2>
       <ul>
         <li><a href="tweak/animation-fade.html" target="_blank">Fade Animation</a></li>
         <li><a href="tweak/bar.html" target="_blank">Header in Options</a></li>
         <li><a href="tweak/animation-slide.html" target="_blank">Slide Animation</a></li>
       </ul>
-      <h2 id="constructor"><a href="#constructor">#</a> Constructor</h2>
+      <h2 id="constructor"><a aria-hidden="true" href="#constructor">#</a> Constructor</h2>
       <pre><code>const picker = new OptionPicker(self, strict = false);</code></pre>
       <pre><code>const picker = new OptionPicker(self, state = {
     max: null,
@@ -1483,18 +1483,18 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
     strict: false,
     with: []
 });</code></pre>
-      <h2 id="parameters"><a href="#parameters">#</a> Parameters</h2>
-      <h3><code>self</code></h3>
+      <h2 id="parameters"><a aria-hidden="true" href="#parameters">#</a> Parameters</h2>
+      <h3 id="parameter-self"><a aria-hidden="true" href="#parameter-self">#</a> <code>self</code></h3>
       <p>The <code>&lt;input&gt;</code> or <code>&lt;select&gt;</code> element.</p>
-      <h3><code>strict</code></h3>
+      <h3 id="parameter-strict"><a aria-hidden="true" href="#parameter-strict">#</a> <code>strict</code></h3>
       <p>Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the <kbd>Tab</kbd> key will automatically select the first active option.</p>
-      <h3><code>state</code></h3>
+      <h3 id="parameter-state"><a aria-hidden="true" href="#parameter-state">#</a> <code>state</code></h3>
       <p>The configuration data.</p>
-      <h4><code>state.max</code></h4>
+      <h4 id="parameter-state-max"><a aria-hidden="true" href="#parameter-state-max">#</a> <code>state.max</code></h4>
       <p>Determines the maximum number of options that can be selected on the option picker that are sourced from a <code>&lt;select multiple&gt;</code> element. It has a default value set to <code>Infinity</code>. If the source element is an <code>&lt;input&gt;</code> element, then its default value will be <code>1</code>. This means that the multiple selection feature will apply only to <code>&lt;select&gt;</code> element.</p>
-      <h4><code>state.min</code></h4>
+      <h4 id="parameter-state-min"><a aria-hidden="true" href="#parameter-state-min">#</a> <code>state.min</code></h4>
       <p>Determines the minimum number of options that can be selected on the option picker. If the source element is a <code>&lt;select&gt;</code> element, the default value will be <code>1</code>; if the source element is an <code>&lt;input&gt;</code> element, the default value will be <code>0</code>.</p>
-      <h4><code>state.options</code></h4>
+      <h4 id="parameter-state-options"><a aria-hidden="true" href="#parameter-state-options">#</a> <code>state.options</code></h4>
       <p>A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.</p>
       <p><strong>Array</strong> is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an <code>&lt;option&gt;</code> element without a <code>value</code> attribute.</p>
       <pre><code>const options = [
@@ -1580,45 +1580,45 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
 };
 
 const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
-      <h4><code>state.size</code></h4>
+      <h4 id="parameter-state-size"><a aria-hidden="true" href="#parameter-state-size">#</a> <code>state.size</code></h4>
       <p>Set the value to an integer greater than <code>1</code> to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a <code>&lt;select&gt;</code> element when given the <code>size</code> attribute. It has a default value of <code>null</code>. If <code>self</code> is a <code>&lt;select&gt;</code> element, then the application will try to use the <code>size</code> attribute value of that element. This does not apply if <code>self</code> is an <code>&lt;input&gt;</code> element, because <code>size</code> attribute on an <code>&lt;input&gt;</code> element has different semantics. <sup><a href="https://html.spec.whatwg.org#attr-input-size" rel="nofollow" target="_blank">1</a></sup> <sup><a href="https://html.spec.whatwg.org#attr-select-size" rel="nofollow" target="_blank">2</a></sup></p>
-      <h4><code>state.strict</code></h4>
+      <h4 id="parameter-state-strict"><a aria-hidden="true" href="#parameter-state-strict">#</a> <code>state.strict</code></h4>
       <p>Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the <kbd>Tab</kbd> key will automatically select the first active option.</p>
-      <h4><code>state.with</code></h4>
+      <h4 id="parameter-state-with"><a aria-hidden="true" href="#parameter-state-with">#</a> <code>state.with</code></h4>
       <p>List of callable functions or objects containing an <code>attach()</code> method to be invoked each time the application is initialized. A very simple “plugin” system.</p>
-      <h2 id="methods"><a href="#methods">#</a> Methods</h2>
-      <h3>Instance Methods</h3>
+      <h2 id="methods"><a aria-hidden="true" href="#methods">#</a> Methods</h2>
+      <h3 id="instance-methods"><a aria-hidden="true" href="#instance-methods">#</a> Instance Methods</h3>
       <p>Instance methods are methods available through the results of an <code>OptionPicker</code> construct.</p>
-      <h4><code>picker.attach(self, state)</code></h4>
+      <h4 id="instance-method-attach"><a aria-hidden="true" href="#instance-method-attach">#</a> <code>picker.attach(self, state)</code></h4>
       <p>Re-initializes the application and its extensions after it has been detached.</p>
       <pre><code>picker.attach();</code></pre>
-      <h4><code>picker.blur()</code></h4>
+      <h4 id="instance-method-blur"><a aria-hidden="true" href="#instance-method-blur">#</a> <code>picker.blur()</code></h4>
       <p>Blurs from the option picker’s input or self.</p>
       <pre><code>picker.blur();</code></pre>
-      <h4><code>picker.detach()</code></h4>
+      <h4 id="instance-method-detach"><a aria-hidden="true" href="#instance-method-detach">#</a> <code>picker.detach()</code></h4>
       <p>Disables the application methods (except for the <code>attach()</code> method) and executes the <code>detach()</code> method of the extensions, if they are present.</p>
       <pre><code>picker.detach();</code></pre>
-      <h4><code>picker.enter(focus, mode = true)</code></h4>
+      <h4 id="instance-method-enter"><a aria-hidden="true" href="#instance-method-enter">#</a> <code>picker.enter(focus, mode = true)</code></h4>
       <p>Shows the option picker’s options.</p>
       <pre><code>picker.enter(); // Show the option picker’s options
 picker.enter(true); // Show the option picker’s options and focus to the option picker’s input or value</code></pre>
-      <h4><code>picker.exit(focus, mode = true)</code></h4>
+      <h4 id="instance-method-exit"><a aria-hidden="true" href="#instance-method-exit">#</a> <code>picker.exit(focus, mode = true)</code></h4>
       <p>Hides the option picker’s options.</p>
       <pre><code>picker.exit(); // Hide the option picker’s options
 picker.exit(true); // Hide the option picker’s options and focus to the option picker’s input or value</code></pre>
-      <h4><code>picker.fire(event, data, that)</code></h4>
+      <h4 id="instance-method-fire"><a aria-hidden="true" href="#instance-method-fire">#</a> <code>picker.fire(event, data, that)</code></h4>
       <p>Fires an event.</p>
       <pre><code>picker.fire('change', []);</code></pre>
-      <h4><code>picker.focus(mode = true)</code></h4>
+      <h4 id="instance-method-focus"><a aria-hidden="true" href="#instance-method-focus">#</a> <code>picker.focus(mode = true)</code></h4>
       <p>Focuses to the option picker’s input or value.</p>
       <pre><code>picker.focus(); // Focus and select the text
 picker.focus(-1); // Focus and put the caret to the start of the text
 picker.focus(+1); // Focus and put the caret to the end of the text</code></pre>
-      <h4><code>picker.off(event, task)</code></h4>
+      <h4 id="instance-method-off"><a aria-hidden="true" href="#instance-method-off">#</a> <code>picker.off(event, task)</code></h4>
       <p>Removes an event.</p>
       <pre><code>picker.off('change'); // Remove all events from the `change` event container
 picker.off('change', onChange); // Remove `onChange` event from the `change` event container</code></pre>
-      <h4><code>picker.on(event, task)</code></h4>
+      <h4 id="instance-method-on"><a aria-hidden="true" href="#instance-method-on">#</a> <code>picker.on(event, task)</code></h4>
       <p>Adds a new event.</p>
       <pre><code>picker.on('change', function () {
     console.log(this.value);
@@ -1628,47 +1628,47 @@ picker.off('change', onChange); // Remove `onChange` event from the `change` eve
 }
 
 picker.on('change', onChange);</code></pre>
-      <h4><code>picker.reset(focus, mode = true)</code></h4>
+      <h4 id="instance-method-reset"><a aria-hidden="true" href="#instance-method-reset">#</a> <code>picker.reset(focus, mode = true)</code></h4>
       <p>Resets the option picker’s value or values to its initial value or values.</p>
       <pre><code>picker.reset(); // Reset the option picker’s value or values
 picker.reset(true); // Reset the option picker’s value or values and focus to the option picker’s input or value</code></pre>
-      <h3>Static Methods</h3>
+      <h3 id="static-methods"><a aria-hidden="true" href="#static-methods">#</a> Static Methods</h3>
       <p>Static methods are methods available directly on the <code>OptionPicker</code> object.</p>
-      <h4><code>OptionPicker.from(self, state)</code></h4>
+      <h4 id="static-method-from"><a aria-hidden="true" href="#static-method-from">#</a> <code>OptionPicker.from(self, state)</code></h4>
       <p>Creates a new <code>OptionPicker</code> instance.</p>
       <pre><code>const picker = OptionPicker.from(document.querySelector('select'));</code></pre>
-      <h4><code>OptionPicker.of(self)</code></h4>
+      <h4 id="static-method-of"><a aria-hidden="true" href="#static-method-of">#</a> <code>OptionPicker.of(self)</code></h4>
       <p>Gets <code>OptionPicker</code> instance of an element.</p>
       <pre><code>document.querySelectorAll('input[list], select').forEach(self =&gt; {
     const picker = OptionPicker.of(self);
 });</code></pre>
-      <h2 id="properties"><a href="#properties">#</a> Properties</h2>
-      <h3>Instance Properties</h3>
+      <h2 id="properties"><a aria-hidden="true" href="#properties">#</a> Properties</h2>
+      <h3 id="instance-properties"><a aria-hidden="true" href="#instance-properties">#</a> Instance Properties</h3>
       <p>Instance properties are properties available through the results of an <code>OptionPicker</code> construct.</p>
-      <h4><code>picker.active</code></h4>
+      <h4 id="instance-property-active"><a aria-hidden="true" href="#instance-property-active">#</a> <code>picker.active</code></h4>
       <p>Gets or sets the active state of the option picker. By setting the value to <code>false</code> or <code>true</code>, the disabled state of the source element will also be set automatically.</p>
       <pre><code>picker.active = false; // Disable option picker
 picker.active = true; // Enable option picker</code></pre>
-      <h4><code>picker.fix</code></h4>
+      <h4 id="instance-property-fix"><a aria-hidden="true" href="#instance-property-fix">#</a> <code>picker.fix</code></h4>
       <p>Gets or sets the read-only state of the option picker. By setting the value to <code>false</code> or <code>true</code>, the read-only state of the source element will also be set automatically. This only applies to the option picker that is sourced from an <code>&lt;input&gt;</code> element.</p>
       <pre><code>picker.fix = true; // Make the option picker “read-only”</code></pre>
-      <h4><code>picker.hooks</code></h4>
+      <h4 id="instance-property-hooks"><a aria-hidden="true" href="#instance-property-hooks">#</a> <code>picker.hooks</code></h4>
       <p>Returns the events data.</p>
       <pre><code>console.log(picker.hooks);</code></pre>
-      <h4><code>picker.mask</code></h4>
+      <h4 id="instance-property-mask"><a aria-hidden="true" href="#instance-property-mask">#</a> <code>picker.mask</code></h4>
       <p>Returns the option picker’s mask.</p>
       <pre><code>picker.mask.classList.add(picker.state.n + '--dark');</code></pre>
-      <h4><code>picker.max</code></h4>
+      <h4 id="instance-property-max"><a aria-hidden="true" href="#instance-property-max">#</a> <code>picker.max</code></h4>
       <p>Proxy that passes to the <code>picker.state.max</code> property, with additional actions that are executed while the value is being set.</p>
       <p role="note"><b>Note:</b> This does not apply to an option picker that is sourced from an <code>&lt;input&gt;</code> element.</p>
       <pre><code>console.log(picker.max); // Returns the `picker.state.max` value</code></pre>
       <pre><code>picker.max = 4; // Add `multiple` attribute to the `&lt;select&gt;` element and allow the user to select up to 4 options. If the option picker is sourced from a `&lt;select multiple&gt;` element and it has more than 4 options selected, the form submission will be disabled and the `max.options` hook will be fired.</code></pre>
-      <h4><code>picker.min</code></h4>
+      <h4 id="instance-property-min"><a aria-hidden="true" href="#instance-property-min">#</a> <code>picker.min</code></h4>
       <p>Proxy that passes to the <code>picker.state.min</code> property, with additional actions that are executed while the value is being set.</p>
       <p role="note"><b>Note:</b> If the value is set to <code>0</code> and the option picker is sourced from a <code>&lt;select&gt;</code> element, it will allow the user to remove the only selection by focusing on the option picker value and then pressing the <kbd>Backspace</kbd> or <kbd>Delete</kbd> key, or by focusing on the selected option and then clicking/tapping or pressing the <kbd>Space</kbd> key on it to remove the selection.</p>
       <pre><code>console.log(picker.min); // Returns the `picker.state.min` value</code></pre>
       <pre><code>picker.min = 4; // If the option picker is sourced from a `&lt;select multiple&gt;` element and it has less than 4 options selected, the form submission will be disabled and the `min.options` hook will be fired.</code></pre>
-      <h4><code>picker.options</code></h4>
+      <h4 id="instance-property-options"><a aria-hidden="true" href="#instance-property-options">#</a> <code>picker.options</code></h4>
       <p>Gets the current options list data, or sets (overwrites) the current options list with new data.</p>
       <pre><code>console.log(picker.options);</code></pre>
       <pre><code>picker.options = [
@@ -1759,20 +1759,20 @@ options.set(3, ['Option 3', {
 }]);
 
 picker.options = options;</code></pre>
-      <h4><code>picker.self</code></h4>
+      <h4 id="instance-property-self"><a aria-hidden="true" href="#instance-property-self">#</a> <code>picker.self</code></h4>
       <p>Returns the <code>&lt;input&gt;</code> or <code>&lt;select&gt;</code> element.</p>
       <pre><code>console.log(picker.self.getAttribute('name'));</code></pre>
-      <h4><code>picker.size</code></h4>
+      <h4 id="instance-property-size"><a aria-hidden="true" href="#instance-property-size">#</a> <code>picker.size</code></h4>
       <p>Changes the layout of a drop-down select box to a scrollable area select box. This is valid only if the value is an integer greater than <code>1</code>. Otherwise, it will be considered as an invalid value and will revert the layout to its default layout, which is a drop-down select box.</p>
       <pre><code>picker.size = 5;</code></pre>
-      <h4><code>picker.state</code></h4>
+      <h4 id="instance-property-state"><a aria-hidden="true" href="#instance-property-state">#</a> <code>picker.state</code></h4>
       <p>Returns the application states if any.</p>
       <pre><code>console.log(picker.state);</code></pre>
-      <h4><code>picker.text</code></h4>
+      <h4 id="instance-property-text"><a aria-hidden="true" href="#instance-property-text">#</a> <code>picker.text</code></h4>
       <p>Gets or sets the current text in the “loose” option picker’s input.</p>
       <pre><code>console.log(picker.text);</code></pre>
       <pre><code>picker.text = 'Option 3';</code></pre>
-      <h4><code>picker.value</code></h4>
+      <h4 id="instance-property-value"><a aria-hidden="true" href="#Instance-property-value">#</a> <code>picker.value</code></h4>
       <p>Proxy that passes to the <code>picker.self.value</code> property, with additional actions that are executed while the value is being set.</p>
       <pre><code>console.log(picker.value);</code></pre>
       <pre><code>picker.on('change', function () {
@@ -1780,9 +1780,9 @@ picker.options = options;</code></pre>
 });
 
 picker.value = '3';</code></pre>
-      <h3>Static Properties</h3>
+      <h3 id="static-properties"><a aria-hidden="true" href="#static-properties">#</a> Static Properties</h3>
       <p>Static properties are properties available directly on the <code>OptionPicker</code> object.</p>
-      <h4><code>OptionPicker._</code></h4>
+      <h4 id="static-property-prototype"><a aria-hidden="true" href="#static-property-prototype">#</a> <code>OptionPicker._</code></h4>
       <p>Alias for <code>OptionPicker.prototype</code>.</p>
       <pre><code>OptionPicker._.clear = function () {
     if ('input' !== this.self.tagName.toLowerCase()) {
@@ -1794,17 +1794,17 @@ picker.value = '3';</code></pre>
 const picker = new OptionPicker(document.querySelector('input'));
 
 picker.clear(); // Clear value</code></pre>
-      <h4><code>OptionPicker.state</code></h4>
+      <h4 id="static-property-state"><a aria-hidden="true" href="#static-property-state">#</a> <code>OptionPicker.state</code></h4>
       <p>Returns the default values of <code>picker.state</code>.</p>
       <pre><code>const picker = new OptionPicker(document.querySelector('select'), {
     foo: ['bar', 'baz', 'qux']
 });
 
 console.log([OptionPicker.state, picker.state]);</code></pre>
-      <h4><code>OptionPicker.version</code></h4>
+      <h4 id="static-property-version"><a aria-hidden="true" href="#static-property-version">#</a> <code>OptionPicker.version</code></h4>
       <p>Returns the application version.</p>
-      <h2 id="extensions"><a href="#extensions">#</a> Extensions</h2>
-      <h3>Anatomy of an Extension</h3>
+      <h2 id="extensions"><a aria-hidden="true" href="#extensions">#</a> Extensions</h2>
+      <h3 id="anatomy-of-an-extension"><a aria-hidden="true" href="#anatomy-of-an-extension">#</a> Anatomy of an Extension</h3>
       <p>Extension as a function:</p>
       <pre><code>function Extension(self, state = {}) {
     this.a = 1;
@@ -1821,20 +1821,20 @@ Object.defineProperty(Extension, 'name', {
     detach: function (self, state = {}) {},
     name: 'Extension'
 };</code></pre>
-      <h3>Usage of an Extension</h3>
+      <h3 id="usage-of-an-extension"><a aria-hidden="true" href="#usage-of-an-extension">#</a> Usage of an Extension</h3>
       <p>As a core extension:</p>
       <pre><code>OptionPicker.state.with.push(Extension);</code></pre>
       <p>As an optional extension:</p>
       <pre><code>const picker = new OptionPicker(document.querySelector('select'), {
     with: [Extension]
 });</code></pre>
-      <h3>List of Extensions</h3>
+      <h3 id="list-of-extensions"><a aria-hidden="true" href="#list-of-extensions">#</a> List of Extensions</h3>
       <ul>
         <li><a aria-disabled="true">Clear Feature</a></li>
         <li><a aria-disabled="true">Custom Scroll Bar</a></li>
         <li><a aria-disabled="true">Highlight Search Term</a></li>
       </ul>
-      <h2 id="license"><a href="#license">#</a> License</h2>
+      <h2 id="license"><a aria-hidden="true" href="#license">#</a> License</h2>
       <p>Use it for free, pay if you get paid. So, you’ve just benefited financially after using this project? It’s a good idea to <a href="https://paypal.me/tatautaufik" target="_blank">share a little financial support</a> with this open source project too. Your support will motivate me to do any further development, as well as to provide voluntary support to overcome problems related to this project.</p>
       <p>Thank you! ❤️</p>
     </main>

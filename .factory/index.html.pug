@@ -1468,9 +1468,13 @@ block content
       li: a(href='tweak/animation-fade.html' target='_blank') Fade Animation
       li: a(href='tweak/bar.html' target='_blank') Header in Options
       li: a(href='tweak/animation-slide.html' target='_blank') Slide Animation
-    h2#constructor
+    h2#constructors
       a(aria-hidden='true' href='#constructor') #
-      = ' Constructor'
+      = ' Constructors'
+    h3#constructor-option-picker
+      a(aria-hidden='true' href='#constructor-option-picker') #
+      = ' '
+      code OptionPicker
     pre: code
       | const picker = new OptionPicker(self, strict = false);
     pre: code
@@ -1482,6 +1486,13 @@ block content
       |     strict: false,
       |     with: []
       | });
+    h3#constructor-option-picker-options
+      a(aria-hidden='true' href='#constructor-option-picker-options') #
+      = ' '
+      code OptionPicker.Options
+    p: em TODO
+    pre: code
+      | const options = new OptionPicker.Options(picker, ['Option 1', 'Option 2', 'Option 3']);
     h2#parameters
       a(aria-hidden='true' href='#parameters') #
       = ' Parameters'

@@ -1710,7 +1710,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
             forEachMap(values, (v, k) => $.delete(k, 0, 0));
             selectToOptionsNone(of, _fireValue);
             options.hidden = true;
-            return _fireHook && of.fire('let.options', [[]]) && 0 === $.count();
+            return (_fireHook && of.fire('let.options', [[]])), 0 === $.count();
         }
         if (!(r = getValueInMap(key = toValue(key), values))) {
             return (_fireHook && of.fire('not.option', [key])), false;
@@ -1878,6 +1878,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         setReference(option, of);
         value[2] = option;
         value[3] = optionReal;
+        _fireHook && of.fire('is.option', [key]);
         setValueInMap(key, value, values);
         if (!isFunction(state.options)) {
             state.options = values;

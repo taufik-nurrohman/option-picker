@@ -2805,7 +2805,7 @@
                 options.hidden = true;
                 return _fireHook && of.fire('let.options', [
                     []
-                ]) && 0 === $.count();
+                ]), 0 === $.count();
             }
             if (!(r = getValueInMap(key = _toValue(key), values))) {
                 return _fireHook && of.fire('not.option', [key]), false;
@@ -2997,6 +2997,7 @@
             setReference(option, of);
             value[2] = option;
             value[3] = optionReal;
+            _fireHook && of.fire('is.option', [key]);
             setValueInMap(key, value, values);
             if (!isFunction(state.options)) {
                 state.options = values;

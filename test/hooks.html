@@ -60,7 +60,7 @@
           return r;
       }
       let now;
-      ['change', 'enter', 'exit', 'fit', 'has.option', 'let.option', 'let.options', 'load', 'max.options', 'min.options', 'not.option', 'search', 'set.option', 'set.options', ].forEach(v => picker.on(v, (function () {
+      ['change', 'enter', 'exit', 'fit', 'has.option', 'is.option', 'let.option', 'let.options', 'load', 'max.options', 'min.options', 'not.option', 'search', 'set.option', 'set.options', ].forEach(v => picker.on(v, (function () {
           return function (...lot) {
               let note = document.createElement('span'),
                   s = (new Date).getSeconds();

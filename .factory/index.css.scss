@@ -71,6 +71,7 @@ $name: 'option-picker';
     position: relative;
   }
   &__arrow {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     user-select: none;
     &::after {
       border: {
@@ -91,6 +92,7 @@ $name: 'option-picker';
   }
   &__option {
     @extend %item;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     user-select: none;
     &[hidden] {
       display: none;
@@ -141,6 +143,7 @@ $name: 'option-picker';
       }
       flex-direction: column;
       &::before {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         @extend %item;
         content: attr(value);
         font-weight: bold;
@@ -223,6 +226,7 @@ $name: 'option-picker';
     }
   }
   &__value {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     flex: 1;
     user-select: none;
     &[aria-disabled='true'] {

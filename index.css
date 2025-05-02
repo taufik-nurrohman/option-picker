@@ -68,6 +68,7 @@
   position: relative;
 }
 .option-picker__arrow {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   user-select: none;
 }
 .option-picker__arrow::after {
@@ -84,6 +85,7 @@
   overflow: hidden;
 }
 .option-picker__option {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   user-select: none;
 }
 .option-picker__option[hidden] {
@@ -130,6 +132,7 @@
   flex-direction: column;
 }
 .option-picker__options-batch::before {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   content: attr(value);
   font-weight: bold;
   user-select: none;
@@ -198,6 +201,7 @@
   content: "‌";
 }
 .option-picker__value {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   flex: 1;
   user-select: none;
 }

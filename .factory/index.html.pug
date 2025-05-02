@@ -1474,7 +1474,7 @@ block content
     h3#constructor-option-picker
       a(aria-hidden='true' href='#constructor-option-picker') #
       = ' '
-      code OptionPicker
+      code OptionPicker(self, state)
     pre: code
       | const picker = new OptionPicker(self, strict = false);
     pre: code
@@ -1489,7 +1489,7 @@ block content
     h3#constructor-option-picker-options
       a(aria-hidden='true' href='#constructor-option-picker-options') #
       = ' '
-      code OptionPicker.Options
+      code OptionPicker.Options(picker, options)
     p: em TODO
     pre: code
       | const options = new OptionPicker.Options(picker, ['Option 1', 'Option 2', 'Option 3']);

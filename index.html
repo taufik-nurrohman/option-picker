@@ -5,7 +5,7 @@
     <meta content="#000" name="theme-color">
     <meta content="width=device-width" name="viewport">
     <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
-    <title>Option Picker 2.0.1</title>
+    <title>Option Picker 2.1.0</title>
     <link href="../layout/index.min.css" rel="stylesheet">
     <link href="../layout/anchor/index.min.css" rel="stylesheet">
     <link href="index.min.css" rel="stylesheet">
@@ -1089,7 +1089,7 @@
     <p role="alert">Do you like this project? Please support my <a href="https://github.com/mecha-cms">Mecha CMS</a> project too. Thank you!</p>
     <header>
       <hgroup>
-        <h1>Option Picker 2.0.1</h1>
+        <h1>Option Picker 2.1.0</h1>
         <p>Accessible custom <code>&lt;select&gt;</code> (and <code>&lt;input list&gt;</code>) element.</p>
       </hgroup>
       <p>Press <kbd>Enter</kbd> or <kbd>Space</kbd> key to open/close the options list. Use <kbd>ArrowDown</kbd> and <kbd>ArrowUp</kbd> keys to open the options list and then focus on an option, then press <kbd>Enter</kbd>, <kbd>Space</kbd>, or <kbd>Tab</kbd> to select it. On the “strict” option picker presentation (the example below), you should be able to type away when you focus on it to select the first active option that contains text that matches the search query you are currently typing. On the “loose” option picker presentation (<a href="test/input.html" target="_blank">this example</a>), when you start to input a value, the available options get filtered instead of selected immediately.</p>
@@ -1674,7 +1674,7 @@ picker.active = true; // Enable option picker</code></pre>
       <pre><code>console.log(picker.min); // Returns the `picker.state.min` value</code></pre>
       <pre><code>picker.min = 4; // If the option picker is sourced from a `&lt;select multiple&gt;` element and it has less than 4 options selected, the form submission will be disabled and the `min.options` hook will be fired.</code></pre>
       <h4 id="instance-property-options"><a aria-hidden="true" href="#instance-property-options">#</a> <code>picker.options</code></h4>
-      <p>Gets the current options list data, or sets (overwrites) the current options list with new data.</p>
+      <p>Gets the current options list data, or sets (overwrites) the current options list with a new data.</p>
       <pre><code>console.log(picker.options);</code></pre>
       <pre><code>picker.options = [
     'Option 1',
@@ -1770,7 +1770,7 @@ picker.options = options;</code></pre>
       <h5 id="instance-property-options-method-count"><a aria-hidden="true" href="#instance-property-options-method-count">#</a> <code>picker.options.count()</code></h5>
       <p><em>TODO</em></p>
       <pre><code>TODO</code></pre>
-      <h5 id="instance-property-options-method-get"><a aria-hidden="true" href="#instance-property-options-method-get">#</a> <code>picker.options.get()</code></h5>
+      <h5 id="instance-property-options-method-get"><a aria-hidden="true" href="#instance-property-options-method-get">#</a> <code>picker.options.get(key)</code></h5>
       <p><em>TODO</em></p>
       <pre><code>TODO</code></pre>
       <h5 id="instance-property-options-method-has"><a aria-hidden="true" href="#instance-property-options-method-has">#</a> <code>picker.options.has(key)</code></h5>

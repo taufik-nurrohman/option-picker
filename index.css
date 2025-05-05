@@ -37,6 +37,7 @@
   flex-direction: column;
   flex-wrap: wrap;
   position: relative;
+  user-select: none;
   vertical-align: middle;
 }
 .option-picker[aria-disabled=true] {
@@ -67,10 +68,6 @@
   overflow: hidden;
   position: relative;
 }
-.option-picker__arrow {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  user-select: none;
-}
 .option-picker__arrow::after {
   border-left: 0.25em solid transparent;
   border-right: 0.25em solid transparent;
@@ -83,10 +80,6 @@
 .option-picker__flex {
   flex: 1;
   overflow: hidden;
-}
-.option-picker__option {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  user-select: none;
 }
 .option-picker__option[hidden] {
   display: none;
@@ -132,10 +125,8 @@
   flex-direction: column;
 }
 .option-picker__options-batch::before {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   content: attr(value);
   font-weight: bold;
-  user-select: none;
 }
 .option-picker__options-lot {
   border-color: inherit;
@@ -171,6 +162,7 @@
   border-color: transparent;
   cursor: text;
   flex: 1;
+  user-select: text;
 }
 .option-picker__text span {
   flex: 1;
@@ -201,9 +193,7 @@
   content: "‌";
 }
 .option-picker__value {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   flex: 1;
-  user-select: none;
 }
 .option-picker__value[aria-disabled=true][aria-selected=true] {
   background: rgba(0, 0, 255, 0.25);

@@ -34,6 +34,7 @@ $name: 'option-picker';
   flex-direction: column;
   flex-wrap: wrap;
   position: relative;
+  user-select: none;
   vertical-align: middle;
   &[aria-disabled='true'] {
     color: rgba(128, 128, 128);
@@ -71,8 +72,6 @@ $name: 'option-picker';
     position: relative;
   }
   &__arrow {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    user-select: none;
     &::after {
       border: {
         left: 0.25em solid transparent;
@@ -92,8 +91,6 @@ $name: 'option-picker';
   }
   &__option {
     @extend %item;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    user-select: none;
     &[hidden] {
       display: none;
     }
@@ -143,11 +140,9 @@ $name: 'option-picker';
       }
       flex-direction: column;
       &::before {
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         @extend %item;
         content: attr(value);
         font-weight: bold;
-        user-select: none;
       }
     }
     &-lot {
@@ -190,6 +185,7 @@ $name: 'option-picker';
     border-color: transparent;
     cursor: text;
     flex: 1;
+    user-select: text;
     span {
       flex: 1;
       position: relative;
@@ -226,9 +222,7 @@ $name: 'option-picker';
     }
   }
   &__value {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     flex: 1;
-    user-select: none;
     &[aria-disabled='true'] {
       &[aria-selected='true'] {
         background: rgba(0, 0, 255, 0.25);

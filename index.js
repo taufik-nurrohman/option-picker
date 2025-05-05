@@ -2358,6 +2358,7 @@
                 isInputSelf = isInput(self),
                 isMultipleSelect = max && max > 1 || !isInputSelf && self.multiple,
                 isReadOnlySelf = isReadOnly(self),
+                theInputName = self.name,
                 theInputPlaceholder = self.placeholder;
             $._active = !isDisabledSelf && !isReadOnlySelf;
             $._fix = isInputSelf && isReadOnlySelf;
@@ -2537,6 +2538,7 @@
             setID(self);
             setID(textInput);
             setID(textInputHint);
+            theInputName && setDatum(mask, 'name', theInputName);
             // Attach extension(s)
             if (isSet(state) && isArray(state.with)) {
                 forEachArray(state.with, function (v, k) {

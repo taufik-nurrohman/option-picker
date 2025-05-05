@@ -1317,6 +1317,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             isInputSelf = isInput(self),
             isMultipleSelect = max && max > 1 || (!isInputSelf && self.multiple),
             isReadOnlySelf = isReadOnly(self),
+            theInputID = self.id,
             theInputName = self.name,
             theInputPlaceholder = self.placeholder;
         $._active = !isDisabledSelf && !isReadOnlySelf;
@@ -1489,6 +1490,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setID(self);
         setID(textInput);
         setID(textInputHint);
+        theInputID && setDatum(mask, 'id', theInputID);
         theInputName && setDatum(mask, 'name', theInputName);
         // Attach extension(s)
         if (isSet(state) && isArray(state.with)) {

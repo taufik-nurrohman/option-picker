@@ -7,6 +7,9 @@
     <title>Option Picker</title>
     <link href="../index.min.css" rel="stylesheet">
     <style>
+      .option-picker {
+        min-width: 10em;
+      }
       .option-picker__options {
         background: #fff;
       }
@@ -15,9 +18,9 @@
   <body>
     <main>
       <form method="get" target="_blank">
-        <p><input list="options" name="test" readonly type="text" value="Option 1"></p>
-        <p><label><input checked onchange="picker.fix = this.checked;" type="checkbox"> <span>Read-Only</span></label></p>
-        <p><button type="submit">Submit</button> <button onclick="picker.options.set('Option 4'), picker.focus();" type="button">Add &ldquo;Option 4&rdquo; Option</button> <button onclick="picker.options.let('Option 4'), picker.focus();" type="button">Remove &ldquo;Option 4&rdquo; Option</button> <button onclick="picker.enter(true).fit();" type="button">Show Options</button></p>
+        <p><input list="options" name="test" required type="text"></p>
+        <p><label><input checked onchange="picker.vital = this.checked;" type="checkbox"> <span>Required</span></label></p>
+        <p><button type="submit">Submit</button></p>
       </form>
     </main><datalist id="options">
       <option>Option 1</option>
@@ -27,7 +30,10 @@
     <script src="../index.min.js"></script>
     <script>
       const picker = new OptionPicker(document.querySelector('input'));
-      picker.fix = document.querySelector('input[type=checkbox]').checked;
+      picker.vital = document.querySelector('input[type=checkbox]').checked;
+      picker.on('min.options', function (count, min) {
+          console.error('The minimum number of options that must be selected to be able to submit the form is ' + min + '.');
+      });
     </script>
   </body>
 </html>

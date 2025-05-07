@@ -573,6 +573,9 @@
     var isReadOnly = function isReadOnly(node) {
         return node.readOnly;
     };
+    var isRequired = function isRequired(node) {
+        return node.required;
+    };
     var isWindow = function isWindow(node) {
         return node === W;
     };
@@ -1099,7 +1102,7 @@
         _options.delete(null, 0, 0);
         forEachMap(map, function (v, k) {
             var _v$1$value3;
-            if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
+            if (isArray(v) && v[1] && (!getState(v[1], 'active') || v[1].active) && v[1].mark) {
                 var _v$1$value2;
                 r.push((_v$1$value2 = v[1].value) != null ? _v$1$value2 : k);
             }
@@ -1179,16 +1182,15 @@
         }
         forEachArray(items, function (v, k) {
             var attributes = getAttributes(v);
-            forEachArray(['disabled', 'selected'], function (k) {
-                if (hasState(attributes, k)) {
-                    attributes[k] = "" === attributes[k] ? true : attributes[k];
-                    if ('selected' === k) {
-                        selected.push(1);
-                    }
-                } else {
-                    attributes[k] = null;
-                }
-            });
+            attributes.active = true;
+            attributes.mark = false;
+            if (hasState(attributes, 'disabled')) {
+                attributes.active = "" === attributes.disabled ? false : !!attributes.disabled;
+                delete attributes.disabled;
+            } else if (hasState(attributes, 'selected')) {
+                attributes.mark = "" === attributes.selected ? true : !!attributes.selected;
+                delete attributes.selected;
+            }
             if ('optgroup' === getName(v)) {
                 forEachMap(getOptions(v), function (vv, kk) {
                     vv[1]['&'] = v.label;
@@ -1200,9 +1202,10 @@
         });
         // If there is no selected option(s), get it from the current value
         if (0 === toCount(selected) && (item = getValueInMap(value = _toValue(value), map))) {
-            item[1].selected = true;
+            item[1].mark = true;
             setValueInMap(value, item, map);
         }
+        console.log(map);
         return map;
     }
 
@@ -2337,11 +2340,38 @@
                 }
                 return $;
             }
+        },
+        vital: {
+            get: function get() {
+                return this._vital;
+            },
+            set: function set(value) {
+                var $ = this,
+                    _mask = $._mask,
+                    mask = $.mask,
+                    min = $.min,
+                    self = $.self,
+                    input = _mask.input,
+                    v = !!value;
+                self.required = v;
+                if (v) {
+                    if (0 === min) {
+                        $.min = 1;
+                    }
+                    input && setAria(input, 'required', true);
+                    setAria(mask, 'required', true);
+                } else {
+                    $.min = 0;
+                    input && letAria(input, 'required');
+                    letAria(mask, 'required');
+                }
+                return $;
+            }
         }
     });
     OptionPicker._ = setObjectMethods(OptionPicker, {
         attach: function attach(self, state) {
-            var _state$size;
+            var _min, _state$size;
             var $ = this;
             self = self || $.self;
             state = state || $.state;
@@ -2358,11 +2388,16 @@
                 isInputSelf = isInput(self),
                 isMultipleSelect = max && max > 1 || !isInputSelf && self.multiple,
                 isReadOnlySelf = isReadOnly(self),
+                isRequiredSelf = isRequired(self),
                 theInputID = self.id,
                 theInputName = self.name,
                 theInputPlaceholder = self.placeholder;
             $._active = !isDisabledSelf && !isReadOnlySelf;
             $._fix = isInputSelf && isReadOnlySelf;
+            $._vital = isRequiredSelf;
+            if (isRequiredSelf && min < 1) {
+                state.min = min = 1; // Force minimum option(s) to select to be `1`
+            }
             var arrow = setElement('span', {
                 'aria': {
                     'hidden': TOKEN_TRUE
@@ -2376,7 +2411,8 @@
                     'expanded': TOKEN_FALSE,
                     'haspopup': 'listbox',
                     'multiselectable': isMultipleSelect ? TOKEN_TRUE : false,
-                    'readonly': isInputSelf && isReadOnlySelf ? TOKEN_TRUE : false
+                    'readonly': isInputSelf && isReadOnlySelf ? TOKEN_TRUE : false,
+                    'required': isRequiredSelf ? TOKEN_TRUE : false
                 },
                 'class': n,
                 'role': 'combobox'
@@ -2412,7 +2448,8 @@
                     'disabled': isDisabledSelf ? TOKEN_TRUE : false,
                     'multiline': TOKEN_FALSE,
                     'placeholder': isInputSelf ? theInputPlaceholder : false,
-                    'readonly': isReadOnlySelf ? TOKEN_TRUE : false
+                    'readonly': isReadOnlySelf ? TOKEN_TRUE : false,
+                    'required': isRequiredSelf ? TOKEN_TRUE : false
                 },
                 'autocapitalize': 'off',
                 'contenteditable': isDisabledSelf || isReadOnlySelf || !isInputSelf ? false : "",
@@ -2491,7 +2528,7 @@
             $._mask = _mask;
             // Re-assign some state value(s) using the setter to either normalize or reject the initial value
             $.max = isMultipleSelect ? max != null ? max : Infinity : 1;
-            $.min = isInputSelf ? 0 : min != null ? min : 1;
+            $.min = isInputSelf ? 0 : (_min = min) != null ? _min : 1;
             var _active = $._active,
                 _state2 = state,
                 options = _state2.options,
@@ -2883,14 +2920,12 @@
                 lot = _mask.lot,
                 options = _mask.options,
                 n = state.n,
-                classes,
                 itemsParent,
                 option,
                 optionGroup,
                 optionGroupReal,
                 optionReal,
-                optionText,
-                styles;
+                optionText;
             if (isInput(self)) {
                 (itemsParent = self.list) ? getChildren(itemsParent): [];
             } else {
@@ -2923,17 +2958,6 @@
                         'value': value[1]['&']
                     }));
                     setChildLast(itemsParent, optionGroupReal);
-                    if (classes = getState(value[1], 'class')) {
-                        setClasses(optionGroup, classes);
-                        setClasses(optionGroupReal, classes);
-                    }
-                    if (isObject(styles = getState(value[1], 'style'))) {
-                        setStyles(optionGroup, styles);
-                        setStyles(optionGroupReal, styles);
-                    } else if (styles) {
-                        setAttribute(optionGroup, 'style', styles);
-                        setAttribute(optionGroupReal, 'style', styles);
-                    }
                     // Force `id` attribute(s)
                     setID(optionGroup);
                     setID(optionGroupReal);
@@ -2942,27 +2966,30 @@
                 optionGroup = optionGroupReal = false;
             }
             var _value$ = value[1],
-                disabled = _value$.disabled,
-                selected = _value$.selected,
+                active = _value$.active,
+                mark = _value$.mark,
                 v = _value$.value;
+            if (!isSet(active)) {
+                active = true;
+            }
             v = _fromValue(v || key);
             option = value[2] || setElement('data', {
                 'aria': {
-                    'disabled': disabled ? TOKEN_TRUE : false,
-                    'selected': selected ? TOKEN_TRUE : false
+                    'disabled': active ? false : TOKEN_TRUE,
+                    'selected': mark ? TOKEN_TRUE : false
                 },
                 'class': n + '__option',
                 'data': {
                     'batch': (_getState3 = getState(value[1], '&')) != null ? _getState3 : false
                 },
                 'role': 'option',
-                'tabindex': disabled ? false : -1,
+                'tabindex': active ? -1 : false,
                 'title': (_getState4 = getState(value[1], 'title')) != null ? _getState4 : false,
                 'value': v
             });
             optionReal = value[3] || setElement('option', _fromValue(value[0]), {
-                'disabled': disabled ? "" : false,
-                'selected': selected ? "" : false,
+                'disabled': active ? false : "",
+                'selected': mark ? "" : false,
                 'title': (_getState5 = getState(value[1], 'title')) != null ? _getState5 : false,
                 'value': v
             });
@@ -2970,24 +2997,13 @@
                 'class': n + '__v',
                 'role': 'none'
             });
-            if (classes = getState(value[1], 'class')) {
-                setClasses(option, classes);
-                setClasses(optionReal, classes);
-            }
-            if (isObject(styles = getState(value[1], 'style'))) {
-                setStyles(option, styles);
-                setStyles(optionReal, styles);
-            } else if (styles) {
-                setAttribute(option, 'style', styles);
-                setAttribute(optionReal, 'style', styles);
-            }
             // Force `id` attribute(s)
             setID(option);
             setID(optionReal);
             option.$ = {};
             option.$[OPTION_SELF] = optionReal;
             option.$[OPTION_TEXT] = optionText;
-            if (!disabled && !value[2]) {
+            if (active && !value[2]) {
                 onEvent(EVENT_FOCUS, option, onFocusOption);
                 onEvent(EVENT_KEY_DOWN, option, onKeyDownOption);
                 onEvent(EVENT_MOUSE_DOWN, option, onPointerDownOption);

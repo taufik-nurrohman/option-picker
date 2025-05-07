@@ -1461,10 +1461,11 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
         <li><a href="test/min.html" target="_blank">Multiple Selection (Minimum)</a></li>
         <li><a href="test/input.html" target="_blank">Options from <code>&lt;datalist&gt;</code></a></li>
         <li><a href="test/strict.html" target="_blank">Options from <code>&lt;datalist&gt;</code> (Strict)</a></li>
-        <li><a href="test/input.value.html" target="_blank">Options from <code>&lt;datalist&gt;</code> with <code>&lt;option value="&hellip;"&gt;</code></a></li>
+        <li><a href="test/input/value.html" target="_blank">Options from <code>&lt;datalist&gt;</code> with <code>&lt;option value="&hellip;"&gt;</code></a></li>
         <li><a href="test/options.html" target="_blank">Options from JavaScript</a></li>
-        <li><a href="test/options.lazy.html" target="_blank">Options from JavaScript (Lazy)</a></li>
+        <li><a href="test/options/lazy.html" target="_blank">Options from JavaScript (Lazy)</a></li>
         <li><a href="test/read-only.html" target="_blank">Read-Only State</a></li>
+        <li><a href="test/required.html" target="_blank">Required State</a></li>
         <li><a href="test/selected.html" target="_blank">Selected State</a></li>
         <li><a href="test/size.html" target="_blank">Visible Options</a></li>
       </ul>
@@ -1486,7 +1487,7 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
     with: []
 });</code></pre>
       <h3 id="constructor-option-picker-options"><a aria-hidden="true" href="#constructor-option-picker-options">#</a> <code>OptionPicker.Options(picker, options)</code></h3>
-      <p><em>TODO</em></p>
+      <p>This constructor is used internally. It is the return value of the <a href="#instance-property-options"><code>picker.options</code></a> property. It contains methods like <a href="#instance-property-options-method-get"><code>get()</code></a>, <a href="#instance-property-options-method-has"><code>has()</code></a>, <a href="#instance-property-options-method-let"><code>let()</code></a>, and <a href="#instance-property-options-method-set"><code>set()</code></a> to modify the current options.</p>
       <pre><code>const options = new OptionPicker.Options(picker, ['Option 1', 'Option 2', 'Option 3']);</code></pre>
       <h2 id="parameters"><a aria-hidden="true" href="#parameters">#</a> Parameters</h2>
       <h3 id="parameter-self"><a aria-hidden="true" href="#parameter-self">#</a> <code>self</code></h3>
@@ -1497,8 +1498,14 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
       <p>The configuration data.</p>
       <h4 id="parameter-state-max"><a aria-hidden="true" href="#parameter-state-max">#</a> <code>state.max</code></h4>
       <p>Determines the maximum number of options that can be selected on the option picker that are sourced from a <code>&lt;select multiple&gt;</code> element. It has a default value set to <code>Infinity</code>. If the source element is an <code>&lt;input&gt;</code> element, then its default value will be <code>1</code>. This means that the multiple selection feature will apply only to <code>&lt;select&gt;</code> element.</p>
+      <pre><code>const picker = new OptionPicker(document.querySelector('select'), {
+    max: 25
+});</code></pre>
       <h4 id="parameter-state-min"><a aria-hidden="true" href="#parameter-state-min">#</a> <code>state.min</code></h4>
       <p>Determines the minimum number of options that can be selected on the option picker. If the source element is a <code>&lt;select&gt;</code> element, the default value will be <code>1</code>; if the source element is an <code>&lt;input&gt;</code> element, the default value will be <code>0</code>.</p>
+      <pre><code>const picker = new OptionPicker(document.querySelector('select'), {
+    min: 5
+});</code></pre>
       <h4 id="parameter-state-options"><a aria-hidden="true" href="#parameter-state-options">#</a> <code>state.options</code></h4>
       <p>A list of options data as an array, an object, a map, or a function that returns an array, an object, or a map.</p>
       <p><strong>Array</strong> is the easiest data structure to write, it guarantees that the order will remain the same when transformed into a series of options. With this kind of data structure, where each element is a scalar, the option label will also act as a value after it is transformed into an options list. This is equivalent to creating an <code>&lt;option&gt;</code> element without a <code>value</code> attribute.</p>
@@ -1517,7 +1524,7 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
         value: 2
     }],
     ['Option 3', {
-        disabled: true,
+        active: false,
         value: 3
     }]
 ];
@@ -1540,7 +1547,7 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
         value: 2
     }],
     'option-3': ['Option 3', {
-        disabled: true,
+        active: false,
         value: 3
     }]
 };
@@ -1565,7 +1572,7 @@ options.set(2, ['Option 2', {
 }]);
 
 options.set(3, ['Option 3', {
-    disabled: true,
+    active: false,
     value: 3
 }]);
 
@@ -1586,22 +1593,28 @@ const picker = new OptionPicker(document.querySelector('select'), {options});</c
 
 const picker = new OptionPicker(document.querySelector('select'), {options});</code></pre>
       <h4 id="parameter-state-size"><a aria-hidden="true" href="#parameter-state-size">#</a> <code>state.size</code></h4>
-      <p>Set the value to an integer greater than <code>1</code> to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a <code>&lt;select&gt;</code> element when given the <code>size</code> attribute. It has a default value of <code>null</code>. If <code>self</code> is a <code>&lt;select&gt;</code> element, then the application will try to use the <code>size</code> attribute value of that element. This does not apply if <code>self</code> is an <code>&lt;input&gt;</code> element, because <code>size</code> attribute on an <code>&lt;input&gt;</code> element has different semantics. <sup><a href="https://html.spec.whatwg.org#attr-input-size" rel="nofollow" target="_blank">1</a></sup> <sup><a href="https://html.spec.whatwg.org#attr-select-size" rel="nofollow" target="_blank">2</a></sup></p>
+      <p>Set the value to an integer greater than <code>1</code> to display the options list as a scrollable area that is always visible. This layout takes up space and is provided to mimic the behavior of a <code>&lt;select&gt;</code> element when given the <code>size</code> attribute. It has a default value of <code>null</code>. If <code>self</code> is a <code>&lt;select&gt;</code> element, then the application will try to use the <code>size</code> attribute value of that element. This does not apply if <a href="#parameter-self"><code>self</code></a> is an <code>&lt;input&gt;</code> element, because <code>size</code> attribute on an <code>&lt;input&gt;</code> element has different semantics. <sup><a href="https://html.spec.whatwg.org#attr-input-size" rel="nofollow" target="_blank">1</a></sup> <sup><a href="https://html.spec.whatwg.org#attr-select-size" rel="nofollow" target="_blank">2</a></sup></p>
+      <pre><code>const picker = new OptionPicker(document.querySelector('select:not([size])'), {
+    size: 5
+});</code></pre>
       <h4 id="parameter-state-strict"><a aria-hidden="true" href="#parameter-state-strict">#</a> <code>state.strict</code></h4>
       <p>Do not allow users to enter a value other than those available in the options list on the “loose” option picker presentation. Pressing the <kbd>Tab</kbd> key will automatically select the first active option.</p>
+      <pre><code>const picker = new OptionPicker(document.querySelector('input[list]'), {
+    strict: true
+});</code></pre>
       <h4 id="parameter-state-with"><a aria-hidden="true" href="#parameter-state-with">#</a> <code>state.with</code></h4>
-      <p>List of callable functions or objects containing an <code>attach()</code> method to be invoked each time the application is initialized. A very simple “plugin” system.</p>
+      <p>List of <a href="#anatomy-of-an-extension">callable functions or objects containing an <code>attach()</code> method</a> to be invoked each time the application is initialized. A very simple “plugin” system.</p>
       <h2 id="methods"><a aria-hidden="true" href="#methods">#</a> Methods</h2>
       <h3 id="instance-methods"><a aria-hidden="true" href="#instance-methods">#</a> Instance Methods</h3>
-      <p>Instance methods are methods available through the results of an <code>OptionPicker</code> construct.</p>
+      <p>Instance methods are methods available through the results of an <a href="#constructor-option-picker"><code>OptionPicker</code></a> construct.</p>
       <h4 id="instance-method-attach"><a aria-hidden="true" href="#instance-method-attach">#</a> <code>picker.attach(self, state)</code></h4>
-      <p>Re-initializes the application and its extensions after it has been detached.</p>
+      <p>Re-initializes the application and its <a href="#extensions">extensions</a> after it has been detached.</p>
       <pre><code>picker.attach();</code></pre>
       <h4 id="instance-method-blur"><a aria-hidden="true" href="#instance-method-blur">#</a> <code>picker.blur()</code></h4>
-      <p>Blurs from the option picker’s input or self.</p>
+      <p>Blurs from the option picker’s input or value.</p>
       <pre><code>picker.blur();</code></pre>
       <h4 id="instance-method-detach"><a aria-hidden="true" href="#instance-method-detach">#</a> <code>picker.detach()</code></h4>
-      <p>Disables the application methods (except for the <code>attach()</code> method) and executes the <code>detach()</code> method of the extensions, if they are present.</p>
+      <p>Removes the application view and executes the <code>detach()</code> method of the <a href="#extensions">extensions</a>, if they are present.</p>
       <pre><code>picker.detach();</code></pre>
       <h4 id="instance-method-enter"><a aria-hidden="true" href="#instance-method-enter">#</a> <code>picker.enter(focus, mode = true)</code></h4>
       <p>Shows the option picker’s options.</p>
@@ -1638,22 +1651,22 @@ picker.on('change', onChange);</code></pre>
       <pre><code>picker.reset(); // Reset the option picker’s value or values
 picker.reset(true); // Reset the option picker’s value or values and focus to the option picker’s input or value</code></pre>
       <h3 id="static-methods"><a aria-hidden="true" href="#static-methods">#</a> Static Methods</h3>
-      <p>Static methods are methods available directly on the <code>OptionPicker</code> object.</p>
+      <p>Static methods are methods available directly on the <a href="#constructor-option-picker"><code>OptionPicker</code></a> object.</p>
       <h4 id="static-method-from"><a aria-hidden="true" href="#static-method-from">#</a> <code>OptionPicker.from(self, state)</code></h4>
-      <p>Creates a new <code>OptionPicker</code> instance.</p>
+      <p>Creates a new <a href="#constructor-option-picker"><code>OptionPicker</code></a> instance.</p>
       <pre><code>const picker = OptionPicker.from(document.querySelector('select'));</code></pre>
       <h4 id="static-method-of"><a aria-hidden="true" href="#static-method-of">#</a> <code>OptionPicker.of(self)</code></h4>
-      <p>Gets <code>OptionPicker</code> instance of an element.</p>
+      <p>Gets <a href="#constructor-option-picker"><code>OptionPicker</code></a> instance of an element.</p>
       <pre><code>document.querySelectorAll('input[list], select').forEach(self =&gt; {
     const picker = OptionPicker.of(self);
 });</code></pre>
       <h2 id="properties"><a aria-hidden="true" href="#properties">#</a> Properties</h2>
       <h3 id="instance-properties"><a aria-hidden="true" href="#instance-properties">#</a> Instance Properties</h3>
-      <p>Instance properties are properties available through the results of an <code>OptionPicker</code> construct.</p>
+      <p>Instance properties are properties available through the results of an <a href="#constructor-option-picker"><code>OptionPicker</code></a> construct.</p>
       <h4 id="instance-property-active"><a aria-hidden="true" href="#instance-property-active">#</a> <code>picker.active</code></h4>
       <p>Gets or sets the active state of the option picker. By setting the value to <code>false</code> or <code>true</code>, the disabled state of the source element will also be set automatically.</p>
-      <pre><code>picker.active = false; // Disable option picker
-picker.active = true; // Enable option picker</code></pre>
+      <pre><code>picker.active = false; // // Make the option picker “disabled”
+picker.active = true; // // Make the option picker “enabled”</code></pre>
       <h4 id="instance-property-fix"><a aria-hidden="true" href="#instance-property-fix">#</a> <code>picker.fix</code></h4>
       <p>Gets or sets the read-only state of the option picker. By setting the value to <code>false</code> or <code>true</code>, the read-only state of the source element will also be set automatically. This only applies to the option picker that is sourced from an <code>&lt;input&gt;</code> element.</p>
       <pre><code>picker.fix = true; // Make the option picker “read-only”</code></pre>
@@ -1664,12 +1677,12 @@ picker.active = true; // Enable option picker</code></pre>
       <p>Returns the option picker’s mask.</p>
       <pre><code>picker.mask.classList.add(picker.state.n + '--dark');</code></pre>
       <h4 id="instance-property-max"><a aria-hidden="true" href="#instance-property-max">#</a> <code>picker.max</code></h4>
-      <p>Proxy that passes to the <code>picker.state.max</code> property, with additional actions that are executed while the value is being set.</p>
+      <p>Proxy that passes to the <a href="#parameter-state-max"><code>picker.state.max</code></a> property, with additional actions that are executed while the value is being set.</p>
       <p role="note"><b>Note:</b> This does not apply to an option picker that is sourced from an <code>&lt;input&gt;</code> element.</p>
       <pre><code>console.log(picker.max); // Returns the `picker.state.max` value</code></pre>
       <pre><code>picker.max = 4; // Add `multiple` attribute to the `&lt;select&gt;` element and allow the user to select up to 4 options. If the option picker is sourced from a `&lt;select multiple&gt;` element and it has more than 4 options selected, the form submission will be disabled and the `max.options` hook will be fired.</code></pre>
       <h4 id="instance-property-min"><a aria-hidden="true" href="#instance-property-min">#</a> <code>picker.min</code></h4>
-      <p>Proxy that passes to the <code>picker.state.min</code> property, with additional actions that are executed while the value is being set.</p>
+      <p>Proxy that passes to the <a href="#parameter-state-min"><code>picker.state.min</code></a> property, with additional actions that are executed while the value is being set.</p>
       <p role="note"><b>Note:</b> If the value is set to <code>0</code> and the option picker is sourced from a <code>&lt;select&gt;</code> element, it will allow the user to remove the only selection by focusing on the option picker value and then pressing the <kbd>Backspace</kbd> or <kbd>Delete</kbd> key, or by focusing on the selected option and then clicking/tapping or pressing the <kbd>Space</kbd> key on it to remove the selection.</p>
       <pre><code>console.log(picker.min); // Returns the `picker.state.min` value</code></pre>
       <pre><code>picker.min = 4; // If the option picker is sourced from a `&lt;select multiple&gt;` element and it has less than 4 options selected, the form submission will be disabled and the `min.options` hook will be fired.</code></pre>
@@ -1694,7 +1707,7 @@ picker.options.set('Option 3');</code></pre>
         value: 2
     }],
     ['Option 3', {
-        disabled: true,
+        active: false,
         value: 3
     }]
 ];
@@ -1703,7 +1716,7 @@ picker.options.set('Option 3');</code></pre>
 picker.options.set(1, 'Option 1');
 picker.options.set(2, 'Option 2');
 picker.options.set(3, ['Option 3', {
-    disabled: true
+    active: false
 }]);</code></pre>
       <pre><code>picker.options = {
     '1': 'Option 1',
@@ -1723,7 +1736,7 @@ picker.options.set(3, 'Option 3');</code></pre>
         value: 2
     }],
     'option-3': ['Option 3', {
-        disabled: true,
+        active: false,
         value: 3
     }]
 };
@@ -1738,7 +1751,7 @@ picker.options.set('option-2', ['Option 2', {
 }]);
 
 picker.options.set('option-3', ['Option 3', {
-    disabled: true,
+    active: false,
     value: 3
 }]);</code></pre>
       <pre><code>const options = new Map;
@@ -1759,32 +1772,38 @@ options.set(2, ['Option 2', {
 }]);
 
 options.set(3, ['Option 3', {
-    disabled: true,
+    active: false,
     value: 3
 }]);
 
 picker.options = options;</code></pre>
       <h5 id="instance-property-options-method-at"><a aria-hidden="true" href="#instance-property-options-method-at">#</a> <code>picker.options.at(key)</code></h5>
-      <p><em>TODO</em></p>
-      <pre><code>TODO</code></pre>
+      <p>Returns the raw option data from its key.</p>
+      <pre><code>console.log(picker.options.at('option-1'));</code></pre>
       <h5 id="instance-property-options-method-count"><a aria-hidden="true" href="#instance-property-options-method-count">#</a> <code>picker.options.count()</code></h5>
-      <p><em>TODO</em></p>
-      <pre><code>TODO</code></pre>
+      <p>Returns the total number of options.</p>
+      <pre><code>console.log(picker.options.count());</code></pre>
       <h5 id="instance-property-options-method-get"><a aria-hidden="true" href="#instance-property-options-method-get">#</a> <code>picker.options.get(key)</code></h5>
-      <p><em>TODO</em></p>
-      <pre><code>TODO</code></pre>
+      <p>Returns the option position in the list, starting from <code>0</code>. If it is in a group, it will return an array containing the option position in the group and the group position in the list.</p>
+      <pre><code>let index = picker.options.get('option-1');
+if (-1 !== ('number' === typeof index ? index : index[0])) { … }</code></pre>
       <h5 id="instance-property-options-method-has"><a aria-hidden="true" href="#instance-property-options-method-has">#</a> <code>picker.options.has(key)</code></h5>
-      <p><em>TODO</em></p>
-      <pre><code>TODO</code></pre>
+      <p>Returns <code>true</code> if the option is present.</p>
+      <pre><code>if (picker.options.has('option-1')) { … }</code></pre>
       <h5 id="instance-property-options-method-let"><a aria-hidden="true" href="#instance-property-options-method-let">#</a> <code>picker.options.let(key)</code></h5>
-      <p><em>TODO</em></p>
-      <pre><code>TODO</code></pre>
+      <p>Removes an option by its key.</p>
+      <pre><code>picker.options.let('option-1'); // Remove “option-1” option
+picker.options.let(); // Remove all options</code></pre>
       <h5 id="instance-property-options-property-open"><a aria-hidden="true" href="#instance-property-options-property-open">#</a> <code>picker.options.open</code></h5>
-      <p><em>TODO</em></p>
-      <pre><code>TODO</code></pre>
+      <p>Returns <code>true</code> if options is visible.</p>
+      <pre><code>if (picker.options.open) { … }</code></pre>
       <h5 id="instance-property-options-method-set"><a aria-hidden="true" href="#instance-property-options-method-set">#</a> <code>picker.options.set(key, value)</code></h5>
-      <p><em>TODO</em></p>
-      <pre><code>TODO</code></pre>
+      <p>Adds a new option with the given value or key and value.</p>
+      <pre><code>picker.options.set('option-1');
+picker.options.set('option-2', 'Option 2');
+picker.options.set('option-3', ['Option 3', {
+    active: false
+}]);</code></pre>
       <h4 id="instance-property-self"><a aria-hidden="true" href="#instance-property-self">#</a> <code>picker.self</code></h4>
       <p>Returns the <code>&lt;input&gt;</code> or <code>&lt;select&gt;</code> element.</p>
       <pre><code>console.log(picker.self.getAttribute('name'));</code></pre>
@@ -1799,15 +1818,18 @@ picker.options = options;</code></pre>
       <pre><code>console.log(picker.text);</code></pre>
       <pre><code>picker.text = 'Option 3';</code></pre>
       <h4 id="instance-property-value"><a aria-hidden="true" href="#Instance-property-value">#</a> <code>picker.value</code></h4>
-      <p>Proxy that passes to the <code>picker.self.value</code> property, with additional actions that are executed while the value is being set.</p>
+      <p>Proxy that passes to the <a href="#instance-property-self"><code>picker.self.value</code></a> property, with additional actions that are executed while the value is being set.</p>
       <pre><code>console.log(picker.value);</code></pre>
       <pre><code>picker.on('change', function () {
     console.log(this.value);
 });
 
 picker.value = '3';</code></pre>
+      <h4 id="instance-property-vital"><a aria-hidden="true" href="#instance-property-vital">#</a> <code>picker.vital</code></h4>
+      <p>Gets or sets the required state of the option picker. By setting the value to <code>false</code> or <code>true</code>, the required state of the source element will also be set automatically. If the value is set to <code>true</code> and the current <a href="#instance-property-min"><code>picker.min</code></a> value is <code>0</code>, then it will change the current <a href="#instance-property-min"><code>picker.min</code></a> value to <code>1</code>.</p>
+      <pre><code>picker.vital = true; // Make the option picker “required”</code></pre>
       <h3 id="static-properties"><a aria-hidden="true" href="#static-properties">#</a> Static Properties</h3>
-      <p>Static properties are properties available directly on the <code>OptionPicker</code> object.</p>
+      <p>Static properties are properties available directly on the <a href="#constructor-option-picker"><code>OptionPicker</code></a> object.</p>
       <h4 id="static-property-prototype"><a aria-hidden="true" href="#static-property-prototype">#</a> <code>OptionPicker._</code></h4>
       <p>Alias for <code>OptionPicker.prototype</code>.</p>
       <pre><code>OptionPicker._.clear = function () {
@@ -1821,7 +1843,7 @@ const picker = new OptionPicker(document.querySelector('input'));
 
 picker.clear(); // Clear value</code></pre>
       <h4 id="static-property-state"><a aria-hidden="true" href="#static-property-state">#</a> <code>OptionPicker.state</code></h4>
-      <p>Returns the default values of <code>picker.state</code>.</p>
+      <p>Returns the default values of <a href="#instance-property-state"><code>picker.state</code></a>.</p>
       <pre><code>const picker = new OptionPicker(document.querySelector('select'), {
     foo: ['bar', 'baz', 'qux']
 });
@@ -1833,8 +1855,7 @@ console.log([OptionPicker.state, picker.state]);</code></pre>
       <h3 id="anatomy-of-an-extension"><a aria-hidden="true" href="#anatomy-of-an-extension">#</a> Anatomy of an Extension</h3>
       <p>Extension as a function:</p>
       <pre><code>function Extension(self, state = {}) {
-    this.a = 1;
-    this.b = function () {};
+    this.test = 1;
     return this;
 }
 
@@ -1843,8 +1864,14 @@ Object.defineProperty(Extension, 'name', {
 });</code></pre>
       <p>Extension as an object:</p>
       <pre><code>const Extension = {
-    attach: function (self, state = {}) {},
-    detach: function (self, state = {}) {},
+    attach: function (self, state = {}) {
+        this.test = 1;
+        return this;
+    },
+    detach: function (self, state = {}) {
+        delete this.test;
+        return this;
+    },
     name: 'Extension'
 };</code></pre>
       <h3 id="usage-of-an-extension"><a aria-hidden="true" href="#usage-of-an-extension">#</a> Usage of an Extension</h3>
@@ -1871,9 +1898,7 @@ Object.defineProperty(Extension, 'name', {
     <script src="index.min.js"></script>
     <script>
       const picker = new OptionPicker(document.forms[0].country);
-      picker.on('change', function (value) {
-          console.log(value);
-      });
+      picker.on('change', value => console.log(value));
     </script>
   </body>
 </html>

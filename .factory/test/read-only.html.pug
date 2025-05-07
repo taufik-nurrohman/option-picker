@@ -8,6 +8,8 @@ block state
 block script
   script
     | const picker = new OptionPicker(document.querySelector('input'));
+    |
+    | picker.fix = document.querySelector('input[type=checkbox]').checked;
 
 block style
   style
@@ -31,7 +33,7 @@ block content
         = ' '
         button(onclick='picker.options.let(\'Option 4\'), picker.focus();' type='button') Remove &ldquo;Option 4&rdquo; Option
         = ' '
-        button(onclick='picker.enter(true);' type='button') Show Options
+        button(onclick='picker.enter(true).fit();' type='button') Show Options
   datalist(id='options')
     option Option 1
     option Option 2

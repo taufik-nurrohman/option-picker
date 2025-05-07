@@ -1,5 +1,5 @@
 import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
-import {R, W, getAria, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasState, isDisabled, isReadOnly, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setClasses, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
+import {R, W, getAria, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasState, isDisabled, isReadOnly, isRequired, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {forEachArray, forEachMap, forEachObject, forEachSet, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, onAnimationsEnd, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toValuesFromMap, toValueFirstFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
@@ -161,7 +161,7 @@ function createOptions($, options) {
     // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
     _options.delete(null, 0, 0);
     forEachMap(map, (v, k) => {
-        if (isArray(v) && v[1] && !v[1].disabled && v[1].selected) {
+        if (isArray(v) && v[1] && (!getState(v[1], 'active') || v[1].active) && v[1].mark) {
             r.push(v[1].value ?? k);
         }
         // Set the option data, but do not fire the `set.option` hook
@@ -235,16 +235,15 @@ function getOptions(self) {
     }
     forEachArray(items, (v, k) => {
         let attributes = getAttributes(v);
-        forEachArray(['disabled', 'selected'], k => {
-            if (hasState(attributes, k)) {
-                attributes[k] = "" === attributes[k] ? true : attributes[k];
-                if ('selected' === k) {
-                    selected.push(1);
-                }
-            } else {
-                attributes[k] = null;
-            }
-        });
+        attributes.active = true;
+        attributes.mark = false;
+        if (hasState(attributes, 'disabled')) {
+            attributes.active = "" === attributes.disabled ? false : !!attributes.disabled;
+            delete attributes.disabled;
+        } else if (hasState(attributes, 'selected')) {
+            attributes.mark = "" === attributes.selected ? true : !!attributes.selected;
+            delete attributes.selected;
+        }
         if ('optgroup' === getName(v)) {
             forEachMap(getOptions(v), (vv, kk) => {
                 vv[1]['&'] = v.label;
@@ -256,9 +255,10 @@ function getOptions(self) {
     });
     // If there is no selected option(s), get it from the current value
     if (0 === toCount(selected) && (item = getValueInMap(value = toValue(value), map))) {
-        item[1].selected = true;
+        item[1].mark = true;
         setValueInMap(value, item, map);
     }
+    console.log(map);
     return map;
 }
 
@@ -1299,6 +1299,30 @@ setObjectAttributes(OptionPicker, {
             }
             return $;
         }
+    },
+    vital: {
+        get: function () {
+            return this._vital;
+        },
+        set: function (value) {
+            let $ = this,
+                {_mask, mask, min, self} = $,
+                {input} = _mask,
+                v = !!value;
+            self.required = v;
+            if (v) {
+                if (0 === min) {
+                    $.min = 1;
+                }
+                input && setAria(input, 'required', true);
+                setAria(mask, 'required', true);
+            } else {
+                $.min = 0;
+                input && letAria(input, 'required');
+                letAria(mask, 'required');
+            }
+            return $;
+        }
     }
 });
 
@@ -1317,11 +1341,16 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             isInputSelf = isInput(self),
             isMultipleSelect = max && max > 1 || (!isInputSelf && self.multiple),
             isReadOnlySelf = isReadOnly(self),
+            isRequiredSelf = isRequired(self),
             theInputID = self.id,
             theInputName = self.name,
             theInputPlaceholder = self.placeholder;
         $._active = !isDisabledSelf && !isReadOnlySelf;
         $._fix = isInputSelf && isReadOnlySelf;
+        $._vital = isRequiredSelf;
+        if (isRequiredSelf && min < 1) {
+            state.min = min = 1; // Force minimum option(s) to select to be `1`
+        }
         const arrow = setElement('span', {
             'aria': {
                 'hidden': TOKEN_TRUE
@@ -1335,7 +1364,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 'expanded': TOKEN_FALSE,
                 'haspopup': 'listbox',
                 'multiselectable': isMultipleSelect ? TOKEN_TRUE : false,
-                'readonly': isInputSelf && isReadOnlySelf ? TOKEN_TRUE : false
+                'readonly': isInputSelf && isReadOnlySelf ? TOKEN_TRUE : false,
+                'required': isRequiredSelf ? TOKEN_TRUE : false
             },
             'class': n,
             'role': 'combobox'
@@ -1372,6 +1402,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 'multiline': TOKEN_FALSE,
                 'placeholder': isInputSelf ? theInputPlaceholder : false,
                 'readonly': isReadOnlySelf ? TOKEN_TRUE : false,
+                'required': isRequiredSelf ? TOKEN_TRUE : false
             },
             'autocapitalize': 'off',
             'contenteditable': isDisabledSelf || isReadOnlySelf || !isInputSelf ? false : "",
@@ -1776,7 +1807,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         let {_mask, self, state} = of,
             {lot, options} = _mask,
             {n} = state,
-            classes, items, itemsParent, option, optionGroup, optionGroupReal, optionReal, optionText, styles;
+            items, itemsParent, option, optionGroup, optionGroupReal, optionReal, optionText;
         if (isInput(self)) {
             items = (itemsParent = self.list) ? getChildren(itemsParent) : [];
         } else {
@@ -1807,17 +1838,6 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
                     'value': value[1]['&']
                 }));
                 setChildLast(itemsParent, optionGroupReal);
-                if (classes = getState(value[1], 'class')) {
-                    setClasses(optionGroup, classes);
-                    setClasses(optionGroupReal, classes);
-                }
-                if (isObject(styles = getState(value[1], 'style'))) {
-                    setStyles(optionGroup, styles);
-                    setStyles(optionGroupReal, styles);
-                } else if (styles) {
-                    setAttribute(optionGroup, 'style', styles);
-                    setAttribute(optionGroupReal, 'style', styles);
-                }
                 // Force `id` attribute(s)
                 setID(optionGroup);
                 setID(optionGroupReal);
@@ -1825,25 +1845,28 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         } else {
             optionGroup = optionGroupReal = false;
         }
-        let {disabled, selected, value: v} = value[1];
+        let {active, mark, value: v} = value[1];
+        if (!isSet(active)) {
+            active = true;
+        }
         v = fromValue(v || key);
         option = value[2] || setElement('data', {
             'aria': {
-                'disabled': disabled ? TOKEN_TRUE : false,
-                'selected': selected ? TOKEN_TRUE : false
+                'disabled': active ? false : TOKEN_TRUE,
+                'selected': mark ? TOKEN_TRUE : false
             },
             'class': n + '__option',
             'data': {
                 'batch': getState(value[1], '&') ?? false,
             },
             'role': 'option',
-            'tabindex': disabled ? false : -1,
+            'tabindex': active ? -1 : false,
             'title': getState(value[1], 'title') ?? false,
             'value': v
         });
         optionReal = value[3] || setElement('option', fromValue(value[0]), {
-            'disabled': disabled ? "" : false,
-            'selected': selected ? "" : false,
+            'disabled': active ? false : "",
+            'selected': mark ? "" : false,
             'title': getState(value[1], 'title') ?? false,
             'value': v
         });
@@ -1851,24 +1874,13 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
             'class': n + '__v',
             'role': 'none'
         });
-        if (classes = getState(value[1], 'class')) {
-            setClasses(option, classes);
-            setClasses(optionReal, classes);
-        }
-        if (isObject(styles = getState(value[1], 'style'))) {
-            setStyles(option, styles);
-            setStyles(optionReal, styles);
-        } else if (styles) {
-            setAttribute(option, 'style', styles);
-            setAttribute(optionReal, 'style', styles);
-        }
         // Force `id` attribute(s)
         setID(option);
         setID(optionReal);
         option.$ = {};
         option.$[OPTION_SELF] = optionReal;
         option.$[OPTION_TEXT] = optionText;
-        if (!disabled && !value[2]) {
+        if (active && !value[2]) {
             onEvent(EVENT_FOCUS, option, onFocusOption);
             onEvent(EVENT_KEY_DOWN, option, onKeyDownOption);
             onEvent(EVENT_MOUSE_DOWN, option, onPointerDownOption);

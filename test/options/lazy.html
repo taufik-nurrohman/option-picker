@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        min-width: 10em;
+      }
+      .option-picker__options {
+        background: #fff;
+      }
+      .option-picker[aria-busy] .option-picker__text,
+      .option-picker[aria-busy] .option-picker__value {
+        background: transparent url('data:image/gif;base64,R0lGODlhEgAEAKEAAH9/fwAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJDwACACwAAAAAEgAEAAACB5SPqcvtrwoAIfkECQ8AAgAsAAAAAAQABAAAAgSEjwkFACH5BAkPAAIALAAAAAALAAQAAAIMjCMJC4fKXBKsnVkLACH5BAkPAAIALAAAAAASAAQAAAIRjCN5mOCwkojt0Xnkg1l1sRUAIfkECQ8AAgAsAAAAABIABAAAAhGEIRkbKRwOUsxBaStdeDdfAAAh+QQJDwACACwHAAAACwAEAAACDIQhGRuHylwSrJ1ZCwAh+QQFDwACACwOAAAABAAEAAACBISPCQUAOw==') no-repeat calc(100% - 0.5em) 50%;
+        padding-right: 2.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form method="get" target="_blank">
+        <p><a href="https://github.com/fawazahmed0/exchange-api" rel="nofollow" target="_blank">fawazahmed0/exchange-api</a></p>
+        <p><select name="test-1">
+            <option disabled selected>Loading&hellip;</option>
+          </select></p>
+        <p><a href="https://github.com/fedeperin/potterapi" rel="nofollow" target="_blank">fedeperin/potterapi</a></p>
+        <p><input list="test-2" name="test-2" type="text"></p>
+        <p><button type="submit">Submit</button></p>
+      </form>
+    </main><datalist id="test-2"></datalist>
+    <script src="../../index.min.js"></script>
+    <script>
+      const pickerInput = new OptionPicker(document.querySelector('input[list]'), {
+          options: function (query) {
+              return fetch('https://potterapi-fedeperin.vercel.app/en/spells' + (null !== query ? '?search=' + encodeURIComponent(query) : '?max=10')).then(r => r.json()).then(data => {
+                  const options = new Map;
+                  data.forEach(v => options.set(v.spell, v.spell));
+                  return options;
+              });
+          }
+      });
+      const pickerSelect = new OptionPicker(document.querySelector('select'), {
+          options: function (query) {
+              return fetch('https://latest.currency-api.pages.dev/v1/currencies/usd.json').then(r => r.json()).then(data => {
+                  const options = new Map;
+                  let k, v;
+                  for (k in data.usd) {
+                      v = data.usd[k];
+                      options.set(k, [k.toUpperCase(), {
+                          mark: 'usd' === k,
+                          title: v
+                      }]);
+                  }
+                  return options;
+              });
+          }
+      });
+      pickerInput.on('change', function (value) {
+          console.log('change: ' + JSON.stringify(value));
+      });
+      pickerInput.on('load', function () {
+          console.log('load: true');
+      });
+      pickerInput.on('search', function (query) {
+          console.log('search: ' + JSON.stringify(query));
+      });
+      pickerSelect.on('change', function (value) {
+          console.log('change: ' + JSON.stringify(value));
+      });
+      pickerSelect.on('load', function () {
+          console.log('load: true');
+      });
+    </script>
+  </body>
+</html>

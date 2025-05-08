@@ -236,6 +236,30 @@ $name: 'option-picker';
       outline-offset: -2px;
     }
   }
+  &__x {
+    height: 1em;
+    line-height: 0;
+    margin-right: -0.125em;
+    position: relative;
+    user-select: none;
+    width: 1em;
+    &::after,
+    &::before {
+      border: 1px solid;
+      bottom: 0;
+      content: "";
+      left: 50%;
+      margin-left: -1px;
+      position: absolute;
+      top: 0;
+    }
+    &::after {
+      transform: rotate(45deg);
+    }
+    &::before {
+      transform: rotate(135deg);
+    }
+  }
   &[data-size] {
     .#{$name}__arrow {
       display: none;

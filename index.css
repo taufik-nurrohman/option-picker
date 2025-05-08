@@ -205,6 +205,30 @@
   outline: 1px solid;
   outline-offset: -2px;
 }
+.option-picker__x {
+  height: 1em;
+  line-height: 0;
+  margin-right: -0.125em;
+  position: relative;
+  user-select: none;
+  width: 1em;
+}
+.option-picker__x::after,
+.option-picker__x::before {
+  border: 1px solid;
+  bottom: 0;
+  content: "";
+  left: 50%;
+  margin-left: -1px;
+  position: absolute;
+  top: 0;
+}
+.option-picker__x::after {
+  transform: rotate(45deg);
+}
+.option-picker__x::before {
+  transform: rotate(135deg);
+}
 .option-picker[data-size] .option-picker__arrow {
   display: none;
 }

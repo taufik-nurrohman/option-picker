@@ -131,6 +131,8 @@ const filter = debounce(($, input, _options, selectOnly) => {
 
 const name = 'OptionPicker';
 
+let _keyIsCtrl, _keyIsShift, _keyOverOption, _keyOverValue;
+
 function createOptions($, options) {
     const map = isInstance(options, Map) ? options : new Map;
     if (isArray(options)) {
@@ -258,7 +260,6 @@ function getOptions(self) {
         item[1].mark = true;
         setValueInMap(value, item, map);
     }
-    console.log(map);
     return map;
 }
 
@@ -379,15 +380,20 @@ function onKeyDownTextInput(e) {
     }
 }
 
+function onKeyUpTextInput(e) {
+    _keyIsCtrl = e.ctrlKey;
+    _keyIsShift = e.shiftKey;
+}
+
 let searchTerm = "",
     searchTermClear = debounce(() => (searchTerm = ""), SEARCH_CLEAR_TIME);
 
 function onKeyDownOption(e) {
-    let $ = this, exit,
+    let $ = _keyOverOption = this, exit,
         key = e.key,
         keyIsAlt = e.altKey,
-        keyIsCtrl = e.ctrlKey,
-        keyIsShift = e.shiftKey,
+        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
+        keyIsShift = _keyIsShift = e.shiftKey,
         picker = getReference($),
         {_mask, _options, max, self} = picker,
         {hint, value} = _mask,
@@ -556,12 +562,30 @@ function onKeyDownOption(e) {
     exit && (offEventDefault(e), offEventPropagation(e));
 }
 
+function onKeyUpOption(e) {
+    _keyOverOption = 0;
+    let $ = this,
+        key = e.key,
+        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
+        keyIsShift = _keyIsShift = e.shiftKey,
+        picker = getReference($),
+        {_options} = picker, selected = 0;
+    forEachMap(_options, v => {
+        if (getAria(v[2], 'selected')) {
+            ++selected;
+        }
+    });
+    if (selected < 2 && !_keyIsCtrl && !_keyIsShift && KEY_ENTER !== key && ' ' !== key) {
+        letAria($, 'selected');
+    }
+}
+
 function onKeyDownValue(e) {
-    let $ = this, exit,
+    let $ = _keyOverValue = this, exit,
         key = e.key,
         keyIsAlt = e.altKey,
-        keyIsCtrl = e.ctrlKey,
-        keyIsShift = e.shiftKey,
+        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
+        keyIsShift = _keyIsShift = e.shiftKey,
         picker = getReference($),
         {_mask, _options, max, min, self} = picker,
         {options, value, values} = _mask,
@@ -593,6 +617,7 @@ function onKeyDownValue(e) {
                         valueCurrent[3].selected = false;
                     }
                     offEvent(EVENT_KEY_DOWN, v, onKeyDownValue);
+                    offEvent(EVENT_KEY_UP, v, onKeyUpValue);
                     offEvent(EVENT_MOUSE_DOWN, v, onPointerDownValue);
                     offEvent(EVENT_TOUCH_START, v, onPointerDownValue);
                     letValueInMap(v, values), letElement(v);
@@ -611,6 +636,7 @@ function onKeyDownValue(e) {
                 if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values) || (valuePrev = getNext($)) && hasKeyInMap(valuePrev, values)) {
                     focusTo(_mask.value = valuePrev);
                     offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
+                    offEvent(EVENT_KEY_UP, $, onKeyUpValue);
                     offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
                     offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
                     letValueInMap($, values), letElement($);
@@ -645,6 +671,7 @@ function onKeyDownValue(e) {
                 if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values) || (valueNext = getPrev($)) && hasKeyInMap(valueNext, values)) {
                     focusTo(_mask.value = valueNext);
                     offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
+                    offEvent(EVENT_KEY_UP, $, onKeyUpValue);
                     offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
                     offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
                     letValueInMap($, values), letElement($);
@@ -739,6 +766,24 @@ function onKeyDownValue(e) {
         filter(picker, searchTerm, _options, true);
     }
     exit && offEventDefault(e);
+}
+
+function onKeyUpValue(e) {
+    _keyOverValue = 0;
+    let $ = this,
+        key = e.key,
+        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
+        keyIsShift = _keyIsShift = e.shiftKey,
+        picker = getReference($),
+        {_options} = picker, selected = 0;
+    // forEachMap(_options, v => {
+    //     if (getAria(v[2], 'selected')) {
+    //         ++selected;
+    //     }
+    // });
+    // if (selected < 2 && !_keyIsCtrl && !_keyIsShift && KEY_ENTER !== key && ' ' !== key) {
+    //     letAria($, 'selected');
+    // }
 }
 
 function onPointerDownValue(e) {
@@ -1006,6 +1051,7 @@ function toggleToOption(option, picker) {
                 letValueInMap(value, values);
                 forEachSet(values, v => {
                     offEvent(EVENT_KEY_DOWN, v, onKeyDownValue);
+                    offEvent(EVENT_KEY_UP, v, onKeyUpValue);
                     offEvent(EVENT_MOUSE_DOWN, v, onPointerDownValue);
                     offEvent(EVENT_TOUCH_START, v, onPointerDownValue);
                     letReference(v, picker), letElement(v);
@@ -1019,6 +1065,7 @@ function toggleToOption(option, picker) {
                     valueNext.$[VALUE_SELF] = null;
                     valueNext.$[VALUE_TEXT] = getElement('.' + n + '__v', valueNext);
                     onEvent(EVENT_KEY_DOWN, valueNext, onKeyDownValue);
+                    onEvent(EVENT_KEY_UP, valueNext, onKeyUpValue);
                     onEvent(EVENT_MOUSE_DOWN, valueNext, onPointerDownValue);
                     onEvent(EVENT_TOUCH_START, valueNext, onPointerDownValue);
                     letAria(valueNext, 'selected');
@@ -1425,12 +1472,14 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             onEvent(EVENT_CUT, textInput, onCutTextInput);
             onEvent(EVENT_FOCUS, textInput, onFocusTextInput);
             onEvent(EVENT_KEY_DOWN, textInput, onKeyDownTextInput);
+            onEvent(EVENT_KEY_UP, textInput, onKeyUpTextInput);
             onEvent(EVENT_PASTE, textInput, onPasteTextInput);
             setChildLast(text, textInput);
             setChildLast(text, textInputHint);
             setReference(textInput, $);
         } else {
             onEvent(EVENT_KEY_DOWN, text, onKeyDownValue);
+            onEvent(EVENT_KEY_UP, text, onKeyUpValue);
             onEvent(EVENT_MOUSE_DOWN, text, onPointerDownValue);
             onEvent(EVENT_TOUCH_START, text, onPointerDownValue);
             setReference(text, $);
@@ -1567,10 +1616,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             offEvent(EVENT_CUT, input, onCutTextInput);
             offEvent(EVENT_FOCUS, input, onFocusTextInput);
             offEvent(EVENT_KEY_DOWN, input, onKeyDownTextInput);
+            offEvent(EVENT_KEY_UP, input, onKeyUpTextInput);
             offEvent(EVENT_PASTE, input, onPasteTextInput);
         }
         if (value) {
             offEvent(EVENT_KEY_DOWN, value, onKeyDownValue);
+            offEvent(EVENT_KEY_UP, value, onKeyUpValue);
             offEvent(EVENT_MOUSE_DOWN, value, onPointerDownValue);
             offEvent(EVENT_TOUCH_START, value, onPointerDownValue);
         }
@@ -1756,6 +1807,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
             valueReal = of.value;
         offEvent(EVENT_FOCUS, r[2], onFocusOption);
         offEvent(EVENT_KEY_DOWN, r[2], onKeyDownOption);
+        offEvent(EVENT_KEY_UP, r[2], onKeyUpOption);
         offEvent(EVENT_MOUSE_DOWN, r[2], onPointerDownOption);
         offEvent(EVENT_MOUSE_UP, r[2], onPointerUpOption);
         offEvent(EVENT_TOUCH_END, r[2], onPointerUpOption);
@@ -1883,6 +1935,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         if (active && !value[2]) {
             onEvent(EVENT_FOCUS, option, onFocusOption);
             onEvent(EVENT_KEY_DOWN, option, onKeyDownOption);
+            onEvent(EVENT_KEY_UP, option, onKeyUpOption);
             onEvent(EVENT_MOUSE_DOWN, option, onPointerDownOption);
             onEvent(EVENT_MOUSE_UP, option, onPointerUpOption);
             onEvent(EVENT_TOUCH_END, option, onPointerUpOption);

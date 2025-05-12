@@ -215,6 +215,7 @@ $name: 'option-picker';
     }
   }
   &__v {
+    flex: 1;
     &:empty {
       &::after {
         content: '\200c';

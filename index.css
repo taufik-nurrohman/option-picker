@@ -189,6 +189,9 @@
   white-space: nowrap;
   z-index: 0;
 }
+.option-picker__v {
+  flex: 1;
+}
 .option-picker__v:empty::after {
   content: "‌";
 }

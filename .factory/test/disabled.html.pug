@@ -7,17 +7,9 @@ block state
 
 block script
   script
-    | const sources = document.querySelectorAll('input[list], select');
+    | const picker = new OptionPicker(document.querySelector('input'));
     |
-    | sources.forEach(source => new OptionPicker(source));
-    |
-    | function disableAll() {
-    |     sources.forEach(source => OptionPicker.of(source).active = false);
-    | }
-    |
-    | function enableAll() {
-    |     sources.forEach(source => OptionPicker.of(source).active = true);
-    | }
+    | picker.active = document.querySelector('input[type=checkbox]').checked;
 
 block style
   style
@@ -31,30 +23,21 @@ block style
 block content
   main
     form(method='get' target='_blank')
+      p: input(list='options' name='test' type='text' value='Option 1')
       p
-        select(name='test-1')
-          option Option 1
-          option Option 2
-          option(disabled) Option 3
+        label
+          input(onchange='picker.active = this.checked;' type='checkbox')
+          = ' '
+          span Enable
       p
-        select(disabled name='test-2')
-          option Option 1
-          option Option 2
-          option Option 3
-      p
-        select(disabled name='test-3' size='3')
-          option Option 1
-          option Option 2
-          option Option 3
-      p
-        input(list='test-4' name='test-4' placeholder!='Test&hellip;')
-      p
-        button(onclick='disableAll(); this.disabled = true; this.nextElementSibling.disabled = false;' type='button') Disable All
-        = ' '
-        button(disabled onclick='enableAll(); this.disabled = true; this.previousElementSibling.disabled = false;' type='button') Enable All
-        = ' '
         button(type='submit') Submit
-  datalist(id='test-4')
+        = ' '
+        button(onclick='picker.options.set(\'Option 4\'), picker.focus();' type='button') Add &ldquo;Option 4&rdquo; Option
+        = ' '
+        button(onclick='picker.options.let(\'Option 4\'), picker.focus();' type='button') Remove &ldquo;Option 4&rdquo; Option
+        = ' '
+        button(onclick='picker.enter(true).fit();' type='button') Show Options
+  datalist(id='options')
     option Option 1
     option Option 2
-    option Option 3
+    option(value='3') Option 3

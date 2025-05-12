@@ -64,11 +64,23 @@ const KEY_TAB = 'Tab';
 const OPTION_SELF = 0;
 const OPTION_TEXT = 1;
 
+const TOKEN_CONTENTEDITABLE = 'contenteditable';
+const TOKEN_DISABLED = 'disabled';
 const TOKEN_FALSE = 'false';
+const TOKEN_READONLY = 'readonly';
+const TOKEN_READ_ONLY = 'readOnly';
+const TOKEN_REQUIRED = 'required';
+const TOKEN_SELECTED = 'selected';
+const TOKEN_TABINDEX = 'tabindex';
+const TOKEN_TAB_INDEX = 'tabIndex';
+const TOKEN_TEXT = 'text';
 const TOKEN_TRUE = 'true';
+const TOKEN_VALUE = 'value';
+const TOKEN_VALUES = TOKEN_VALUE + 's';
 
 const VALUE_SELF = 0;
 const VALUE_TEXT = 1;
+const VALUE_X = 2;
 
 const filter = debounce(($, input, _options, selectOnly) => {
     let query = isString(input) ? input : getText(input) || "",
@@ -80,7 +92,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
     if (selectOnly) {
         forEachMap(_options, v => {
             let text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-            if ("" !== q && q === text.slice(0, toCount(q)) && !getAria(v[2], 'disabled')) {
+            if ("" !== q && q === text.slice(0, toCount(q)) && !getAria(v[2], TOKEN_DISABLED)) {
                 selectToOption(v[2], $);
                 return 0;
             }
@@ -101,8 +113,8 @@ const filter = debounce(($, input, _options, selectOnly) => {
         if (strict) {
             // Silently select the first option without affecting the currently typed query and focus/select state
             if (count && "" !== q && (option = goToOptionFirst($))) {
-                setAria(option, 'selected', true);
-                option.$[OPTION_SELF].selected = true;
+                setAria(option, TOKEN_SELECTED, true);
+                option.$[OPTION_SELF][TOKEN_SELECTED] = true;
                 setValue(self, getOptionValue(option));
             } else {
                 setValue(self, "");
@@ -121,7 +133,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
             call.then(v => {
                 createOptions($, v);
                 letAria(mask, 'busy');
-                $.fire('load', [query, $.values])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
+                $.fire('load', [query, $[TOKEN_VALUES]])[goToOptionFirst($) ? 'enter' : 'exit']().fit();
             });
         } else {
             createOptions($, call);
@@ -140,7 +152,7 @@ function createOptions($, options) {
             if (isArray(option)) {
                 option[0] = option[0] ?? "";
                 option[1] = option[1] ?? {};
-                setValueInMap(toValue(option[1].value ?? option[0]), option, map);
+                setValueInMap(toValue(option[1][TOKEN_VALUE] ?? option[0]), option, map);
             } else {
                 setValueInMap(toValue(option), [option, {}], map);
             }
@@ -150,7 +162,7 @@ function createOptions($, options) {
             if (isArray(v)) {
                 options[k][0] = v[0] ?? "";
                 options[k][1] = v[1] ?? {};
-                setValueInMap(toValue(v[1].value ?? k), v, map);
+                setValueInMap(toValue(v[1][TOKEN_VALUE] ?? k), v, map);
             } else {
                 setValueInMap(toValue(k), [v, {}], map);
             }
@@ -164,10 +176,10 @@ function createOptions($, options) {
     _options.delete(null, 0, 0);
     forEachMap(map, (v, k) => {
         if (isArray(v) && v[1] && (!getState(v[1], 'active') || v[1].active) && v[1].mark) {
-            r.push(v[1].value ?? k);
+            r.push(v[1][TOKEN_VALUE] ?? k);
         }
         // Set the option data, but do not fire the `set.option` hook
-        _options.set(toValue(isArray(v) && v[1] ? (v[1].value ?? k) : k), v, 0);
+        _options.set(toValue(isArray(v) && v[1] ? (v[1][TOKEN_VALUE] ?? k) : k), v, 0);
     });
     if (!isFunction(state.options)) {
         state.options = map;
@@ -209,7 +221,7 @@ function focusToOptionLast(picker) {
 function getOptionSelected($, strict) {
     let {_options, self} = $, selected;
     forEachMap(_options, (v, k) => {
-        if (isArray(v) && v[2] && !getAria(v[2], 'disabled') && getAria(v[2], 'selected')) {
+        if (isArray(v) && v[2] && !getAria(v[2], TOKEN_DISABLED) && getAria(v[2], TOKEN_SELECTED)) {
             return (selected = v[2]), 0;
         }
     });
@@ -239,12 +251,12 @@ function getOptions(self) {
         let attributes = getAttributes(v);
         attributes.active = true;
         attributes.mark = false;
-        if (hasState(attributes, 'disabled')) {
-            attributes.active = "" === attributes.disabled ? false : !!attributes.disabled;
-            delete attributes.disabled;
-        } else if (hasState(attributes, 'selected')) {
-            attributes.mark = "" === attributes.selected ? true : !!attributes.selected;
-            delete attributes.selected;
+        if (hasState(attributes, TOKEN_DISABLED)) {
+            attributes.active = "" === attributes[TOKEN_DISABLED] ? false : !!attributes[TOKEN_DISABLED];
+            delete attributes[TOKEN_DISABLED];
+        } else if (hasState(attributes, TOKEN_SELECTED)) {
+            attributes.mark = "" === attributes[TOKEN_SELECTED] ? true : !!attributes[TOKEN_SELECTED];
+            delete attributes[TOKEN_SELECTED];
         }
         if ('optgroup' === getName(v)) {
             forEachMap(getOptions(v), (vv, kk) => {
@@ -252,7 +264,7 @@ function getOptions(self) {
                 setValueInMap(toValue(kk), vv, map);
             });
         } else {
-            setValueInMap(toValue(v.value), [getText(v) || v.value, attributes, null, v], map);
+            setValueInMap(toValue(v[TOKEN_VALUE]), [getText(v) || v[TOKEN_VALUE], attributes, null, v], map);
         }
     });
     // If there is no selected option(s), get it from the current value
@@ -270,7 +282,7 @@ function getOptionsValues(options, parseValue) {
 function getOptionsSelected($) {
     let {_options} = $, selected = [];
     return forEachMap(_options, (v, k) => {
-        if (isArray(v) && v[2] && !getAria(v[2], 'disabled') && getAria(v[2], 'selected')) {
+        if (isArray(v) && v[2] && !getAria(v[2], TOKEN_DISABLED) && getAria(v[2], TOKEN_SELECTED)) {
             selected.push(v[2]);
         }
     }), selected;
@@ -278,7 +290,7 @@ function getOptionsSelected($) {
 
 function goToOptionFirst(picker, k) {
     let {_options} = picker, option;
-    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !getAria(v[2], 'disabled') && !v[2].hidden)) {
+    if (option = toValuesFromMap(_options)['find' + (k || "")](v => !getAria(v[2], TOKEN_DISABLED) && !v[2].hidden)) {
         return option[2];
     }
 }
@@ -350,7 +362,7 @@ function onKeyDownTextInput(e) {
         if (!currentOption || currentOption.hidden) {
             currentOption = toValueFirstFromMap(_options);
             currentOption = currentOption ? currentOption[2] : 0;
-            while (currentOption && (getAria(currentOption, 'disabled') || currentOption.hidden)) {
+            while (currentOption && (getAria(currentOption, TOKEN_DISABLED) || currentOption.hidden)) {
                 currentOption = getNext(currentOption);
             }
         }
@@ -389,11 +401,11 @@ let searchTerm = "",
     searchTermClear = debounce(() => (searchTerm = ""), SEARCH_CLEAR_TIME);
 
 function onKeyDownOption(e) {
-    let $ = _keyOverOption = this, exit,
+    let $ = this, exit,
         key = e.key,
         keyIsAlt = e.altKey,
-        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
-        keyIsShift = _keyIsShift = e.shiftKey,
+        keyIsCtrl = e.ctrlKey,
+        keyIsShift = e.shiftKey,
         picker = getReference($),
         {_mask, _options, max, self} = picker,
         {hint, value} = _mask,
@@ -429,7 +441,7 @@ function onKeyDownOption(e) {
             optionNext = getNext($);
         }
         // Skip disabled and hidden option(s)…
-        while (optionNext && (getAria(optionNext, 'disabled') || optionNext.hidden)) {
+        while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
             optionNext = getNext(optionNext);
         }
         if (optionNext) {
@@ -449,33 +461,10 @@ function onKeyDownOption(e) {
             }
         }
         // Skip disabled and hidden option(s)…
-        while (optionNext && (getAria(optionNext, 'disabled') || optionNext.hidden)) {
+        while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
             optionNext = getNext(optionNext);
         }
-        if (keyIsShift && max > 1) {
-            if (optionNext) {
-                if (!getAria(optionNext, 'selected')) {
-                    toggleToOption(optionNext, picker);
-                } else {
-                    if (optionPrev = getPrev($)) {
-                        if ('group' === getRole(optionPrev)) {
-                            optionPrev = false;
-                        } else {
-                            while (optionPrev && (getAria(optionPrev, 'disabled') || optionPrev.hidden)) {
-                                optionPrev = getNext(optionPrev);
-                            }
-                        }
-                    }
-                    if (!optionPrev || !getAria(optionPrev, 'selected')) {
-                        // This removes the selection
-                        toggleToOption($, picker);
-                    }
-                }
-                focusToOption(optionNext, picker);
-            }
-        } else {
-            optionNext ? focusToOption(optionNext, picker) : focusToOptionFirst(picker);
-        }
+        optionNext ? focusToOption(optionNext, picker) : focusToOptionFirst(picker);
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
         if (KEY_PAGE_UP === key && 'group' === getRole(optionParent = getParent($))) {
@@ -484,7 +473,7 @@ function onKeyDownOption(e) {
             optionPrev = getPrev($);
         }
         // Skip disabled and hidden option(s)…
-        while (optionPrev && (getAria(optionPrev, 'disabled') || optionPrev.hidden)) {
+        while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
             optionPrev = getPrev(optionPrev);
         }
         if (optionPrev) {
@@ -504,33 +493,10 @@ function onKeyDownOption(e) {
             }
         }
         // Skip disabled and hidden option(s)…
-        while (optionPrev && (getAria(optionPrev, 'disabled') || optionPrev.hidden)) {
+        while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
             optionPrev = getPrev(optionPrev);
         }
-        if (keyIsShift && max > 1) {
-            if (optionPrev) {
-                if (!getAria(optionPrev, 'selected')) {
-                    toggleToOption(optionPrev, picker);
-                } else {
-                    if (optionNext = getNext($)) {
-                        if ('group' === getRole(optionNext)) {
-                            optionNext = false;
-                        } else {
-                            while (optionNext && (getAria(optionNext, 'disabled') || optionNext.hidden)) {
-                                optionNext = getNext(optionNext);
-                            }
-                        }
-                    }
-                    if (!optionNext || !getAria(optionNext, 'selected')) {
-                        // This removes the selection
-                        toggleToOption($, picker);
-                    }
-                }
-                focusToOption(optionPrev, picker);
-            }
-        } else {
-            optionPrev ? focusToOption(optionPrev, picker) : focusToOptionLast(picker);
-        }
+        optionPrev ? focusToOption(optionPrev, picker) : focusToOptionLast(picker);
     } else if (KEY_BEGIN === key) {
         exit = true;
         focusToOptionFirst(picker);
@@ -538,17 +504,7 @@ function onKeyDownOption(e) {
         exit = true;
         focusToOptionLast(picker);
     } else {
-        if (keyIsCtrl && !keyIsShift && KEY_A === key && !isInput(self) && max > 1) {
-            exit = true;
-            forEachMap(_options, (v, k) => {
-                if (!getAria(v[2], 'disabled') && !v[2].hidden) {
-                    letAria(valueCurrent = v[2], 'selected');
-                    v[3].selected = false;
-                    toggleToOption(valueCurrent, picker); // Force select
-                }
-            });
-            valueCurrent && focusTo(valueCurrent);
-        } else if (!keyIsCtrl) {
+        if (!keyIsCtrl) {
             if (1 === toCount(key) && !keyIsAlt) {
                 if (isInput(self)) {
                     setStyle(hint, 'color', 'transparent');
@@ -562,30 +518,12 @@ function onKeyDownOption(e) {
     exit && (offEventDefault(e), offEventPropagation(e));
 }
 
-function onKeyUpOption(e) {
-    _keyOverOption = 0;
-    let $ = this,
-        key = e.key,
-        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
-        keyIsShift = _keyIsShift = e.shiftKey,
-        picker = getReference($),
-        {_options} = picker, selected = 0;
-    forEachMap(_options, v => {
-        if (getAria(v[2], 'selected')) {
-            ++selected;
-        }
-    });
-    if (selected < 2 && !_keyIsCtrl && !_keyIsShift && KEY_ENTER !== key && ' ' !== key) {
-        letAria($, 'selected');
-    }
-}
-
 function onKeyDownValue(e) {
-    let $ = _keyOverValue = this, exit,
+    let $ = this, exit,
         key = e.key,
         keyIsAlt = e.altKey,
-        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
-        keyIsShift = _keyIsShift = e.shiftKey,
+        keyIsCtrl = e.ctrlKey,
+        keyIsShift = e.shiftKey,
         picker = getReference($),
         {_mask, _options, max, min, self} = picker,
         {options, value, values} = _mask,
@@ -594,55 +532,24 @@ function onKeyDownValue(e) {
     if (isDisabled(self) || isInput(self) && isReadOnly(self)) {
         return offEventDefault(e);
     }
-    if (getAria($, 'selected') && (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key)) {
-        searchTerm = "";
-        if (min === toSetCount(values)) {
-            picker.fire('min.options', [min, min]);
-        } else {
-            let index = 0;
-            forEachSet(values, v => {
-                if (min > index) {
-                    if (valueCurrent = _options.at(getOptionValue(v))) {
-                        if (min < 1) {
-                            letAria(valueCurrent[2], 'selected');
-                            letAttribute(v, 'value');
-                            valueCurrent[3].selected = false;
-                            setHTML(v.$[VALUE_TEXT], "");
-                        }
-                    }
-                    focusTo(_mask.value = v);
-                } else if (getAria(v, 'selected')) {
-                    if (valueCurrent = _options.at(getOptionValue(v))) {
-                        letAria(valueCurrent[2], 'selected');
-                        valueCurrent[3].selected = false;
-                    }
-                    offEvent(EVENT_KEY_DOWN, v, onKeyDownValue);
-                    offEvent(EVENT_KEY_UP, v, onKeyUpValue);
-                    offEvent(EVENT_MOUSE_DOWN, v, onPointerDownValue);
-                    offEvent(EVENT_TOUCH_START, v, onPointerDownValue);
-                    letValueInMap(v, values), letElement(v);
-                }
-                ++index;
-            });
-        }
-        forEachSet(values, v => letAria(v, 'selected'));
-    } else if (KEY_DELETE_LEFT === key) {
+    if (KEY_DELETE_LEFT === key) {
         searchTerm = "";
         let countValues = toSetCount(values);
         if (min < countValues) {
             if (valueCurrent = _options.at(getOptionValue($))) {
-                letAria(valueCurrent[2], 'selected');
-                valueCurrent[3].selected = false;
+                letAria(valueCurrent[2], TOKEN_SELECTED);
+                valueCurrent[3][TOKEN_SELECTED] = false;
                 if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values) || (valuePrev = getNext($)) && hasKeyInMap(valuePrev, values)) {
-                    focusTo(_mask.value = valuePrev);
+                    focusTo(_mask[TOKEN_VALUE] = valuePrev);
                     offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
-                    offEvent(EVENT_KEY_UP, $, onKeyUpValue);
                     offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $.$[VALUE_X], onPointerDownValueX);
                     offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, $.$[VALUE_X], onPointerDownValueX);
                     letValueInMap($, values), letElement($);
                 // Do not remove the only option value
                 } else {
-                    letAttribute(_mask.value = $, 'value');
+                    letAttribute(_mask[TOKEN_VALUE] = $, TOKEN_VALUE);
                     setHTML($.$[VALUE_TEXT], "");
                     // No option(s) selected
                     if (0 === min) {
@@ -655,9 +562,9 @@ function onKeyDownValue(e) {
         }
         if (max !== Infinity && max > countValues) {
             forEachMap(_options, (v, k) => {
-                if (!v[3].disabled) {
-                    letAria(v[2], 'disabled');
-                    setAttribute(v[2], 'tabindex', 0);
+                if (!v[3][TOKEN_DISABLED]) {
+                    letAria(v[2], TOKEN_DISABLED);
+                    setAttribute(v[2], TOKEN_TABINDEX, 0);
                 }
             });
         }
@@ -666,18 +573,19 @@ function onKeyDownValue(e) {
         let countValues = toSetCount(values);
         if (min < countValues) {
             if (valueCurrent = _options.at(getOptionValue($))) {
-                letAria(valueCurrent[2], 'selected');
-                valueCurrent[3].selected = false;
+                letAria(valueCurrent[2], TOKEN_SELECTED);
+                valueCurrent[3][TOKEN_SELECTED] = false;
                 if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values) || (valueNext = getPrev($)) && hasKeyInMap(valueNext, values)) {
-                    focusTo(_mask.value = valueNext);
+                    focusTo(_mask[TOKEN_VALUE] = valueNext);
                     offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
-                    offEvent(EVENT_KEY_UP, $, onKeyUpValue);
                     offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $.$[VALUE_X], onPointerDownValueX);
                     offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, $.$[VALUE_X], onPointerDownValueX);
                     letValueInMap($, values), letElement($);
                 // Do not remove the only option value
                 } else {
-                    letAttribute(_mask.value = $, 'value');
+                    letAttribute(_mask[TOKEN_VALUE] = $, TOKEN_VALUE);
                     setHTML($.$[VALUE_TEXT], "");
                     // No option(s) selected
                     if (0 === min) {
@@ -690,9 +598,9 @@ function onKeyDownValue(e) {
         }
         if (max !== Infinity && max > countValues) {
             forEachMap(_options, (v, k) => {
-                if (!v[3].disabled) {
-                    letAria(v[2], 'disabled');
-                    setAttribute(v[2], 'tabindex', 0);
+                if (!v[3][TOKEN_DISABLED]) {
+                    letAria(v[2], TOKEN_DISABLED);
+                    setAttribute(v[2], TOKEN_TABINDEX, -1);
                 }
             });
         }
@@ -703,62 +611,24 @@ function onKeyDownValue(e) {
         searchTerm = "";
         picker.exit(exit = false);
     } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
-        let focus = exit = true;
-        if (KEY_ENTER === key || ' ' === key) {
-            if (valueCurrent = _options.at(getOptionValue($))) {
-                focus = false;
-                onAnimationsEnd(options, () => focusTo(valueCurrent[2]), scrollTo(valueCurrent[2]));
-            }
-            if (getAria($, 'selected')) {
-                letAria($, 'selected');
-            } else {
-                setAria($, 'selected', true);
-            }
-        }
+        exit = true;
         if (picker.size < 2) {
             setStyle(options, 'max-height', 0);
         }
-        picker.enter(focus).fit();
+        picker.enter(exit).fit();
     } else if (KEY_ARROW_LEFT === key) {
         exit = true;
         if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values)) {
-            if (keyIsShift) {
-                if (getAria(valuePrev, 'selected')) {
-                    letAria($, 'selected');
-                } else {
-                    setAria($, 'selected', true);
-                    setAria(valuePrev, 'selected', true);
-                }
-            }
             focusTo(valuePrev);
         }
     } else if (KEY_ARROW_RIGHT === key) {
         exit = true;
         if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values)) {
-            if (keyIsShift) {
-                if (getAria(valueNext, 'selected')) {
-                    letAria($, 'selected');
-                } else {
-                    setAria($, 'selected', true);
-                    setAria(valueNext, 'selected', true);
-                }
-            }
             focusTo(valueNext);
         }
     } else if (1 === toCount(key) && !keyIsAlt) {
         exit = true;
-        if (keyIsCtrl && !keyIsShift && KEY_R === key) {
-            exit = false; // Native reload :(
-        } else if (keyIsCtrl && !keyIsShift && KEY_A === key && max > 1) {
-            // Select all visually
-            setAria(valueCurrent = value, 'selected', true);
-            while ((valueNext = getNext(valueCurrent)) && hasKeyInMap(valueNext, values)) {
-                setAria(valueCurrent = valueNext, 'selected', true);
-            }
-            while ((valuePrev = getPrev(valueCurrent)) && hasKeyInMap(valuePrev, values)) {
-                setAria(valueCurrent = valuePrev, 'selected', true);
-            }
-        } else if (!keyIsCtrl) {
+        if (!keyIsCtrl) {
             searchTerm += key;
         }
     }
@@ -768,34 +638,18 @@ function onKeyDownValue(e) {
     exit && offEventDefault(e);
 }
 
-function onKeyUpValue(e) {
-    _keyOverValue = 0;
-    let $ = this,
-        key = e.key,
-        keyIsCtrl = _keyIsCtrl = e.ctrlKey,
-        keyIsShift = _keyIsShift = e.shiftKey,
-        picker = getReference($),
-        {_options} = picker, selected = 0;
-    // forEachMap(_options, v => {
-    //     if (getAria(v[2], 'selected')) {
-    //         ++selected;
-    //     }
-    // });
-    // if (selected < 2 && !_keyIsCtrl && !_keyIsShift && KEY_ENTER !== key && ' ' !== key) {
-    //     letAria($, 'selected');
-    // }
+function onPointerDownValue(e) {
+    focusTo(this), offEventDefault(e);
 }
 
-function onPointerDownValue(e) {
-    offEventDefault(e);
+function onPointerDownValueX(e) {
     let $ = this,
-        picker = getReference($),
-        {_mask, max} = picker,
-        {values} = _mask;
-    // Clear all selection(s) on “click”
-    forEachSet(values, v => letAria(v, 'selected'));
-    // Do not show option(s) on “click” value if it is not the only value for `<select multiple>`
-    max > 1 && toSetCount(values) > 1 && (picker.exit(), focusTo($), offEventPropagation(e));
+        value = getParent($),
+        picker = getReference(value),
+        {_options} = picker,
+        option = _options.at(getOptionValue(value))[2];
+    option && toggleToOption(option, picker);
+    picker.enter().fit(), offEventDefault(e), offEventPropagation(e);
 }
 
 function onPasteTextInput(e) {
@@ -823,7 +677,7 @@ function onPointerDownMask(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {_mask, _options, self} = picker,
+        {_mask, _options, max, self} = picker,
         {options} = _mask,
         {target} = e;
     if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
@@ -837,7 +691,11 @@ function onPointerDownMask(e) {
     if (picker.size < 2) {
         setStyle(options, 'max-height', 0);
     }
-    picker[getReference(R) !== picker ? 'enter' : 'exit'](true).fit();
+    if (getReference(R) !== picker) {
+        picker.enter(true).fit();
+    } else {
+        picker.exit(1 === max || isInput(self));
+    }
 }
 
 function onPointerDownOption(e) {
@@ -845,14 +703,14 @@ function onPointerDownOption(e) {
     // Add an “active” effect on `touchstart` to indicate which option is about to be selected. We don’t need this
     // indication on `mousedown` because pointer device(s) already have a hover state that is clear enough to indicate
     // which option is about to be selected.
-    if ('touchstart' === e.type && !getAria($, 'disabled')) {
-        setAria($, 'selected', true);
+    if (EVENT_TOUCH_START === e.type && !getAria($, TOKEN_DISABLED)) {
+        setAria($, TOKEN_SELECTED, true);
     }
     currentPointerState = 1; // Pointer is “down”
 }
 
 function onPointerDownRoot(e) {
-    if ('touchstart' === e.type) {
+    if (EVENT_TOUCH_START === e.type) {
         touchTop = e.touches[0].clientY;
     }
     let $ = this,
@@ -868,7 +726,7 @@ function onPointerDownRoot(e) {
 }
 
 function onPointerMoveRoot(e) {
-    touchTopCurrent = 'touchmove' === e.type ? e.touches[0].clientY : false;
+    touchTopCurrent = EVENT_TOUCH_MOVE === e.type ? e.touches[0].clientY : false;
     let $ = this,
         picker = getReference($);
     if (!picker) {
@@ -897,7 +755,7 @@ function onPointerUpOption() {
         picker = getReference($);
     // A “touch only” event is valid only if the pointer has not been “move(d)” up to this event
     if (1 === currentPointerState) {
-        if (!getAria($, 'disabled')) {
+        if (!getAria($, TOKEN_DISABLED)) {
             if (picker.max > 1) {
                 toggleToOption($, picker), focusTo($);
             } else {
@@ -906,7 +764,7 @@ function onPointerUpOption() {
         }
     } else {
         // Remove the “active” effect that was previously added on `touchstart`
-        letAria($, 'selected');
+        letAria($, TOKEN_SELECTED);
     }
     currentPointerState = 0; // Reset current pointer state
 }
@@ -955,8 +813,8 @@ function selectToOption(option, picker) {
     if (option) {
         optionReal = option.$[OPTION_SELF];
         selectToOptionsNone(picker);
-        optionReal.selected = true;
-        setAria(option, 'selected', true);
+        optionReal[TOKEN_SELECTED] = true;
+        setAria(option, TOKEN_SELECTED, true);
         setValue(self, v = getOptionValue(option));
         if (isInput(self)) {
             setAria(input, 'activedescendant', getID(option));
@@ -981,8 +839,8 @@ function selectToOptionsNone(picker, fireValue) {
     let {_mask, _options, self} = picker,
         {hint, input, value} = _mask, v;
     forEachMap(_options, v => {
-        letAria(v[2], 'selected');
-        v[3].selected = false;
+        letAria(v[2], TOKEN_SELECTED);
+        v[3][TOKEN_SELECTED] = false;
     });
     if (fireValue) {
         setValue(self, v = "");
@@ -991,7 +849,7 @@ function selectToOptionsNone(picker, fireValue) {
             letStyle(hint, 'color');
             setText(input, "");
         } else {
-            letAttribute(value, 'value');
+            letAttribute(value, TOKEN_VALUE);
             setHTML(value.$[VALUE_TEXT], v);
         }
     }
@@ -1001,45 +859,45 @@ function toggleToOption(option, picker) {
     let {_mask, _options, max, min, self, state} = picker,
         {value, values} = _mask,
         {n} = state,
-        selected, selectedFirst, valueCurrent, valueNext;
+        selected, selectedFirst, valueCurrent, valueNext, valueNextX;
     if (option) {
         let optionReal = option.$[OPTION_SELF],
             a = getOptionsValues(getOptionsSelected(picker)), b, c;
-        if (getAria(option, 'selected') && optionReal.selected) {
+        if (getAria(option, TOKEN_SELECTED) && optionReal[TOKEN_SELECTED]) {
             if (min > 0 && (c = toCount(a)) <= min) {
                 picker.fire('min.options', [c, min]);
             } else {
-                letAria(option, 'selected');
-                optionReal.selected = false;
+                letAria(option, TOKEN_SELECTED);
+                optionReal[TOKEN_SELECTED] = false;
             }
         } else {
-            setAria(option, 'selected', true);
-            optionReal.selected = true;
+            setAria(option, TOKEN_SELECTED, true);
+            optionReal[TOKEN_SELECTED] = true;
         }
         if (!isInput(self)) {
             b = getOptionsValues(getOptionsSelected(picker));
             if (max !== Infinity && (c = toCount(b)) === max) {
                 forEachMap(_options, (v, k) => {
-                    if (!getAria(v[2], 'selected')) {
-                        letAttribute(v[2], 'tabindex');
-                        setAria(v[2], 'disabled', true);
+                    if (!getAria(v[2], TOKEN_SELECTED)) {
+                        letAttribute(v[2], TOKEN_TABINDEX);
+                        setAria(v[2], TOKEN_DISABLED, true);
                     }
                 });
             } else if (c > max) {
-                letAria(option, 'selected');
-                optionReal.selected = false;
+                letAria(option, TOKEN_SELECTED);
+                optionReal[TOKEN_SELECTED] = false;
                 forEachMap(_options, (v, k) => {
-                    if (!getAria(v[2], 'selected')) {
-                        letAttribute(v[2], 'tabindex');
-                        setAria(v[2], 'disabled', true);
+                    if (!getAria(v[2], TOKEN_SELECTED)) {
+                        letAttribute(v[2], TOKEN_TABINDEX);
+                        setAria(v[2], TOKEN_DISABLED, true);
                     }
                 });
                 picker.fire('max.options', [c, max]);
             } else {
                 forEachMap(_options, (v, k) => {
-                    if (!v[3].disabled) {
-                        letAria(v[2], 'disabled');
-                        setAttribute(v[2], 'tabindex', 0);
+                    if (!v[3][TOKEN_DISABLED]) {
+                        letAria(v[2], TOKEN_DISABLED);
+                        setAttribute(v[2], TOKEN_TABINDEX, -1);
                     }
                 });
             }
@@ -1051,24 +909,26 @@ function toggleToOption(option, picker) {
                 letValueInMap(value, values);
                 forEachSet(values, v => {
                     offEvent(EVENT_KEY_DOWN, v, onKeyDownValue);
-                    offEvent(EVENT_KEY_UP, v, onKeyUpValue);
                     offEvent(EVENT_MOUSE_DOWN, v, onPointerDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, v.$[VALUE_X], onPointerDownValueX);
                     offEvent(EVENT_TOUCH_START, v, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, v.$[VALUE_X], onPointerDownValueX);
                     letReference(v, picker), letElement(v);
                     return -1; // Remove
                 });
                 values.add(valueCurrent = value); // Add the only value to the set
                 forEachArray(selected, (v, k) => {
                     valueNext = setID(letID(value.cloneNode(true)));
-                    valueNext.tabIndex = -1;
+                    valueNext[TOKEN_TAB_INDEX] = -1;
                     valueNext.$ = {};
                     valueNext.$[VALUE_SELF] = null;
                     valueNext.$[VALUE_TEXT] = getElement('.' + n + '__v', valueNext);
+                    valueNext.$[VALUE_X] = valueNextX = getElement('.' + n + '__x', valueNext);
                     onEvent(EVENT_KEY_DOWN, valueNext, onKeyDownValue);
-                    onEvent(EVENT_KEY_UP, valueNext, onKeyUpValue);
                     onEvent(EVENT_MOUSE_DOWN, valueNext, onPointerDownValue);
+                    onEvent(EVENT_MOUSE_DOWN, valueNextX, onPointerDownValueX);
                     onEvent(EVENT_TOUCH_START, valueNext, onPointerDownValue);
-                    letAria(valueNext, 'selected');
+                    onEvent(EVENT_TOUCH_START, valueNextX, onPointerDownValueX);
                     setHTML(valueNext.$[VALUE_TEXT], getHTML(v.$[OPTION_TEXT]));
                     setReference(valueNext, picker), values.add(setNext(valueCurrent, valueNext));
                     setValue(valueNext, getOptionValue(v));
@@ -1102,7 +962,7 @@ function OptionPickerOptions(of, options) {
         return new OptionPickerOptions(of, options);
     }
     $.of = of;
-    $.values = new Map;
+    $[TOKEN_VALUES] = new Map;
     if (options) {
         createOptions(of, options);
     }
@@ -1143,22 +1003,22 @@ setObjectAttributes(OptionPicker, {
                 {_mask, mask, self} = $,
                 {input, value: inputReadOnly} = _mask,
                 v = !!value;
-            self.disabled = !($._active = v);
+            self[TOKEN_DISABLED] = !($._active = v);
             if (v) {
-                letAria(mask, 'disabled');
+                letAria(mask, TOKEN_DISABLED);
                 if (input) {
-                    letAria(input, 'disabled');
-                    setAttribute(input, 'contenteditable', "");
+                    letAria(input, TOKEN_DISABLED);
+                    setAttribute(input, TOKEN_CONTENTEDITABLE, "");
                 } else if (inputReadOnly) {
-                    setAttribute(inputReadOnly, 'tabindex', 0);
+                    setAttribute(inputReadOnly, TOKEN_TABINDEX, 0);
                 }
             } else {
-                setAria(mask, 'disabled', true);
+                setAria(mask, TOKEN_DISABLED, true);
                 if (input) {
-                    setAria(input, 'disabled', true);
-                    letAttribute(input, 'contenteditable');
+                    setAria(input, TOKEN_DISABLED, true);
+                    letAttribute(input, TOKEN_CONTENTEDITABLE);
                 } else if (inputReadOnly) {
-                    letAttribute(inputReadOnly, 'tabindex');
+                    letAttribute(inputReadOnly, TOKEN_TABINDEX);
                 }
             }
             return $;
@@ -1176,17 +1036,17 @@ setObjectAttributes(OptionPicker, {
             if (!isInput(self)) {
                 return $;
             }
-            $._active = !($._fix = self.readOnly = v);
+            $._active = !($._fix = self[TOKEN_READ_ONLY] = v);
             if (v) {
-                letAttribute(input, 'contenteditable');
-                setAria(input, 'readonly', true);
-                setAria(mask, 'readonly', true);
-                setAttribute(input, 'tabindex', 0);
+                letAttribute(input, TOKEN_CONTENTEDITABLE);
+                setAria(input, TOKEN_READONLY, true);
+                setAria(mask, TOKEN_READONLY, true);
+                setAttribute(input, TOKEN_TABINDEX, 0);
             } else {
-                letAria(input, 'readonly');
-                letAria(mask, 'readonly');
-                letAttribute(input, 'tabindex');
-                setAttribute(input, 'contenteditable', "");
+                letAria(input, TOKEN_READONLY);
+                letAria(mask, TOKEN_READONLY);
+                letAttribute(input, TOKEN_TABINDEX);
+                setAttribute(input, TOKEN_CONTENTEDITABLE, "");
             }
             return $;
         }
@@ -1243,7 +1103,7 @@ setObjectAttributes(OptionPicker, {
             }
             if (toCount(selected = createOptions($, options))) {
                 let isMultipleSelect = max > 1;
-                $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
+                $[TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = $['_' + TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
             }
             let optionsValues = [];
             forEachMap($._options, v => optionsValues.push(getOptionValue(v[2], 1)));
@@ -1361,12 +1221,12 @@ setObjectAttributes(OptionPicker, {
                 if (0 === min) {
                     $.min = 1;
                 }
-                input && setAria(input, 'required', true);
-                setAria(mask, 'required', true);
+                input && setAria(input, TOKEN_REQUIRED, true);
+                setAria(mask, TOKEN_REQUIRED, true);
             } else {
                 $.min = 0;
-                input && letAria(input, 'required');
-                letAria(mask, 'required');
+                input && letAria(input, TOKEN_REQUIRED);
+                letAria(mask, TOKEN_REQUIRED);
             }
             return $;
         }
@@ -1430,18 +1290,10 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             'class': n + '__options-lot',
             'role': 'none'
         });
-        const text = setElement(isInputSelf ? 'span' : 'data', {
-            'class': n + '__' + (isInputSelf ? 'text' : 'value'),
+        const textOrValue = setElement(isInputSelf ? 'span' : 'data', {
+            'class': n + '__' + (isInputSelf ? TOKEN_TEXT : TOKEN_VALUE),
             'tabindex': isInputSelf ? false : 0
         });
-        if (!isInputSelf) {
-            text.$ = {};
-            text.$[VALUE_SELF] = null;
-            setChildLast(text, text.$[VALUE_TEXT] = setElement('span', {
-                'class': n + '__v',
-                'role': 'none'
-            }));
-        }
         const textInput = setElement('span', {
             'aria': {
                 'autocomplete': 'list',
@@ -1462,10 +1314,17 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 'hidden': TOKEN_TRUE
             }
         });
+        const valueX = setElement('span', {
+            'aria': {
+                'hidden': TOKEN_TRUE
+            },
+            'class': n + '__x',
+            'tabindex': -1
+        });
         setChildLast(mask, maskFlex);
         setChildLast(mask, maskOptions);
         setChildLast(maskOptions, maskOptionsLot);
-        setChildLast(maskFlex, text);
+        setChildLast(maskFlex, textOrValue);
         setChildLast(maskFlex, arrow);
         if (isInputSelf) {
             onEvent(EVENT_BLUR, textInput, onBlurTextInput);
@@ -1474,15 +1333,14 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             onEvent(EVENT_KEY_DOWN, textInput, onKeyDownTextInput);
             onEvent(EVENT_KEY_UP, textInput, onKeyUpTextInput);
             onEvent(EVENT_PASTE, textInput, onPasteTextInput);
-            setChildLast(text, textInput);
-            setChildLast(text, textInputHint);
+            setChildLast(textOrValue, textInput);
+            setChildLast(textOrValue, textInputHint);
             setReference(textInput, $);
         } else {
-            onEvent(EVENT_KEY_DOWN, text, onKeyDownValue);
-            onEvent(EVENT_KEY_UP, text, onKeyUpValue);
-            onEvent(EVENT_MOUSE_DOWN, text, onPointerDownValue);
-            onEvent(EVENT_TOUCH_START, text, onPointerDownValue);
-            setReference(text, $);
+            onEvent(EVENT_KEY_DOWN, textOrValue, onKeyDownValue);
+            onEvent(EVENT_MOUSE_DOWN, textOrValue, onPointerDownValue);
+            onEvent(EVENT_TOUCH_START, textOrValue, onPointerDownValue);
+            setReference(textOrValue, $);
         }
         setClass(self, n + '__self');
         setNext(self, mask);
@@ -1504,7 +1362,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         onEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot, {passive: true});
         onEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
         onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
-        self.tabIndex = -1;
+        self[TOKEN_TAB_INDEX] = -1;
         setReference(mask, $);
         let _mask = {
             arrow: arrow,
@@ -1517,14 +1375,25 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             self: mask,
             values: new Set
         };
-        _mask[isInputSelf ? 'text' : 'value'] = text;
+        _mask[isInputSelf ? TOKEN_TEXT : TOKEN_VALUE] = textOrValue;
+        // Re-assign some state value(s) using the setter to either normalize or reject the initial value
+        $.max = max = isMultipleSelect ? (max ?? Infinity) : 1;
+        $.min = min = isInputSelf ? 0 : (min ?? 1);
         if (!isInputSelf) {
-            _mask.values.add(text); // Add the only value to the set
+            textOrValue.$ = {};
+            textOrValue.$[VALUE_SELF] = null;
+            setChildLast(textOrValue, textOrValue.$[VALUE_TEXT] = setID(setElement('span', {
+                'class': n + '__v',
+                'role': 'none'
+            })));
+            if (max > 1) {
+                onEvent(EVENT_MOUSE_DOWN, valueX, onPointerDownValueX);
+                onEvent(EVENT_TOUCH_START, valueX, onPointerDownValueX);
+                setChildLast(textOrValue, textOrValue.$[VALUE_X] = valueX);
+            }
+            _mask[TOKEN_VALUES].add(textOrValue); // Add the only value to the set
         }
         $._mask = _mask;
-        // Re-assign some state value(s) using the setter to either normalize or reject the initial value
-        $.max = isMultipleSelect ? (max ?? Infinity) : 1;
-        $.min = isInputSelf ? 0 : (min ?? 1);
         let {_active} = $,
             {options} = state, selected;
         // Force the `this._active` value to `true` to set the initial value
@@ -1536,21 +1405,21 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 options.then(options => {
                     letAria(mask, 'busy');
                     if (toCount(selected = createOptions($, options))) {
-                        $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
+                        $[TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = $['_' + TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                     } else if (selected = getOptionSelected($, 1)) {
                         selected = getOptionValue(selected);
-                        $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? [selected] : selected;
+                        $[TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = $['_' + TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? [selected] : selected;
                     }
-                    $.fire('load', [null, $.values])[$.options.open ? 'enter' : 'exit']().fit();
+                    $.fire('load', [null, $[TOKEN_VALUES]])[$.options.open ? 'enter' : 'exit']().fit();
                 });
             } else {
                 if (toCount(selected = createOptions($, options))) {
-                    $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
+                    $[TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = $['_' + TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
                 }
             }
         } else {
             if (toCount(selected = createOptions($, options || getOptions(self)))) {
-                $['value' + (isMultipleSelect ? 's' : "")] = $['_value' + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
+                $[TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = $['_' + TOKEN_VALUE + (isMultipleSelect ? 's' : "")] = isMultipleSelect ? selected : selected[0];
             }
         }
         // After the initial value has been set, restore the previous `this._active` value
@@ -1560,7 +1429,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         $.size = state.size ?? (isInputSelf ? 1 : self.size);
         // Force `id` attribute(s)
         setAria(mask, 'controls', getID(setID(maskOptions)));
-        setAria(mask, 'labelledby', getID(setID(text)));
+        setAria(mask, 'labelledby', getID(setID(textOrValue)));
         setAria(self, 'hidden', true);
         setAria(textInput, 'controls', getID(maskOptions));
         setID(arrow);
@@ -1570,6 +1439,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setID(self);
         setID(textInput);
         setID(textInputHint);
+        setID(valueX);
         theInputID && setDatum(mask, 'id', theInputID);
         theInputName && setDatum(mask, 'name', theInputName);
         // Attach extension(s)
@@ -1621,9 +1491,13 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         }
         if (value) {
             offEvent(EVENT_KEY_DOWN, value, onKeyDownValue);
-            offEvent(EVENT_KEY_UP, value, onKeyUpValue);
             offEvent(EVENT_MOUSE_DOWN, value, onPointerDownValue);
             offEvent(EVENT_TOUCH_START, value, onPointerDownValue);
+            let valueX = value.$[VALUE_X];
+            if (valueX) {
+                offEvent(EVENT_MOUSE_DOWN, valueX, onPointerDownValueX);
+                offEvent(EVENT_TOUCH_START, valueX, onPointerDownValueX);
+            }
         }
         offEvent(EVENT_FOCUS, self, onFocusSelf);
         offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
@@ -1647,7 +1521,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 }
             });
         }
-        self.tabIndex = null;
+        self[TOKEN_TAB_INDEX] = null;
         letAria(self, 'hidden');
         letClass(self, state.n + '__self');
         setNext(mask, self);
@@ -1661,7 +1535,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     enter: function (focus, mode) {
         let $ = this, option,
             {_active, _mask, _options, mask, self} = $,
-            {input, lot, options, value, values} = _mask;
+            {input, lot, options, value} = _mask;
         if (!_active) {
             return $;
         }
@@ -1671,8 +1545,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             theRootReference.exit(); // Exit other(s)
         }
         setReference(R, $); // Link current picker to the root target
-        // Clear all selection(s) on “click”
-        forEachSet(values, v => letAria(v, 'selected'));
         $.fire('enter');
         if (focus) {
             if (isInput(self)) {
@@ -1736,8 +1608,11 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     focus: function (mode) {
         let $ = this,
-            {_mask} = $,
+            {_active, _fix, _mask} = $,
             {input, value} = _mask;
+        if (!_active && !_fix) {
+            return $;
+        }
         if (input) {
             focusTo(input), selectTo(input, mode);
         } else {
@@ -1752,9 +1627,9 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             return $;
         }
         if (max > 1) {
-            $.values = _values;
+            $[TOKEN_VALUES] = _values;
         } else {
-            $.value = _value;
+            $[TOKEN_VALUE] = _value;
         }
         return focus ? $.focus(mode) : $;
     }
@@ -1779,10 +1654,10 @@ setObjectAttributes(OptionPickerOptions, {
 
 OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
     at: function (key) {
-        return getValueInMap(toValue(key), this.values);
+        return getValueInMap(toValue(key), this[TOKEN_VALUES]);
     },
     count: function () {
-        return toMapCount(this.values);
+        return toMapCount(this[TOKEN_VALUES]);
     },
     delete: function (key, _fireHook = 1, _fireValue = 1) {
         let $ = this,
@@ -1804,10 +1679,9 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         let parent = getParent(r[2]),
             parentReal = getParent(r[3]),
             value = getOptionValue(r[2]),
-            valueReal = of.value;
+            valueReal = of[TOKEN_VALUE];
         offEvent(EVENT_FOCUS, r[2], onFocusOption);
         offEvent(EVENT_KEY_DOWN, r[2], onKeyDownOption);
-        offEvent(EVENT_KEY_UP, r[2], onKeyUpOption);
         offEvent(EVENT_MOUSE_DOWN, r[2], onPointerDownOption);
         offEvent(EVENT_MOUSE_UP, r[2], onPointerUpOption);
         offEvent(EVENT_TOUCH_END, r[2], onPointerUpOption);
@@ -1841,7 +1715,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         return value ? getElementIndex(value[2]) : -1;
     },
     has: function (key) {
-        return hasKeyInMap(toValue(key), this.values);
+        return hasKeyInMap(toValue(key), this[TOKEN_VALUES]);
     },
     let: function (key, _fireHook = 1) {
         return this.delete(key, _fireHook, 1);
@@ -1929,13 +1803,13 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         // Force `id` attribute(s)
         setID(option);
         setID(optionReal);
+        setID(optionText);
         option.$ = {};
         option.$[OPTION_SELF] = optionReal;
         option.$[OPTION_TEXT] = optionText;
         if (active && !value[2]) {
             onEvent(EVENT_FOCUS, option, onFocusOption);
             onEvent(EVENT_KEY_DOWN, option, onKeyDownOption);
-            onEvent(EVENT_KEY_UP, option, onKeyUpOption);
             onEvent(EVENT_MOUSE_DOWN, option, onPointerDownOption);
             onEvent(EVENT_MOUSE_UP, option, onPointerUpOption);
             onEvent(EVENT_TOUCH_END, option, onPointerUpOption);
@@ -1958,7 +1832,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
 
 // In order for an object to be iterable, it must have a `Symbol.iterator` key
 getPrototype(OptionPickerOptions)[Symbol.iterator] = function () {
-    return this.values[Symbol.iterator]();
+    return this[TOKEN_VALUES][Symbol.iterator]();
 };
 
 OptionPicker.Options = OptionPickerOptions;

@@ -43,7 +43,6 @@ const KEY_LEFT = 'Left';
 const KEY_RIGHT = 'Right';
 const KEY_UP = 'Up';
 
-const KEY_A = 'a';
 const KEY_ARROW = 'Arrow';
 const KEY_ARROW_DOWN = KEY_ARROW + KEY_DOWN;
 const KEY_ARROW_LEFT = KEY_ARROW + KEY_LEFT;
@@ -58,7 +57,6 @@ const KEY_ESCAPE = 'Escape';
 const KEY_PAGE = 'Page';
 const KEY_PAGE_DOWN = KEY_PAGE + KEY_DOWN;
 const KEY_PAGE_UP = KEY_PAGE + KEY_UP;
-const KEY_R = 'r';
 const KEY_TAB = 'Tab';
 
 const OPTION_SELF = 0;
@@ -612,6 +610,10 @@ function onKeyDownValue(e) {
         picker.exit(exit = false);
     } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
         exit = true;
+        if (KEY_ENTER === key || ' ' === key) {
+            // TODO: Focus to the related option
+            console.log(getOptionValue($));
+        }
         if (picker.size < 2) {
             setStyle(options, 'max-height', 0);
         }
@@ -639,7 +641,15 @@ function onKeyDownValue(e) {
 }
 
 function onPointerDownValue(e) {
-    focusTo(this), offEventDefault(e);
+    offEventDefault(e);
+    let $ = this,
+        picker = getReference($);
+    if (picker.options.open) {
+        focusTo($);
+    } else {
+        // TODO: Focus to the selected option
+        console.log(getOptionValue($));
+    }
 }
 
 function onPointerDownValueX(e) {
@@ -649,7 +659,7 @@ function onPointerDownValueX(e) {
         {_options} = picker,
         option = _options.at(getOptionValue(value))[2];
     option && toggleToOption(option, picker);
-    picker.enter().fit(), offEventDefault(e), offEventPropagation(e);
+    picker.enter(true).fit(), offEventDefault(e), offEventPropagation(e);
 }
 
 function onPasteTextInput(e) {
@@ -1576,6 +1586,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             } else {
                 focusTo(value);
             }
+        } else {
+            selectToNone();
         }
         return $;
     },

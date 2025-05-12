@@ -1591,6 +1591,10 @@
             picker.exit(exit = false);
         } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
             exit = true;
+            if (KEY_ENTER === key || ' ' === key) {
+                // TODO: Focus to the related option
+                console.log(getOptionValue($));
+            }
             if (picker.size < 2) {
                 setStyle(options, 'max-height', 0);
             }
@@ -1618,7 +1622,15 @@
     }
 
     function onPointerDownValue(e) {
-        focusTo(this), offEventDefault(e);
+        offEventDefault(e);
+        var $ = this,
+            picker = getReference($);
+        if (picker.options.open) {
+            focusTo($);
+        } else {
+            // TODO: Focus to the selected option
+            console.log(getOptionValue($));
+        }
     }
 
     function onPointerDownValueX(e) {
@@ -1628,7 +1640,7 @@
             _options = picker._options,
             option = _options.at(getOptionValue(value))[2];
         option && toggleToOption(option, picker);
-        picker.enter().fit(), offEventDefault(e), offEventPropagation(e);
+        picker.enter(true).fit(), offEventDefault(e), offEventPropagation(e);
     }
 
     function onPasteTextInput(e) {
@@ -2647,6 +2659,8 @@
                 } else {
                     focusTo(value);
                 }
+            } else {
+                selectToNone();
             }
             return $;
         },

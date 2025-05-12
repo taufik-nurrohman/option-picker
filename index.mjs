@@ -861,6 +861,9 @@ function selectToOptionsNone(picker, fireValue) {
         } else {
             letAttribute(value, TOKEN_VALUE);
             setHTML(value.$[VALUE_TEXT], v);
+            if (v = value.$[VALUE_X]) {
+                letElement(v);
+            }
         }
     }
 }
@@ -914,6 +917,7 @@ function toggleToOption(option, picker) {
             selected = getOptionsSelected(picker);
             selectedFirst = selected.shift();
             if (selectedFirst) {
+                setChildLast(value, value.$[VALUE_X]);
                 setHTML(value.$[VALUE_TEXT], getHTML(selectedFirst.$[OPTION_TEXT]));
                 setValue(value, getOptionValue(selectedFirst));
                 letValueInMap(value, values);
@@ -944,6 +948,8 @@ function toggleToOption(option, picker) {
                     setValue(valueNext, getOptionValue(v));
                     valueCurrent = valueNext;
                 });
+            } else {
+                selectToOptionsNone(picker, 1);
             }
         }
         return picker.fire('change', [b]), option;

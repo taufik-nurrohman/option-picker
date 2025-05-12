@@ -23,7 +23,7 @@ block style
 block content
   main
     form(method='get' target='_blank')
-      p: input(list='options' name='test' type='text' value='Option 1')
+      p: input(disabled list='options' name='test' type='text' value='Option 1')
       p
         label
           input(onchange='picker.active = this.checked;' type='checkbox')

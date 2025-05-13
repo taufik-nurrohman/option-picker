@@ -23,7 +23,6 @@ const EVENT_CUT = 'cut';
 const EVENT_FOCUS = 'focus';
 const EVENT_KEY = 'key';
 const EVENT_KEY_DOWN = EVENT_KEY + EVENT_DOWN;
-const EVENT_KEY_UP = EVENT_KEY + EVENT_UP;
 const EVENT_MOUSE = 'mouse';
 const EVENT_MOUSE_DOWN = EVENT_MOUSE + EVENT_DOWN;
 const EVENT_MOUSE_MOVE = EVENT_MOUSE + EVENT_MOVE;
@@ -140,8 +139,6 @@ const filter = debounce(($, input, _options, selectOnly) => {
 }, FILTER_COMMIT_TIME);
 
 const name = 'OptionPicker';
-
-let _keyIsCtrl, _keyIsShift, _keyOverOption, _keyOverValue;
 
 function createOptions($, options) {
     const map = isInstance(options, Map) ? options : new Map;
@@ -390,11 +387,6 @@ function onKeyDownTextInput(e) {
     }
 }
 
-function onKeyUpTextInput(e) {
-    _keyIsCtrl = e.ctrlKey;
-    _keyIsShift = e.shiftKey;
-}
-
 let searchTerm = "",
     searchTermClear = debounce(() => (searchTerm = ""), SEARCH_CLEAR_TIME);
 
@@ -405,7 +397,7 @@ function onKeyDownOption(e) {
         keyIsCtrl = e.ctrlKey,
         keyIsShift = e.shiftKey,
         picker = getReference($),
-        {_mask, _options, max, self} = picker,
+        {_mask, max, self} = picker,
         {hint, value} = _mask,
         optionNext, optionParent, optionPrev, valueCurrent;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
@@ -521,10 +513,9 @@ function onKeyDownValue(e) {
         key = e.key,
         keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
-        keyIsShift = e.shiftKey,
         picker = getReference($),
         {_mask, _options, max, min, self} = picker,
-        {options, value, values} = _mask,
+        {options, values} = _mask,
         valueCurrent, valueNext, valuePrev;
     searchTermClear();
     if (isDisabled(self) || isInput(self) && isReadOnly(self)) {
@@ -609,15 +600,17 @@ function onKeyDownValue(e) {
         searchTerm = "";
         picker.exit(exit = false);
     } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
-        exit = true;
+        let focus = exit = true;
         if (KEY_ENTER === key || ' ' === key) {
-            // TODO: Focus to the related option
-            console.log(getOptionValue($));
+            if (valueCurrent = _options.at(getOptionValue($))) {
+                focus = false;
+                onAnimationsEnd(options, () => focusTo(valueCurrent[2]), scrollTo(valueCurrent[2]));
+            }
         }
         if (picker.size < 2) {
             setStyle(options, 'max-height', 0);
         }
-        picker.enter(exit).fit();
+        picker.enter(focus).fit();
     } else if (KEY_ARROW_LEFT === key) {
         exit = true;
         if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values)) {
@@ -643,12 +636,15 @@ function onKeyDownValue(e) {
 function onPointerDownValue(e) {
     offEventDefault(e);
     let $ = this,
-        picker = getReference($);
-    if (picker.options.open) {
+        picker = getReference($),
+        {_mask, _options} = picker,
+        {options} = _mask, option;
+    if (_options.open) {
         focusTo($);
     } else {
-        // TODO: Focus to the selected option
-        console.log(getOptionValue($));
+        if (option = _options.at(getOptionValue($))) {
+            onAnimationsEnd(options, () => delay(() => (focusTo(option[2]), scrollTo(option[2])), 1)());
+        }
     }
 }
 
@@ -818,7 +814,7 @@ function scrollTo(node) {
 }
 
 function selectToOption(option, picker) {
-    let {_mask, min, self} = picker,
+    let {_mask, self} = picker,
         {hint, input, value} = _mask, optionReal, v;
     if (option) {
         optionReal = option.$[OPTION_SELF];
@@ -1110,7 +1106,7 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (options) {
             let $ = this,
-                {_active, _mask, max} = $, selected;
+                {_active, max} = $, selected;
             if (!_active) {
                 return $;
             }
@@ -1347,7 +1343,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             onEvent(EVENT_CUT, textInput, onCutTextInput);
             onEvent(EVENT_FOCUS, textInput, onFocusTextInput);
             onEvent(EVENT_KEY_DOWN, textInput, onKeyDownTextInput);
-            onEvent(EVENT_KEY_UP, textInput, onKeyUpTextInput);
             onEvent(EVENT_PASTE, textInput, onPasteTextInput);
             setChildLast(textOrValue, textInput);
             setChildLast(textOrValue, textInputHint);
@@ -1502,7 +1497,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             offEvent(EVENT_CUT, input, onCutTextInput);
             offEvent(EVENT_FOCUS, input, onFocusTextInput);
             offEvent(EVENT_KEY_DOWN, input, onKeyDownTextInput);
-            offEvent(EVENT_KEY_UP, input, onKeyUpTextInput);
             offEvent(EVENT_PASTE, input, onPasteTextInput);
         }
         if (value) {

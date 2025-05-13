@@ -963,7 +963,6 @@
     var EVENT_FOCUS = 'focus';
     var EVENT_KEY = 'key';
     var EVENT_KEY_DOWN = EVENT_KEY + EVENT_DOWN;
-    var EVENT_KEY_UP = EVENT_KEY + EVENT_UP;
     var EVENT_MOUSE = 'mouse';
     var EVENT_MOUSE_DOWN = EVENT_MOUSE + EVENT_DOWN;
     var EVENT_MOUSE_MOVE = EVENT_MOUSE + EVENT_MOVE;
@@ -1353,11 +1352,6 @@
             offEventPropagation(e);
         }
     }
-
-    function onKeyUpTextInput(e) {
-        e.ctrlKey;
-        e.shiftKey;
-    }
     var searchTerm = "",
         searchTermClear = debounce(function () {
             return searchTerm = "";
@@ -1371,9 +1365,8 @@
             keyIsCtrl = e.ctrlKey,
             keyIsShift = e.shiftKey,
             picker = getReference($),
-            _mask = picker._mask;
-        picker._options;
-        var max = picker.max,
+            _mask = picker._mask,
+            max = picker.max,
             self = picker.self,
             hint = _mask.hint,
             value = _mask.value,
@@ -1493,17 +1486,15 @@
             exit,
             key = e.key,
             keyIsAlt = e.altKey,
-            keyIsCtrl = e.ctrlKey;
-        e.shiftKey;
-        var picker = getReference($),
+            keyIsCtrl = e.ctrlKey,
+            picker = getReference($),
             _mask = picker._mask,
             _options = picker._options,
             max = picker.max,
             min = picker.min,
             self = picker.self,
-            options = _mask.options;
-        _mask.value;
-        var values = _mask.values,
+            options = _mask.options,
+            values = _mask.values,
             valueCurrent,
             valueNext,
             valuePrev;
@@ -1590,15 +1581,19 @@
             searchTerm = "";
             picker.exit(exit = false);
         } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
-            exit = true;
+            var focus = exit = true;
             if (KEY_ENTER === key || ' ' === key) {
-                // TODO: Focus to the related option
-                console.log(getOptionValue($));
+                if (valueCurrent = _options.at(getOptionValue($))) {
+                    focus = false;
+                    onAnimationsEnd(options, function () {
+                        return focusTo(valueCurrent[2]);
+                    }, scrollTo(valueCurrent[2]));
+                }
             }
             if (picker.size < 2) {
                 setStyle(options, 'max-height', 0);
             }
-            picker.enter(exit).fit();
+            picker.enter(focus).fit();
         } else if (KEY_ARROW_LEFT === key) {
             exit = true;
             if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values)) {
@@ -1624,12 +1619,21 @@
     function onPointerDownValue(e) {
         offEventDefault(e);
         var $ = this,
-            picker = getReference($);
-        if (picker.options.open) {
+            picker = getReference($),
+            _mask = picker._mask,
+            _options = picker._options,
+            options = _mask.options,
+            option;
+        if (_options.open) {
             focusTo($);
         } else {
-            // TODO: Focus to the selected option
-            console.log(getOptionValue($));
+            if (option = _options.at(getOptionValue($))) {
+                onAnimationsEnd(options, function () {
+                    return delay(function () {
+                        return focusTo(option[2]), scrollTo(option[2]);
+                    }, 1)();
+                });
+            }
         }
     }
 
@@ -1805,9 +1809,8 @@
     }
 
     function selectToOption(option, picker) {
-        var _mask = picker._mask;
-        picker.min;
-        var self = picker.self,
+        var _mask = picker._mask,
+            self = picker.self,
             hint = _mask.hint,
             input = _mask.input,
             value = _mask.value,
@@ -2123,9 +2126,8 @@
             },
             set: function set(options) {
                 var $ = this,
-                    _active = $._active;
-                $._mask;
-                var max = $.max,
+                    _active = $._active,
+                    max = $.max,
                     selected;
                 if (!_active) {
                     return $;
@@ -2388,7 +2390,6 @@
                 onEvent(EVENT_CUT, textInput, onCutTextInput);
                 onEvent(EVENT_FOCUS, textInput, onFocusTextInput);
                 onEvent(EVENT_KEY_DOWN, textInput, onKeyDownTextInput);
-                onEvent(EVENT_KEY_UP, textInput, onKeyUpTextInput);
                 onEvent(EVENT_PASTE, textInput, onPasteTextInput);
                 setChildLast(textOrValue, textInput);
                 setChildLast(textOrValue, textInputHint);
@@ -2556,7 +2557,6 @@
                 offEvent(EVENT_CUT, input, onCutTextInput);
                 offEvent(EVENT_FOCUS, input, onFocusTextInput);
                 offEvent(EVENT_KEY_DOWN, input, onKeyDownTextInput);
-                offEvent(EVENT_KEY_UP, input, onKeyUpTextInput);
                 offEvent(EVENT_PASTE, input, onPasteTextInput);
             }
             if (value) {

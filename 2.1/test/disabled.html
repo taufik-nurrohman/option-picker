@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        min-width: 10em;
+      }
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form method="get" target="_blank">
+        <p><input disabled list="options" name="test" type="text" value="Option 1"></p>
+        <p><label><input onchange="picker.active = this.checked;" type="checkbox"> <span>Enable</span></label></p>
+        <p><button type="submit">Submit</button> <button onclick="picker.options.set('Option 4'), picker.focus();" type="button">Add &ldquo;Option 4&rdquo; Option</button> <button onclick="picker.options.let('Option 4'), picker.focus();" type="button">Remove &ldquo;Option 4&rdquo; Option</button> <button onclick="picker.enter(true).fit();" type="button">Show Options</button></p>
+      </form>
+    </main><datalist id="options">
+      <option>Option 1</option>
+      <option>Option 2</option>
+      <option value="3">Option 3</option>
+    </datalist>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker = new OptionPicker(document.querySelector('input'));
+      picker.active = document.querySelector('input[type=checkbox]').checked;
+    </script>
+  </body>
+</html>

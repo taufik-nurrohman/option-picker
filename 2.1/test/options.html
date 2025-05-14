@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form method="get" target="_blank">
+        <p><select name="test"></select></p>
+        <p><button onclick="createOptions_1(picker);" type="button">Create from Array</button> <button onclick="createOptions_1_1(picker);" type="button">Create from Array 2</button> <button onclick="createOptions_2(picker);" type="button">Create from Object</button> <button onclick="createOptions_2_1(picker);" type="button">Create from Object 2</button> <button onclick="createOptions_2_2(picker);" type="button">Create from Object 3</button> <button onclick="createOptions_3(picker);" type="button">Create from Map</button> <button onclick="createOptions_3_1(picker);" type="button">Create from Map 2</button></p>
+        <p><button onclick="picker.options.set((new Date).toLocaleString());" type="button"><code>picker.options.set((new Date).toLocaleString())</code></button> <button onclick="picker.options.set(Date.now(), 'Current Date');" type="button"><code>picker.options.set(Date.now(), 'Current Date')</code></button> <button onclick="picker.options.set(Date.now(), ['Current Date', {disabled: true}]);" type="button"><code>picker.options.set(Date.now(), ['Current Date', {disabled: true}])</code></button></p>
+        <p><button onclick="picker.options.set('red', ['Red', {'&amp;': 'Color'}]);" type="button"><code>picker.options.set('red', ['Red', {'&': 'Color'}])</code></button> <button onclick="picker.options.set('green', ['Green', {'&amp;': 'Color'}]);" type="button"><code>picker.options.set('green', ['Green', {'&': 'Color'}])</code></button> <button onclick="picker.options.set('blue', ['Blue', {'&amp;': 'Color'}]);" type="button"><code>picker.options.set('blue', ['Blue', {'&': 'Color'}])</code></button></p>
+        <p><button onclick="picker.options.let('red');" type="button"><code>picker.options.let('red')</code></button> <button onclick="picker.options.let('green');" type="button"><code>picker.options.let('green')</code></button> <button onclick="picker.options.let('blue');" type="button"><code>picker.options.let('blue')</code></button></p>
+        <p><button onclick="picker.options.let();" type="button"><code>picker.options.let()</code></button></p>
+        <p><button type="submit">Submit</button></p>
+      </form>
+    </main>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker = new OptionPicker(document.querySelector('select'), {
+          options: ['Option 1', 'Option 2', ['Option 3', {
+              value: 3
+          }]]
+      });
+      picker.on('change', function (value) {
+          console.log(value);
+      });
+
+      function createOptions_1(picker) {
+          picker.options = ['Option 1 (Array 1)', 'Option 2 (Array 1)', 'Option 3 (Array 1)'];
+      }
+
+      function createOptions_1_1(picker) {
+          picker.options = [
+              ['Option 1 (Array 1.1)', {
+                  value: 1
+              }],
+              ['Option 2 (Array 1.1)', {
+                  value: 2
+              }],
+              ['Option 3 (Array 1.1)', {
+                  disabled: true,
+                  value: 3
+              }]
+          ];
+      }
+
+      function createOptions_2(picker) {
+          picker.options = {
+              '3': 'Option 1 (Object 1)',
+              '2': 'Option 2 (Object 1)',
+              '1': 'Option 3 (Object 1)'
+          };
+      }
+
+      function createOptions_2_1(picker) {
+          picker.options = {
+              'option-3': 'Option 1 (Object 1.1)',
+              'option-2': 'Option 2 (Object 1.1)',
+              'option-1': 'Option 3 (Object 1.1)'
+          };
+      }
+
+      function createOptions_2_2(picker) {
+          picker.options = {
+              'option-3': ['Option 1 (Object 1.2)', {
+                  value: 1
+              }],
+              'option-2': ['Option 2 (Object 1.2)', {
+                  value: 2
+              }],
+              'option-1': ['Option 3 (Object 1.2)', {
+                  disabled: true,
+                  value: 3
+              }]
+          };
+      }
+
+      function createOptions_3(picker) {
+          const options = new Map;
+          options.set(1, 'Option 1 (Map 1)');
+          options.set(2, 'Option 2 (Map 1)');
+          options.set(3, 'Option 3 (Map 1)');
+          picker.options = options;
+      }
+
+      function createOptions_3_1(picker) {
+          const options = new Map;
+          options.set(1, ['Option 1 (Map 1.1)', {
+              value: 1
+          }]);
+          options.set(2, ['Option 2 (Map 1.1)', {
+              value: 2
+          }]);
+          options.set(3, ['Option 3 (Map 1.1)', {
+              disabled: true,
+              value: 3
+          }]);
+          picker.options = options;
+      }
+    </script>
+  </body>
+</html>

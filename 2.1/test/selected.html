@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><select>
+          <option>Option 1</option>
+          <option selected>Option 2</option>
+          <option>Option 3</option>
+        </select></p>
+      <p><select multiple>
+          <option>Option 1</option>
+          <option selected>Option 2</option>
+          <option selected>Option 3</option>
+          <option>Option 4</option>
+          <option>Option 5</option>
+        </select></p>
+      <p><select multiple size="3">
+          <option>Option 1</option>
+          <option selected>Option 2</option>
+          <option selected>Option 3</option>
+          <option>Option 4</option>
+          <option>Option 5</option>
+        </select></p>
+      <p><input list="options" type="text" value="Option 2"></p>
+    </main><datalist id="options">
+      <option>Option 1</option>
+      <option>Option 2</option>
+      <option>Option 3</option>
+      <option>Option 4</option>
+      <option>Option 5</option>
+    </datalist>
+    <script src="../index.min.js"></script>
+    <script>
+      document.querySelectorAll('input[list], select').forEach(v => new OptionPicker(v));
+    </script>
+  </body>
+</html>

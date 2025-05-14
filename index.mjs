@@ -381,10 +381,7 @@ function onKeyDownTextInput(e) {
             }
         }, 1)();
     }
-    if (exit) {
-        offEventDefault(e);
-        offEventPropagation(e);
-    }
+    exit && (offEventDefault(e), offEventPropagation(e));
 }
 
 let searchTerm = "",

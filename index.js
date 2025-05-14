@@ -1347,10 +1347,7 @@
                 }
             }, 1)();
         }
-        if (exit) {
-            offEventDefault(e);
-            offEventPropagation(e);
-        }
+        exit && (offEventDefault(e), offEventPropagation(e));
     }
     var searchTerm = "",
         searchTermClear = debounce(function () {

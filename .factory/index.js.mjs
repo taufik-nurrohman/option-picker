@@ -10,6 +10,7 @@ import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isBoolean, isFloat, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-nurrohman/event';
 import {toCaseLower, toCount, toMapCount, toSetCount, toValue} from '@taufik-nurrohman/to';
+import {toPattern} from '@taufik-nurrohman/pattern';
 
 const FILTER_COMMIT_TIME = 10;
 const SEARCH_CLEAR_TIME = 500;
@@ -21,6 +22,7 @@ const EVENT_UP = 'up';
 const EVENT_BLUR = 'blur';
 const EVENT_CUT = 'cut';
 const EVENT_FOCUS = 'focus';
+const EVENT_INVALID = 'invalid';
 const EVENT_KEY = 'key';
 const EVENT_KEY_DOWN = EVENT_KEY + EVENT_DOWN;
 const EVENT_MOUSE = 'mouse';
@@ -64,6 +66,7 @@ const OPTION_TEXT = 1;
 const TOKEN_CONTENTEDITABLE = 'contenteditable';
 const TOKEN_DISABLED = 'disabled';
 const TOKEN_FALSE = 'false';
+const TOKEN_INVALID = 'invalid';
 const TOKEN_READONLY = 'readonly';
 const TOKEN_READ_ONLY = 'readOnly';
 const TOKEN_REQUIRED = 'required';
@@ -84,6 +87,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         q = toCaseLower(query),
         {_mask, mask, self, state} = $,
         {options} = _mask,
+        {pattern} = self,
         {strict} = state, option;
     let count = _options.count();
     if (selectOnly) {
@@ -110,14 +114,33 @@ const filter = debounce(($, input, _options, selectOnly) => {
         if (strict) {
             // Silently select the first option without affecting the currently typed query and focus/select state
             if (count && "" !== q && (option = goToOptionFirst($))) {
+                letAria(mask, TOKEN_INVALID);
                 setAria(option, TOKEN_SELECTED, true);
                 option.$[OPTION_SELF][TOKEN_SELECTED] = true;
                 setValue(self, getOptionValue(option));
             } else {
+                // No other option(s) are available to query
+                if (isRequired(self)) {
+                    if ("" !== q) {
+                        setAria(mask, TOKEN_INVALID, true);
+                    } else {
+                        letAria(mask, TOKEN_INVALID);
+                    }
+                }
                 setValue(self, "");
             }
         } else {
-            setValue(self, query);
+            if (pattern) {
+                letAria(mask, TOKEN_INVALID);
+                setValue(self, "");
+                if (toPattern('^' + pattern + '$', "").test(query)) {
+                    setValue(self, query);
+                } else if (!count && "" !== q) {
+                    setAria(mask, TOKEN_INVALID, true);
+                }
+            } else {
+                setValue(self, query);
+            }
         }
     }
     $.fire('search', [query = "" !== query ? query : null]);
@@ -168,7 +191,7 @@ function createOptions($, options) {
         r = [], value = getValue(self);
     n += '__option';
     // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
-    _options.delete(null, 0, 0);
+    _options.let(null, 0, 0);
     forEachMap(map, (v, k) => {
         if (isArray(v) && v[1] && (!getState(v[1], 'active') || v[1].active) && v[1].mark) {
             r.push(v[1][TOKEN_VALUE] ?? k);
@@ -297,13 +320,14 @@ function isInput(self) {
 function onBlurTextInput() {
     let $ = this,
         picker = getReference($),
-        {_mask, state} = picker,
+        {_mask, mask, state} = picker,
         {options} = _mask,
         {strict} = state, option;
     if (strict) {
         if (!options.hidden && (option = getOptionSelected(picker, 1))) {
             selectToOption(option, picker);
         } else {
+            delay(() => letAria(mask, TOKEN_INVALID), 1000)();
             options.hidden = false;
             selectToOptionsNone(picker, 1);
         }
@@ -336,6 +360,15 @@ function onFocusTextInput() {
     let $ = this,
         picker = getReference($);
     getText($, 0) ? selectTo($) : picker.enter().fit();
+}
+
+function onInvalidSelf(e) {
+    e && offEventDefault(e);
+    let $ = this,
+        picker = getReference($),
+        {mask} = picker;
+    setAria(mask, TOKEN_INVALID, true);
+    delay(() => letAria(mask, TOKEN_INVALID), 1000)();
 }
 
 let searchQuery = "";
@@ -544,6 +577,7 @@ function onKeyDownValue(e) {
                 }
             }
         } else {
+            onInvalidSelf.call(self);
             picker.fire('min.options', [countValues, min]);
         }
         if (max !== Infinity && max > countValues) {
@@ -580,6 +614,7 @@ function onKeyDownValue(e) {
                 }
             }
         } else {
+            onInvalidSelf.call(self);
             picker.fire('min.options', [countValues, min]);
         }
         if (max !== Infinity && max > countValues) {
@@ -784,14 +819,14 @@ function onResetForm() {
 function onSubmitForm(e) {
     let $ = this,
         picker = getReference($),
-        {max, min} = picker,
+        {max, min, self} = picker,
         count = toCount(getOptionsSelected(picker));
     if (count < min) {
-        picker.fire('min.options', [count, min]);
-        offEventDefault(e);
+        onInvalidSelf.call(self);
+        picker.fire('min.options', [count, min]), offEventDefault(e);
     } else if (count > max) {
-        picker.fire('max.options', [count, max]);
-        offEventDefault(e);
+        onInvalidSelf.call(self);
+        picker.fire('max.options', [count, max]), offEventDefault(e);
     }
 }
 
@@ -811,7 +846,7 @@ function scrollTo(node) {
 }
 
 function selectToOption(option, picker) {
-    let {_mask, self} = picker,
+    let {_mask, mask, self} = picker,
         {hint, input, value} = _mask, optionReal, v;
     if (option) {
         optionReal = option.$[OPTION_SELF];
@@ -820,6 +855,7 @@ function selectToOption(option, picker) {
         setAria(option, TOKEN_SELECTED, true);
         setValue(self, v = getOptionValue(option));
         if (isInput(self)) {
+            letAria(mask, TOKEN_INVALID);
             setAria(input, 'activedescendant', getID(option));
             setStyle(hint, 'color', 'transparent');
             setText(input, getText(option));
@@ -871,6 +907,7 @@ function toggleToOption(option, picker) {
             a = getOptionsValues(getOptionsSelected(picker)), b, c;
         if (getAria(option, TOKEN_SELECTED) && optionReal[TOKEN_SELECTED]) {
             if (min > 0 && (c = toCount(a)) <= min) {
+                onInvalidSelf.call(self);
                 picker.fire('min.options', [c, min]);
             } else {
                 letAria(option, TOKEN_SELECTED);
@@ -898,6 +935,7 @@ function toggleToOption(option, picker) {
                         setAria(v[2], TOKEN_DISABLED, true);
                     }
                 });
+                onInvalidSelf.call(self);
                 picker.fire('max.options', [c, max]);
             } else {
                 forEachMap(_options, (v, k) => {
@@ -1225,7 +1263,7 @@ setObjectAttributes(OptionPicker, {
                 {_mask, mask, min, self} = $,
                 {input} = _mask,
                 v = !!value;
-            self.required = v;
+            self[TOKEN_REQUIRED] = v;
             if (v) {
                 if (0 === min) {
                     $.min = 1;
@@ -1360,6 +1398,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             setReference(form, $);
         }
         onEvent(EVENT_FOCUS, self, onFocusSelf);
+        onEvent(EVENT_INVALID, self, onInvalidSelf);
         onEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
         onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
         onEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
@@ -1507,6 +1546,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             }
         }
         offEvent(EVENT_FOCUS, self, onFocusSelf);
+        offEvent(EVENT_INVALID, self, onInvalidSelf);
         offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
         offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
         offEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
@@ -1677,7 +1717,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
             return false;
         }
         if (!isSet(key)) {
-            forEachMap(values, (v, k) => $.delete(k, 0, 0));
+            forEachMap(values, (v, k) => $.let(k, 0, 0));
             selectToOptionsNone(of, _fireValue);
             options.hidden = true;
             return (_fireHook && of.fire('let.options', [[]])), 0 === $.count();
@@ -1726,8 +1766,8 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
     has: function (key) {
         return hasKeyInMap(toValue(key), this[TOKEN_VALUES]);
     },
-    let: function (key, _fireHook = 1) {
-        return this.delete(key, _fireHook, 1);
+    let: function (key, _fireHook = 1, _fireValue = 1) {
+        return this.delete(key, _fireHook, _fireValue);
     },
     set: function (key, value, _fireHook = 1) {
         let $ = this,

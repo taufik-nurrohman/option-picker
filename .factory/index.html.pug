@@ -20,7 +20,9 @@ block style
     |   max-width: 60rem;
     | }
     | .option-picker {
+    |   background: #fff;
     |   border-width: 2px;
+    |   color: #000;
     |   flex: 1;
     | }
     | .option-picker__arrow,
@@ -39,6 +41,11 @@ block style
     | .option-picker:focus-within .option-picker__value {
     |   background: 0 0;
     |   outline: 0;
+    | }
+    | .option-picker[aria-invalid='true'] {
+    |   background: rgba(255, 0, 0, 0.125);
+    |   border-color: #f00;
+    |   color: #000;
     | }
     | .option-picker__option {
     |   border: 0;
@@ -1447,6 +1454,7 @@ block content
       li: a(href='test/disabled.html' target='_blank') Disabled State
       li: a(href='test/focus.html' target='_blank') Focus Automatically
       li: a(href='test/group.html' target='_blank') Grouped Options
+      li: a(href='test/invalid.html' target='_blank') Invalid State
       li: a(href='test/self.html' target='_blank') Multiple Instances
       li: a(href='test/multiple.html' target='_blank') Multiple Selection
       li: a(href='test/max.html' target='_blank') Multiple Selection (Maximum)

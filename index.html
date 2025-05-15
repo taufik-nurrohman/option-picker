@@ -5,7 +5,7 @@
     <meta content="#000" name="theme-color">
     <meta content="width=device-width" name="viewport">
     <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
-    <title>Option Picker 2.1.0</title>
+    <title>Option Picker 2.1.1</title>
     <link href="../layout/index.min.css" rel="stylesheet">
     <link href="../layout/anchor/index.min.css" rel="stylesheet">
     <link href="index.min.css" rel="stylesheet">
@@ -16,7 +16,9 @@
         max-width: 60rem;
       }
       .option-picker {
+        background: #fff;
         border-width: 2px;
+        color: #000;
         flex: 1;
       }
       .option-picker__arrow,
@@ -35,6 +37,11 @@
       .option-picker:focus-within .option-picker__value {
         background: 0 0;
         outline: 0;
+      }
+      .option-picker[aria-invalid='true'] {
+        background: rgba(255, 0, 0, 0.125);
+        border-color: #f00;
+        color: #000;
       }
       .option-picker__option {
         border: 0;
@@ -1089,7 +1096,7 @@
     <p role="alert">Do you like this project? Please support my <a href="https://github.com/mecha-cms">Mecha CMS</a> project too. Thank you!</p>
     <header>
       <hgroup>
-        <h1>Option Picker 2.1.0</h1>
+        <h1>Option Picker 2.1.1</h1>
         <p>Accessible custom <code>&lt;select&gt;</code> (and <code>&lt;input list&gt;</code>) element.</p>
       </hgroup>
       <p>Press <kbd>Enter</kbd> or <kbd>Space</kbd> key to open/close the options list. Use <kbd>ArrowDown</kbd> and <kbd>ArrowUp</kbd> keys to open the options list and then focus on an option, then press <kbd>Enter</kbd>, <kbd>Space</kbd>, or <kbd>Tab</kbd> to select it. On the “strict” option picker presentation (the example below), you should be able to type away when you focus on it to select the first active option that contains text that matches the search query you are currently typing. On the “loose” option picker presentation (<a href="test/input.html" target="_blank">this example</a>), when you start to input a value, the available options get filtered instead of selected immediately.</p>
@@ -1454,6 +1461,7 @@ const picker = new OptionPicker(document.querySelector('select'));</code></pre>
         <li><a href="test/disabled.html" target="_blank">Disabled State</a></li>
         <li><a href="test/focus.html" target="_blank">Focus Automatically</a></li>
         <li><a href="test/group.html" target="_blank">Grouped Options</a></li>
+        <li><a href="test/invalid.html" target="_blank">Invalid State</a></li>
         <li><a href="test/self.html" target="_blank">Multiple Instances</a></li>
         <li><a href="test/multiple.html" target="_blank">Multiple Selection</a></li>
         <li><a href="test/max.html" target="_blank">Multiple Selection (Maximum)</a></li>

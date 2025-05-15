@@ -24,9 +24,9 @@ block content
     form(method='get' target='_blank')
       p Type “asdf” in the input box below, and then press the #[kbd Tab] key or just click randomly outside the input box to trigger the blur event.
       p
-        input(list='zones' name='zone' placeholder='Select or type a time zone…' type='text')
+        input(list='zones' name='zone' placeholder='Select or type a time zone…' required type='text')
         = ' '
-        input(list='zones' name='zone-strict' placeholder='Can only select a valid time zone' type='text')
+        input(list='zones' name='zone-strict' placeholder='Can only select a valid time zone' required type='text')
       p
         button(type='submit') Submit
   datalist#zones

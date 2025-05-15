@@ -33,7 +33,7 @@ block content
   main
     form(method='get' target='_blank')
       p
-        input(list='colors' name='color' placeholder='Select a color…' type='text' value='Blue')
+        input(list='colors' name='test' pattern='#[a-f\\d]{6}' placeholder='Select a color…' type='text' value='Blue')
       p
         button(type='submit') Submit
   datalist#colors

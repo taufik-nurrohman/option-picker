@@ -1,0 +1,30 @@
+extends ../_index.pug
+
+block state
+  - const scripts = ['../index.min.js']
+  - const styles = ['../index.min.css']
+  - const title = 'Tag Picker'
+
+block script
+  script
+    | const picker = new OptionPicker(document.querySelector('input'));
+
+block style
+  style
+    | .option-picker {
+    |   min-width: 10em;
+    | }
+    | .option-picker__options {
+    |   background: #fff;
+    | }
+
+block content
+  main
+    p Type any value that does not match #[code='^#[a-f\\d]{6}$'] pattern!
+    form(method='get' target='_blank')
+      p: input(list='colors' name='test' pattern='#[a-f\\d]{6}' type='text')
+      p: button(type='submit') Submit
+    datalist#colors
+      option #0000ff
+      option #00ff00
+      option #ff0000

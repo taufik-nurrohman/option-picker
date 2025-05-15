@@ -953,6 +953,15 @@
         }
         node.addEventListener(name, then, options);
     };
+    var isPattern = function isPattern(pattern) {
+        return isInstance(pattern, RegExp);
+    };
+    var toPattern = function toPattern(pattern, opt) {
+        if (isPattern(pattern)) {
+            return pattern;
+        }
+        return new RegExp(pattern, isSet(opt) ? opt : 'g');
+    };
     var FILTER_COMMIT_TIME = 10;
     var SEARCH_CLEAR_TIME = 500;
     var EVENT_DOWN = 'down';
@@ -961,6 +970,7 @@
     var EVENT_BLUR = 'blur';
     var EVENT_CUT = 'cut';
     var EVENT_FOCUS = 'focus';
+    var EVENT_INVALID = 'invalid';
     var EVENT_KEY = 'key';
     var EVENT_KEY_DOWN = EVENT_KEY + EVENT_DOWN;
     var EVENT_MOUSE = 'mouse';
@@ -1000,6 +1010,7 @@
     var TOKEN_CONTENTEDITABLE = 'contenteditable';
     var TOKEN_DISABLED = 'disabled';
     var TOKEN_FALSE = 'false';
+    var TOKEN_INVALID = 'invalid';
     var TOKEN_READONLY = 'readonly';
     var TOKEN_READ_ONLY = 'readOnly';
     var TOKEN_REQUIRED = 'required';
@@ -1021,6 +1032,7 @@
             self = $.self,
             state = $.state,
             options = _mask.options,
+            pattern = self.pattern,
             strict = state.strict,
             option;
         var count = _options.count();
@@ -1048,14 +1060,33 @@
             if (strict) {
                 // Silently select the first option without affecting the currently typed query and focus/select state
                 if (count && "" !== q && (option = goToOptionFirst($))) {
+                    letAria(mask, TOKEN_INVALID);
                     setAria(option, TOKEN_SELECTED, true);
                     option.$[OPTION_SELF][TOKEN_SELECTED] = true;
                     setValue(self, getOptionValue(option));
                 } else {
+                    // No other option(s) are available to query
+                    if (isRequired(self)) {
+                        if ("" !== q) {
+                            setAria(mask, TOKEN_INVALID, true);
+                        } else {
+                            letAria(mask, TOKEN_INVALID);
+                        }
+                    }
                     setValue(self, "");
                 }
             } else {
-                setValue(self, query);
+                if (pattern) {
+                    letAria(mask, TOKEN_INVALID);
+                    setValue(self, "");
+                    if (toPattern('^' + pattern + '$', "").test(query)) {
+                        setValue(self, query);
+                    } else if (!count && "" !== q) {
+                        setAria(mask, TOKEN_INVALID, true);
+                    }
+                } else {
+                    setValue(self, query);
+                }
             }
         }
         $.fire('search', [query = "" !== query ? query : null]);
@@ -1109,7 +1140,7 @@
         var r = [],
             value = getValue(self);
         // Reset the option(s) data, but leave the typed query in place, and do not fire the `let.options` hook
-        _options.delete(null, 0, 0);
+        _options.let(null, 0, 0);
         forEachMap(map, function (v, k) {
             var _v$1$TOKEN_VALUE3;
             if (isArray(v) && v[1] && (!getState(v[1], 'active') || v[1].active) && v[1].mark) {
@@ -1252,6 +1283,7 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
+            mask = picker.mask,
             state = picker.state,
             options = _mask.options,
             strict = state.strict,
@@ -1260,6 +1292,9 @@
             if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
             } else {
+                delay(function () {
+                    return letAria(mask, TOKEN_INVALID);
+                }, 1000)();
                 options.hidden = false;
                 selectToOptionsNone(picker, 1);
             }
@@ -1294,6 +1329,17 @@
         var $ = this,
             picker = getReference($);
         getText($, 0) ? selectTo($) : picker.enter().fit();
+    }
+
+    function onInvalidSelf(e) {
+        e && offEventDefault(e);
+        var $ = this,
+            picker = getReference($),
+            mask = picker.mask;
+        setAria(mask, TOKEN_INVALID, true);
+        delay(function () {
+            return letAria(mask, TOKEN_INVALID);
+        }, 1000)();
     }
     var searchQuery = "";
 
@@ -1525,6 +1571,7 @@
                     }
                 }
             } else {
+                onInvalidSelf.call(self);
                 picker.fire('min.options', [countValues, min]);
             }
             if (max !== Infinity && max > countValues) {
@@ -1561,6 +1608,7 @@
                     }
                 }
             } else {
+                onInvalidSelf.call(self);
                 picker.fire('min.options', [_countValues, min]);
             }
             if (max !== Infinity && max > _countValues) {
@@ -1780,13 +1828,14 @@
             picker = getReference($),
             max = picker.max,
             min = picker.min,
+            self = picker.self,
             count = toCount(getOptionsSelected(picker));
         if (count < min) {
-            picker.fire('min.options', [count, min]);
-            offEventDefault(e);
+            onInvalidSelf.call(self);
+            picker.fire('min.options', [count, min]), offEventDefault(e);
         } else if (count > max) {
-            picker.fire('max.options', [count, max]);
-            offEventDefault(e);
+            onInvalidSelf.call(self);
+            picker.fire('max.options', [count, max]), offEventDefault(e);
         }
     }
 
@@ -1807,6 +1856,7 @@
 
     function selectToOption(option, picker) {
         var _mask = picker._mask,
+            mask = picker.mask,
             self = picker.self,
             hint = _mask.hint,
             input = _mask.input,
@@ -1820,6 +1870,7 @@
             setAria(option, TOKEN_SELECTED, true);
             setValue(self, v = getOptionValue(option));
             if (isInput(self)) {
+                letAria(mask, TOKEN_INVALID);
                 setAria(input, 'activedescendant', getID(option));
                 setStyle(hint, 'color', 'transparent');
                 setText(input, getText(option));
@@ -1888,6 +1939,7 @@
                 c;
             if (getAria(option, TOKEN_SELECTED) && optionReal[TOKEN_SELECTED]) {
                 if (min > 0 && (c = toCount(a)) <= min) {
+                    onInvalidSelf.call(self);
                     picker.fire('min.options', [c, min]);
                 } else {
                     letAria(option, TOKEN_SELECTED);
@@ -1915,6 +1967,7 @@
                             setAria(v[2], TOKEN_DISABLED, true);
                         }
                     });
+                    onInvalidSelf.call(self);
                     picker.fire('max.options', [c, max]);
                 } else {
                     forEachMap(_options, function (v, k) {
@@ -2007,7 +2060,7 @@
         'strict': false,
         'with': []
     };
-    OptionPicker.version = '2.1.0';
+    OptionPicker.version = '2.1.1';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2269,7 +2322,7 @@
                     self = $.self,
                     input = _mask.input,
                     v = !!value;
-                self.required = v;
+                self[TOKEN_REQUIRED] = v;
                 if (v) {
                     if (0 === min) {
                         $.min = 1;
@@ -2407,6 +2460,7 @@
                 setReference(form, $);
             }
             onEvent(EVENT_FOCUS, self, onFocusSelf);
+            onEvent(EVENT_INVALID, self, onInvalidSelf);
             onEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
             onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
             onEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
@@ -2567,6 +2621,7 @@
                 }
             }
             offEvent(EVENT_FOCUS, self, onFocusSelf);
+            offEvent(EVENT_INVALID, self, onInvalidSelf);
             offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
             offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
             offEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
@@ -2774,7 +2829,7 @@
             }
             if (!isSet(key)) {
                 forEachMap(values, function (v, k) {
-                    return $.delete(k, 0, 0);
+                    return $.let(k, 0, 0);
                 });
                 selectToOptionsNone(of, _fireValue);
                 options.hidden = true;
@@ -2827,11 +2882,14 @@
         has: function has(key) {
             return hasKeyInMap(_toValue(key), this[TOKEN_VALUES]);
         },
-        let: function _let(key, _fireHook) {
+        let: function _let(key, _fireHook, _fireValue) {
             if (_fireHook === void 0) {
                 _fireHook = 1;
             }
-            return this.delete(key, _fireHook, 1);
+            if (_fireValue === void 0) {
+                _fireValue = 1;
+            }
+            return this.delete(key, _fireHook, _fireValue);
         },
         set: function set(key, value, _fireHook) {
             var _getState3, _getState4, _getState5;

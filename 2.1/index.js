@@ -1362,6 +1362,7 @@
             delay(function () {
                 return picker.enter().fit();
             }, FILTER_COMMIT_TIME + 1)();
+            searchQuery = getText($);
         }
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
             var currentOption = _options.at(getValue(self));

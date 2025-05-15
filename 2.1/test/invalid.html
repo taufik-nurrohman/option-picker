@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Tag Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        min-width: 10em;
+      }
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>Type any value that does not match <code>^#[a-f\d]{6}$</code> pattern!</p>
+      <form method="get" target="_blank">
+        <p><input list="colors" name="test" pattern="#[a-f\d]{6}" type="text"></p>
+        <p><button type="submit">Submit</button></p>
+      </form><datalist id="colors">
+        <option>#0000ff</option>
+        <option>#00ff00</option>
+        <option>#ff0000</option>
+      </datalist>
+    </main>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker = new OptionPicker(document.querySelector('input'));
+    </script>
+  </body>
+</html>

@@ -970,6 +970,7 @@
     var EVENT_BLUR = 'blur';
     var EVENT_CUT = 'cut';
     var EVENT_FOCUS = 'focus';
+    var EVENT_INPUT = 'input';
     var EVENT_INVALID = 'invalid';
     var EVENT_KEY = 'key';
     var EVENT_KEY_DOWN = EVENT_KEY + EVENT_DOWN;
@@ -1342,12 +1343,33 @@
     }
     var searchQuery = "";
 
+    function onInputTextInput(e) {
+        var $ = this,
+            inputType = e.inputType,
+            picker = getReference($),
+            _active = picker._active;
+        if (!_active) {
+            return offEventDefault(e);
+        }
+        var _mask = picker._mask,
+            hint = _mask.hint;
+        if (('deleteContentBackward' === inputType || 'deleteContentForward' === inputType) && !getText($, 0)) {
+            letStyle(hint, TOKEN_VISIBILITY);
+        } else if ('insertText' === inputType) {
+            setStyle(hint, TOKEN_VISIBILITY, 'hidden');
+        }
+    }
+
     function onKeyDownTextInput(e) {
         var $ = this,
             exit,
             key = e.key,
             picker = getReference($),
-            _mask = picker._mask,
+            _active = picker._active;
+        if (!_active) {
+            return offEventDefault(e);
+        }
+        var _mask = picker._mask,
             _options = picker._options,
             mask = picker.mask,
             self = picker.self,
@@ -2440,6 +2462,7 @@
                 onEvent(EVENT_BLUR, textInput, onBlurTextInput);
                 onEvent(EVENT_CUT, textInput, onCutTextInput);
                 onEvent(EVENT_FOCUS, textInput, onFocusTextInput);
+                onEvent(EVENT_INPUT, textInput, onInputTextInput);
                 onEvent(EVENT_KEY_DOWN, textInput, onKeyDownTextInput);
                 onEvent(EVENT_PASTE, textInput, onPasteTextInput);
                 setChildLast(textOrValue, textInput);
@@ -2608,6 +2631,7 @@
                 offEvent(EVENT_BLUR, input, onBlurTextInput);
                 offEvent(EVENT_CUT, input, onCutTextInput);
                 offEvent(EVENT_FOCUS, input, onFocusTextInput);
+                offEvent(EVENT_INPUT, input, onInputTextInput);
                 offEvent(EVENT_KEY_DOWN, input, onKeyDownTextInput);
                 offEvent(EVENT_PASTE, input, onPasteTextInput);
             }

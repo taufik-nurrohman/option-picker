@@ -22,6 +22,7 @@ const EVENT_UP = 'up';
 const EVENT_BLUR = 'blur';
 const EVENT_CUT = 'cut';
 const EVENT_FOCUS = 'focus';
+const EVENT_INPUT = 'input';
 const EVENT_INVALID = 'invalid';
 const EVENT_KEY = 'key';
 const EVENT_KEY_DOWN = EVENT_KEY + EVENT_DOWN;
@@ -372,11 +373,32 @@ function onInvalidSelf(e) {
 
 let searchQuery = "";
 
+function onInputTextInput(e) {
+    let $ = this,
+        {inputType} = e,
+        picker = getReference($),
+        {_active} = picker;
+    if (!_active) {
+        return offEventDefault(e);
+    }
+    let {_mask} = picker,
+        {hint} = _mask;
+    if (('deleteContentBackward' === inputType || 'deleteContentForward' === inputType) && !getText($, 0)) {
+        letStyle(hint, TOKEN_VISIBILITY);
+    } else if ('insertText' === inputType) {
+        setStyle(hint, TOKEN_VISIBILITY, 'hidden');
+    }
+}
+
 function onKeyDownTextInput(e) {
     let $ = this, exit,
         key = e.key,
         picker = getReference($),
-        {_mask, _options, mask, self, state} = picker,
+        {_active} = picker;
+    if (!_active) {
+        return offEventDefault(e);
+    }
+    let {_mask, _options, mask, self, state} = picker,
         {hint} = _mask,
         {strict} = state;
     delay(() => getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY), 1)();
@@ -1378,6 +1400,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             onEvent(EVENT_BLUR, textInput, onBlurTextInput);
             onEvent(EVENT_CUT, textInput, onCutTextInput);
             onEvent(EVENT_FOCUS, textInput, onFocusTextInput);
+            onEvent(EVENT_INPUT, textInput, onInputTextInput);
             onEvent(EVENT_KEY_DOWN, textInput, onKeyDownTextInput);
             onEvent(EVENT_PASTE, textInput, onPasteTextInput);
             setChildLast(textOrValue, textInput);
@@ -1533,6 +1556,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             offEvent(EVENT_BLUR, input, onBlurTextInput);
             offEvent(EVENT_CUT, input, onCutTextInput);
             offEvent(EVENT_FOCUS, input, onFocusTextInput);
+            offEvent(EVENT_INPUT, input, onInputTextInput);
             offEvent(EVENT_KEY_DOWN, input, onKeyDownTextInput);
             offEvent(EVENT_PASTE, input, onPasteTextInput);
         }

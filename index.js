@@ -1306,8 +1306,9 @@
             picker = getReference($),
             _mask = picker._mask,
             self = picker.self,
-            strict = picker.strict,
-            hint = _mask.hint;
+            state = picker.state,
+            hint = _mask.hint,
+            strict = state.strict;
         delay(function () {
             getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
             if (strict);
@@ -1353,7 +1354,7 @@
         }
         var _mask = picker._mask,
             hint = _mask.hint;
-        if (('deleteContentBackward' === inputType || 'deleteContentForward' === inputType) && !getText($, 0)) {
+        if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
             letStyle(hint, TOKEN_VISIBILITY);
         } else if ('insertText' === inputType) {
             setStyle(hint, TOKEN_VISIBILITY, 'hidden');
@@ -1720,9 +1721,16 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
-            hint = _mask.hint;
+            self = picker.self,
+            state = picker.state,
+            hint = _mask.hint,
+            strict = state.strict;
         delay(function () {
-            return getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+            getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+            if (strict);
+            else {
+                setValue(self, getText($));
+            }
         }, 1)();
         insertAtSelection($, e.clipboardData.getData('text/plain'));
     }
@@ -2083,7 +2091,7 @@
         'strict': false,
         'with': []
     };
-    OptionPicker.version = '2.1.3';
+    OptionPicker.version = '2.1.4';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name

@@ -337,8 +337,9 @@ function onBlurTextInput() {
 function onCutTextInput() {
     let $ = this,
         picker = getReference($),
-        {_mask, self, strict} = picker,
-        {hint} = _mask;
+        {_mask, self, state} = picker,
+        {hint} = _mask,
+        {strict} = state;
     delay(() => {
         getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
         if (strict) {} else {
@@ -383,7 +384,7 @@ function onInputTextInput(e) {
     }
     let {_mask} = picker,
         {hint} = _mask;
-    if (('deleteContentBackward' === inputType || 'deleteContentForward' === inputType) && !getText($, 0)) {
+    if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
         letStyle(hint, TOKEN_VISIBILITY);
     } else if ('insertText' === inputType) {
         setStyle(hint, TOKEN_VISIBILITY, 'hidden');
@@ -717,9 +718,15 @@ function onPasteTextInput(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {_mask} = picker,
-        {hint} = _mask;
-    delay(() => getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY), 1)();
+        {_mask, self, state} = picker,
+        {hint} = _mask,
+        {strict} = state;
+    delay(() => {
+        getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+        if (strict) {} else {
+            setValue(self, getText($));
+        }
+    }, 1)();
     insertAtSelection($, e.clipboardData.getData('text/plain'));
 }
 
@@ -1055,7 +1062,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.1.3';
+OptionPicker.version = '2.1.4';
 
 setObjectAttributes(OptionPicker, {
     name: {

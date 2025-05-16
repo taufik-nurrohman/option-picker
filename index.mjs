@@ -130,16 +130,12 @@ const filter = debounce(($, input, _options, selectOnly) => {
                 setValue(self, "");
             }
         } else {
+            letAria(mask, TOKEN_INVALID);
+            setValue(self, query);
             if (pattern) {
-                letAria(mask, TOKEN_INVALID);
-                setValue(self, "");
-                if (toPattern('^' + pattern + '$', "").test(query)) {
-                    setValue(self, query);
-                } else if (!count && "" !== q) {
+                if (!count && "" !== q && !toPattern('^' + pattern + '$', "").test(query)) {
                     setAria(mask, TOKEN_INVALID, true);
                 }
-            } else {
-                setValue(self, query);
             }
         }
     }

@@ -77,6 +77,7 @@ const TOKEN_TEXT = 'text';
 const TOKEN_TRUE = 'true';
 const TOKEN_VALUE = 'value';
 const TOKEN_VALUES = TOKEN_VALUE + 's';
+const TOKEN_VISIBILITY = 'visibility';
 
 const VALUE_SELF = 0;
 const VALUE_TEXT = 1;
@@ -340,7 +341,7 @@ function onCutTextInput() {
         {_mask, self, strict} = picker,
         {hint} = _mask;
     delay(() => {
-        getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
+        getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
         if (strict) {} else {
             setValue(self, getText($));
         }
@@ -380,7 +381,7 @@ function onKeyDownTextInput(e) {
         {_mask, _options, mask, self, state} = picker,
         {hint} = _mask,
         {strict} = state;
-    delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
+    delay(() => getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY), 1)();
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
         delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
         searchQuery = 0; // This will make a difference and force the filter to execute
@@ -529,7 +530,7 @@ function onKeyDownOption(e) {
         if (!keyIsCtrl) {
             if (1 === toCount(key) && !keyIsAlt) {
                 if (isInput(self)) {
-                    setStyle(hint, 'color', 'transparent');
+                    setStyle(hint, TOKEN_VISIBILITY, 'hidden');
                 } else {
                     searchTerm += key; // Initialize search term, right before exit
                 }
@@ -698,7 +699,7 @@ function onPasteTextInput(e) {
         picker = getReference($),
         {_mask} = picker,
         {hint} = _mask;
-    delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
+    delay(() => getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY), 1)();
     insertAtSelection($, e.clipboardData.getData('text/plain'));
 }
 
@@ -859,7 +860,7 @@ function selectToOption(option, picker) {
         if (isInput(self)) {
             letAria(mask, TOKEN_INVALID);
             setAria(input, 'activedescendant', getID(option));
-            setStyle(hint, 'color', 'transparent');
+            setStyle(hint, TOKEN_VISIBILITY, 'hidden');
             setText(input, getText(option));
         } else {
             setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));
@@ -887,7 +888,7 @@ function selectToOptionsNone(picker, fireValue) {
         setValue(self, v = "");
         if (isInput(self)) {
             letAria(input, 'activedescendant');
-            letStyle(hint, 'color');
+            letStyle(hint, TOKEN_VISIBILITY);
             setText(input, "");
         } else {
             letAttribute(value, TOKEN_VALUE);
@@ -1212,7 +1213,7 @@ setObjectAttributes(OptionPicker, {
                 return $;
             }
             setText(input, v = fromValue(value));
-            return (v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color')), $;
+            return (v ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY)), $;
         }
     },
     value: {

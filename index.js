@@ -1021,6 +1021,7 @@
     var TOKEN_TRUE = 'true';
     var TOKEN_VALUE = 'value';
     var TOKEN_VALUES = TOKEN_VALUE + 's';
+    var TOKEN_VISIBILITY = 'visibility';
     var VALUE_SELF = 0;
     var VALUE_TEXT = 1;
     var VALUE_X = 2;
@@ -1309,7 +1310,7 @@
             strict = picker.strict,
             hint = _mask.hint;
         delay(function () {
-            getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
+            getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
             if (strict);
             else {
                 setValue(self, getText($));
@@ -1356,7 +1357,7 @@
             hint = _mask.hint,
             strict = state.strict;
         delay(function () {
-            return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
+            return getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
         }, 1)();
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
             delay(function () {
@@ -1516,7 +1517,7 @@
             if (!keyIsCtrl) {
                 if (1 === toCount(key) && !keyIsAlt) {
                     if (isInput(self)) {
-                        setStyle(hint, 'color', 'transparent');
+                        setStyle(hint, TOKEN_VISIBILITY, 'hidden');
                     } else {
                         searchTerm += key; // Initialize search term, right before exit
                     }
@@ -1701,7 +1702,7 @@
             _mask = picker._mask,
             hint = _mask.hint;
         delay(function () {
-            return getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color');
+            return getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
         }, 1)();
         insertAtSelection($, e.clipboardData.getData('text/plain'));
     }
@@ -1874,7 +1875,7 @@
             if (isInput(self)) {
                 letAria(mask, TOKEN_INVALID);
                 setAria(input, 'activedescendant', getID(option));
-                setStyle(hint, 'color', 'transparent');
+                setStyle(hint, TOKEN_VISIBILITY, 'hidden');
                 setText(input, getText(option));
             } else {
                 setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));
@@ -1907,7 +1908,7 @@
             setValue(self, v = "");
             if (isInput(self)) {
                 letAria(input, 'activedescendant');
-                letStyle(hint, 'color');
+                letStyle(hint, TOKEN_VISIBILITY);
                 setText(input, "");
             } else {
                 letAttribute(value, TOKEN_VALUE);
@@ -2062,7 +2063,7 @@
         'strict': false,
         'with': []
     };
-    OptionPicker.version = '2.1.2';
+    OptionPicker.version = '2.1.3';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2264,7 +2265,7 @@
                     return $;
                 }
                 setText(input, v = _fromValue(value));
-                return v ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), $;
+                return v ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY), $;
             }
         },
         value: {

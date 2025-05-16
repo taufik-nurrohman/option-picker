@@ -121,12 +121,10 @@ const filter = debounce(($, input, _options, selectOnly) => {
                 setValue(self, getOptionValue(option));
             } else {
                 // No other option(s) are available to query
-                if (isRequired(self)) {
-                    if ("" !== q) {
-                        setAria(mask, TOKEN_INVALID, true);
-                    } else {
-                        letAria(mask, TOKEN_INVALID);
-                    }
+                if ("" !== q) {
+                    setAria(mask, TOKEN_INVALID, true);
+                } else {
+                    letAria(mask, TOKEN_INVALID);
                 }
                 setValue(self, "");
             }

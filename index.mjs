@@ -383,7 +383,7 @@ function onKeyDownTextInput(e) {
     delay(() => getText($, 0) ? setStyle(hint, 'color', 'transparent') : letStyle(hint, 'color'), 1)();
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
         delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
-        searchQuery = getText($);
+        searchQuery = 0; // This will make a difference and force the filter to execute
     }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
         let currentOption = _options.at(getValue(self));
@@ -409,11 +409,12 @@ function onKeyDownTextInput(e) {
         picker.exit();
     } else {
         delay(() => {
+            // Only execute the filter if the previous search query is different from the current search query
             if ("" === searchQuery || searchQuery !== getText($) + "") {
                 filter(picker, $, _options);
                 searchQuery = getText($) + "";
             }
-        }, 1)();
+        }, 2)();
     }
     exit && (offEventDefault(e), offEventPropagation(e));
 }
@@ -1033,7 +1034,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.1.1';
+OptionPicker.version = '2.1.2';
 
 setObjectAttributes(OptionPicker, {
     name: {

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker {
+        min-width: 10em;
+      }
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form method="get" target="_blank">
+        <p><input list="options" name="test" required type="text"></p>
+        <p><label><input checked onchange="picker.vital = this.checked;" type="checkbox"> <span>Required</span></label></p>
+        <p><button type="submit">Submit</button></p>
+      </form>
+    </main><datalist id="options">
+      <option>Option 1</option>
+      <option>Option 2</option>
+      <option value="3">Option 3</option>
+    </datalist>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker = new OptionPicker(document.querySelector('input'));
+      picker.vital = document.querySelector('input[type=checkbox]').checked;
+      picker.on('min.options', function (count, min) {
+          console.error('The minimum number of options that must be selected to be able to submit the form is ' + min + '.');
+      });
+    </script>
+  </body>
+</html>

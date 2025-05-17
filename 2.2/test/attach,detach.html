@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Accessible custom `&lt;select&gt;` (and `&lt;input list&gt;`) element." name="description">
+    <title>Option Picker</title>
+    <link href="../index.min.css" rel="stylesheet">
+    <style>
+      .option-picker__options {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form method="get" target="_blank">
+        <p>asdf</p>
+        <p>asdf <select name="test">
+            <option>Option 1</option>
+            <option>Option 2</option>
+            <option value="3">Option 3</option>
+          </select> asdf</p>
+        <p>asdf</p>
+        <p><button onclick="this.disabled = true; this.nextElementSibling.disabled = false; picker.detach(); return false;" type="button">Detach</button> <button disabled onclick="this.disabled = true; this.previousElementSibling.disabled = false; picker.attach(); return false;" type="button">Attach</button> <button type="submit">Submit</button></p>
+      </form>
+    </main>
+    <script src="../index.min.js"></script>
+    <script>
+      const picker = new OptionPicker(document.querySelector('select'));
+    </script>
+  </body>
+</html>

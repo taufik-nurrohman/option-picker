@@ -12,9 +12,6 @@ import {offEvent, offEventDefault, offEventPropagation, onEvent} from '@taufik-n
 import {toCaseLower, toCount, toMapCount, toSetCount, toValue} from '@taufik-nurrohman/to';
 import {toPattern} from '@taufik-nurrohman/pattern';
 
-const FILTER_COMMIT_TIME = 10;
-const SEARCH_CLEAR_TIME = 500;
-
 const EVENT_DOWN = 'down';
 const EVENT_MOVE = 'move';
 const EVENT_UP = 'up';
@@ -155,7 +152,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
             createOptions($, call);
         }
     }
-}, FILTER_COMMIT_TIME);
+})[0];
 
 const name = 'OptionPicker';
 
@@ -318,12 +315,17 @@ function onBlurTextInput() {
         picker = getReference($),
         {_mask, mask, state} = picker,
         {options} = _mask,
-        {strict} = state, option;
+        {strict, time} = state,
+        {error} = time, option;
     if (strict) {
         if (!options.hidden && (option = getOptionSelected(picker, 1))) {
             selectToOption(option, picker);
         } else {
-            delay(() => letAria(mask, TOKEN_INVALID), 1000)();
+            if (isInteger(error) && error > 0) {
+                delay(() => letAria(mask, TOKEN_INVALID))[0](error);
+            } else {
+                letAria(mask, TOKEN_INVALID);
+            }
             options.hidden = false;
             selectToOptionsNone(picker, 1);
         }
@@ -338,10 +340,10 @@ function onCutTextInput() {
         {strict} = state;
     delay(() => {
         getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
-        if (strict) {} else {
+        if (!strict) {
             setValue(self, getText($));
         }
-    }, 1)();
+    })[0](1);
 }
 
 function onFocusOption() {
@@ -363,9 +365,13 @@ function onInvalidSelf(e) {
     e && offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {mask} = picker;
-    setAria(mask, TOKEN_INVALID, true);
-    delay(() => letAria(mask, TOKEN_INVALID), 1000)();
+        {mask, state} = picker,
+        {time} = state,
+        {error} = time;
+    if (isInteger(error) && error > 0) {
+        setAria(mask, TOKEN_INVALID, true);
+        delay(() => letAria(mask, TOKEN_INVALID))[0](error);
+    }
 }
 
 let searchQuery = "";
@@ -397,10 +403,11 @@ function onKeyDownTextInput(e) {
     }
     let {_mask, _options, mask, self, state} = picker,
         {hint} = _mask,
-        {strict} = state;
-    delay(() => getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY), 1)();
+        {strict, time} = state,
+        {search} = time;
+    delay(() => getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY))[0](1);
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
-        delay(() => picker.enter().fit(), FILTER_COMMIT_TIME + 1)();
+        delay(() => picker.enter().fit())[0](search[0] + 1);
         searchQuery = 0; // This will make a difference and force the filter to execute
     }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
@@ -429,16 +436,16 @@ function onKeyDownTextInput(e) {
         delay(() => {
             // Only execute the filter if the previous search query is different from the current search query
             if ("" === searchQuery || searchQuery !== getText($) + "") {
-                filter(picker, $, _options);
+                filter(search[0], picker, $, _options);
                 searchQuery = getText($) + "";
             }
-        }, 2)();
+        })[0](2);
     }
     exit && (offEventDefault(e), offEventPropagation(e));
 }
 
 let searchTerm = "",
-    searchTermClear = debounce(() => (searchTerm = ""), SEARCH_CLEAR_TIME);
+    searchTermClear = debounce(() => searchTerm = "")[0];
 
 function onKeyDownOption(e) {
     let $ = this, exit,
@@ -564,11 +571,13 @@ function onKeyDownValue(e) {
         keyIsAlt = e.altKey,
         keyIsCtrl = e.ctrlKey,
         picker = getReference($),
-        {_mask, _options, max, min, self} = picker,
+        {_active, _fix, _mask, _options, max, min, self, state} = picker,
         {options, values} = _mask,
+        {time} = state,
+        {search} = time,
         valueCurrent, valueNext, valuePrev;
-    searchTermClear();
-    if (isDisabled(self) || isInput(self) && isReadOnly(self)) {
+    searchTermClear(search[1]);
+    if (!_active || isInput(self) && _fix) {
         return offEventDefault(e);
     }
     if (KEY_DELETE_LEFT === key) {
@@ -680,7 +689,7 @@ function onKeyDownValue(e) {
         }
     }
     if ("" !== searchTerm) {
-        filter(picker, searchTerm, _options, true);
+        filter(search[0], picker, searchTerm, _options, true);
     }
     exit && offEventDefault(e);
 }
@@ -695,7 +704,7 @@ function onPointerDownValue(e) {
         focusTo($);
     } else {
         if (option = _options.at(getOptionValue($))) {
-            onAnimationsEnd(options, () => delay(() => (focusTo(option[2]), scrollTo(option[2])), 1)());
+            onAnimationsEnd(options, () => delay(() => (focusTo(option[2]), scrollTo(option[2])))[0](1));
         }
     }
 }
@@ -719,10 +728,10 @@ function onPasteTextInput(e) {
         {strict} = state;
     delay(() => {
         getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
-        if (strict) {} else {
+        if (!strict) {
             setValue(self, getText($));
         }
-    }, 1)();
+    })[0](1);
     insertAtSelection($, e.clipboardData.getData('text/plain'));
 }
 
@@ -741,10 +750,13 @@ function onPointerDownMask(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {_mask, _options, max, self} = picker,
+        {_active, _fix, _mask, _options, max, self} = picker,
         {options} = _mask,
         {target} = e;
-    if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
+    if (_fix) {
+        return focusTo(picker);
+    }
+    if (!_active || getDatum($, 'size')) {
         return;
     }
     if ('listbox' === getRole(target) || getParent(target, '[role=listbox]')) {
@@ -1055,10 +1067,14 @@ OptionPicker.state = {
     'options': null,
     'size': null,
     'strict': false,
+    'time': {
+        'error': 1000,
+        'search': [10, 500]
+    },
     'with': []
 };
 
-OptionPicker.version = '2.1.4';
+OptionPicker.version = '2.2.0';
 
 setObjectAttributes(OptionPicker, {
     name: {
@@ -1609,8 +1625,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     enter: function (focus, mode) {
         let $ = this, option,
-            {_active, _mask, _options, mask, self} = $,
-            {input, lot, options, value} = _mask;
+            {_active, _fix, _mask, _options, mask, self} = $,
+            {input, lot, options, value} = _mask,
+            isInputSelf = isInput(self);
+        if (_fix && focus && isInputSelf) {
+            return (focusTo(input), selectTo(input, mode)), $;
+        }
         if (!_active) {
             return $;
         }
@@ -1622,7 +1642,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setReference(R, $); // Link current picker to the root target
         $.fire('enter');
         if (focus) {
-            if (isInput(self)) {
+            if (isInputSelf) {
                 focusTo(input), selectTo(input, mode);
             } else if (option = _options.at(getValue(self))) {
                 onAnimationsEnd(options, () => focusTo(option[2]), scrollTo(option[2]));
@@ -1636,8 +1656,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     exit: function (focus, mode) {
         let $ = this,
-            {_active, _mask, _options, mask, self} = $,
-            {input, value} = _mask;
+            {_active, _fix, _mask, _options, mask, self} = $,
+            {input, value} = _mask,
+            isInputSelf = isInput(self);
+        if (_fix && focus && isInputSelf) {
+            return (focusTo(input), selectTo(input, mode)), $;
+        }
         if (!_active) {
             return $;
         }
@@ -1646,7 +1670,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         letReference(R);
         $.fire('exit');
         if (focus) {
-            if (isInput(self)) {
+            if (isInputSelf) {
                 focusTo(input), selectTo(input, mode);
             } else {
                 focusTo(value);
@@ -1687,7 +1711,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         let $ = this,
             {_active, _fix, _mask} = $,
             {input, value} = _mask;
-        if (!_active && !_fix) {
+        if (!_active) {
             return $;
         }
         if (input) {
@@ -1699,7 +1723,10 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     reset: function (focus, mode) {
         let $ = this,
-            {_active, _value, _values, max} = $;
+            {_active, _fix, _value, _values, max} = $;
+        if (_fix) {
+            return focus ? $.focus(mode) : $;
+        }
         if (!_active) {
             return $;
         }

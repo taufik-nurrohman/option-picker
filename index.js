@@ -412,7 +412,7 @@
     };
     var references = new WeakMap();
 
-    function _toArray(iterable) {
+    function _toArray$1(iterable) {
         return Array.from(iterable);
     }
     var D = document;
@@ -455,7 +455,7 @@
         return parent['last' + (anyNode ? "" : 'Element') + 'Child'] || null;
     };
     var getChildren = function getChildren(parent, index, anyNode) {
-        var children = _toArray(parent['child' + (anyNode ? 'Nodes' : 'ren')]);
+        var children = _toArray$1(parent['child' + (anyNode ? 'Nodes' : 'ren')]);
         return isNumber(index) ? children[index] || null : children;
     };
     var getDatum = function getDatum(node, datum, parseValue) {
@@ -707,7 +707,7 @@
         return setAttribute(node, 'id', isSet(value) ? value : getID(node, batch));
     };
     var setNext = function setNext(current, node) {
-        return getParent(current).insertBefore(node, getNext(current, true)), node;
+        return current.after(node), node;
     };
     var setStyle = function setStyle(node, style, value) {
         if (isNumber(value)) {
@@ -840,25 +840,44 @@
         }
         return selection.addRange(range), selection;
     };
-    var debounce = function debounce(then, time) {
-        var timer;
-        return function () {
-            var _arguments = arguments,
-                _this = this;
+
+    function _toArray(iterable) {
+        return Array.from(iterable);
+    }
+    var clearTimeout = W.clearTimeout,
+        setTimeout = W.setTimeout; // For better minification
+    var debounce = function debounce(task, time) {
+        var stickyTime = isInteger(time) && time >= 0,
+            timer;
+        return [function () {
+            var _this = this;
             timer && clearTimeout(timer);
+            var lot = _toArray(arguments);
+            if (!stickyTime) {
+                time = lot.shift();
+            }
             timer = setTimeout(function () {
-                return then.apply(_this, _arguments);
+                return task.apply(_this, lot);
             }, time);
-        };
+        }, function () {
+            timer = clearTimeout(timer);
+        }];
     };
-    var delay = function delay(then, time) {
-        return function () {
-            var _arguments2 = arguments,
-                _this2 = this;
-            setTimeout(function () {
-                return then.apply(_this2, _arguments2);
+    var delay = function delay(task, time) {
+        var stickyTime = isInteger(time) && time >= 0,
+            timer;
+        return [function () {
+            var _this2 = this;
+            var lot = _toArray(arguments);
+            if (!stickyTime) {
+                time = lot.shift();
+            }
+            timer = setTimeout(function () {
+                return task.apply(_this2, lot);
             }, time);
-        };
+        }, function () {
+            timer && clearTimeout(timer);
+        }];
     };
     var getRect = function getRect(node) {
         var h, rect, w, x, y, X, Y;
@@ -962,8 +981,6 @@
         }
         return new RegExp(pattern, isSet(opt) ? opt : 'g');
     };
-    var FILTER_COMMIT_TIME = 10;
-    var SEARCH_CLEAR_TIME = 500;
     var EVENT_DOWN = 'down';
     var EVENT_MOVE = 'move';
     var EVENT_UP = 'up';
@@ -1101,7 +1118,7 @@
                 createOptions($, call);
             }
         }
-    }, FILTER_COMMIT_TIME);
+    })[0];
     var name = 'OptionPicker';
 
     function createOptions($, options) {
@@ -1283,14 +1300,20 @@
             state = picker.state,
             options = _mask.options,
             strict = state.strict,
+            time = state.time,
+            error = time.error,
             option;
         if (strict) {
             if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
             } else {
-                delay(function () {
-                    return letAria(mask, TOKEN_INVALID);
-                }, 1000)();
+                if (isInteger(error) && error > 0) {
+                    delay(function () {
+                        return letAria(mask, TOKEN_INVALID);
+                    })[0](error);
+                } else {
+                    letAria(mask, TOKEN_INVALID);
+                }
                 options.hidden = false;
                 selectToOptionsNone(picker, 1);
             }
@@ -1307,11 +1330,10 @@
             strict = state.strict;
         delay(function () {
             getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
-            if (strict);
-            else {
+            if (!strict) {
                 setValue(self, getText($));
             }
-        }, 1)();
+        })[0](1);
     }
 
     function onFocusOption() {
@@ -1332,11 +1354,16 @@
         e && offEventDefault(e);
         var $ = this,
             picker = getReference($),
-            mask = picker.mask;
-        setAria(mask, TOKEN_INVALID, true);
-        delay(function () {
-            return letAria(mask, TOKEN_INVALID);
-        }, 1000)();
+            mask = picker.mask,
+            state = picker.state,
+            time = state.time,
+            error = time.error;
+        if (isInteger(error) && error > 0) {
+            setAria(mask, TOKEN_INVALID, true);
+            delay(function () {
+                return letAria(mask, TOKEN_INVALID);
+            })[0](error);
+        }
     }
     var searchQuery = "";
 
@@ -1372,14 +1399,16 @@
             self = picker.self,
             state = picker.state,
             hint = _mask.hint,
-            strict = state.strict;
+            strict = state.strict,
+            time = state.time,
+            search = time.search;
         delay(function () {
             return getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
-        }, 1)();
+        })[0](1);
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
             delay(function () {
                 return picker.enter().fit();
-            }, FILTER_COMMIT_TIME + 1)();
+            })[0](search[0] + 1);
             searchQuery = 0; // This will make a difference and force the filter to execute
         }
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
@@ -1408,17 +1437,17 @@
             delay(function () {
                 // Only execute the filter if the previous search query is different from the current search query
                 if ("" === searchQuery || searchQuery !== getText($) + "") {
-                    filter(picker, $, _options);
+                    filter(search[0], picker, $, _options);
                     searchQuery = getText($) + "";
                 }
-            }, 2)();
+            })[0](2);
         }
         exit && (offEventDefault(e), offEventPropagation(e));
     }
     var searchTerm = "",
         searchTermClear = debounce(function () {
             return searchTerm = "";
-        }, SEARCH_CLEAR_TIME);
+        })[0];
 
     function onKeyDownOption(e) {
         var $ = this,
@@ -1551,18 +1580,23 @@
             keyIsAlt = e.altKey,
             keyIsCtrl = e.ctrlKey,
             picker = getReference($),
+            _active = picker._active,
+            _fix = picker._fix,
             _mask = picker._mask,
             _options = picker._options,
             max = picker.max,
             min = picker.min,
             self = picker.self,
+            state = picker.state,
             options = _mask.options,
             values = _mask.values,
+            time = state.time,
+            search = time.search,
             valueCurrent,
             valueNext,
             valuePrev;
-        searchTermClear();
-        if (isDisabled(self) || isInput(self) && isReadOnly(self)) {
+        searchTermClear(search[1]);
+        if (!_active || isInput(self) && _fix) {
             return offEventDefault(e);
         }
         if (KEY_DELETE_LEFT === key) {
@@ -1676,7 +1710,7 @@
             }
         }
         if ("" !== searchTerm) {
-            filter(picker, searchTerm, _options, true);
+            filter(search[0], picker, searchTerm, _options, true);
         }
         exit && offEventDefault(e);
     }
@@ -1696,7 +1730,7 @@
                 onAnimationsEnd(options, function () {
                     return delay(function () {
                         return focusTo(option[2]), scrollTo(option[2]);
-                    }, 1)();
+                    })[0](1);
                 });
             }
         }
@@ -1723,11 +1757,10 @@
             strict = state.strict;
         delay(function () {
             getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
-            if (strict);
-            else {
+            if (!strict) {
                 setValue(self, getText($));
             }
-        }, 1)();
+        })[0](1);
         insertAtSelection($, e.clipboardData.getData('text/plain'));
     }
     // The default state is `0`. When the pointer is pressed on the option mask, its value will become `1`. This check is
@@ -1744,13 +1777,18 @@
         offEventDefault(e);
         var $ = this,
             picker = getReference($),
+            _active = picker._active,
+            _fix = picker._fix,
             _mask = picker._mask,
             _options = picker._options,
             max = picker.max,
             self = picker.self,
             options = _mask.options,
             target = e.target;
-        if (isDisabled(self) || isReadOnly(self) || getDatum($, 'size')) {
+        if (_fix) {
+            return focusTo(picker);
+        }
+        if (!_active || getDatum($, 'size')) {
             return;
         }
         if ('listbox' === getRole(target) || getParent(target, '[role=listbox]')) {
@@ -2085,9 +2123,13 @@
         'options': null,
         'size': null,
         'strict': false,
+        'time': {
+            'error': 1000,
+            'search': [10, 500]
+        },
         'with': []
     };
-    OptionPicker.version = '2.1.4';
+    OptionPicker.version = '2.2.0';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2687,6 +2729,7 @@
             var $ = this,
                 option,
                 _active = $._active,
+                _fix = $._fix,
                 _mask = $._mask,
                 _options = $._options,
                 mask = $.mask,
@@ -2694,7 +2737,11 @@
                 input = _mask.input,
                 lot = _mask.lot,
                 options = _mask.options,
-                value = _mask.value;
+                value = _mask.value,
+                isInputSelf = isInput(self);
+            if (_fix && focus && isInputSelf) {
+                return focusTo(input), selectTo(input, mode), $;
+            }
             if (!_active) {
                 return $;
             }
@@ -2706,7 +2753,7 @@
             setReference(R, $); // Link current picker to the root target
             $.fire('enter');
             if (focus) {
-                if (isInput(self)) {
+                if (isInputSelf) {
                     focusTo(input), selectTo(input, mode);
                 } else if (option = _options.at(getValue(self))) {
                     onAnimationsEnd(options, function () {
@@ -2725,12 +2772,17 @@
         exit: function exit(focus, mode) {
             var $ = this,
                 _active = $._active,
+                _fix = $._fix,
                 _mask = $._mask,
                 _options = $._options,
                 mask = $.mask,
                 self = $.self,
                 input = _mask.input,
-                value = _mask.value;
+                value = _mask.value,
+                isInputSelf = isInput(self);
+            if (_fix && focus && isInputSelf) {
+                return focusTo(input), selectTo(input, mode), $;
+            }
             if (!_active) {
                 return $;
             }
@@ -2741,7 +2793,7 @@
             letReference(R);
             $.fire('exit');
             if (focus) {
-                if (isInput(self)) {
+                if (isInputSelf) {
                     focusTo(input), selectTo(input, mode);
                 } else {
                     focusTo(value);
@@ -2782,12 +2834,12 @@
         },
         focus: function focus(mode) {
             var $ = this,
-                _active = $._active,
-                _fix = $._fix,
-                _mask = $._mask,
+                _active = $._active;
+            $._fix;
+            var _mask = $._mask,
                 input = _mask.input,
                 value = _mask.value;
-            if (!_active && !_fix) {
+            if (!_active) {
                 return $;
             }
             if (input) {
@@ -2800,9 +2852,13 @@
         reset: function reset(focus, mode) {
             var $ = this,
                 _active = $._active,
+                _fix = $._fix,
                 _value = $._value,
                 _values = $._values,
                 max = $.max;
+            if (_fix) {
+                return focus ? $.focus(mode) : $;
+            }
             if (!_active) {
                 return $;
             }

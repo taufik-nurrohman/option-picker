@@ -1,7 +1,7 @@
 extends _index.pug
 
 block state
-  - const scripts = ['index.min.js']
+  - const scripts = ['index.js']
   - const styles = ['../layout/index.min.css', '../layout/anchor/index.min.css', 'index.min.css']
   - const theme = '#000'
   - const title = 'Option Picker ' + version
@@ -1491,6 +1491,10 @@ block content
       |     options: null,
       |     size: null,
       |     strict: false,
+      |     time: {
+      |         error: 1000,
+      |         search: [10, 500]
+      |     },
       |     with: []
       | });
     h3#constructor-option-picker-options
@@ -1650,6 +1654,44 @@ block content
     pre: code
       | const picker = new OptionPicker(document.querySelector('input[list]'), {
       |     strict: true
+      | });
+    h4#parameter-state-time
+      a(aria-hidden='true' href='#parameter-state-time') #
+      = ' '
+      code state.time
+    p Stores configuration data related to time in milliseconds.
+    h5#parameter-state-time-error
+      a(aria-hidden='true' href='#parameter-state-time-error') #
+      = ' '
+      code state.time.error
+    p Determines how long the invalid state is presented to the user. If the value is less than or equal to #[code 0], the built-in invalid state will be disabled.
+    pre: code
+      | const picker = new OptionPicker(document.querySelector('select'), {
+      |     time: {
+      |         error: 999999999 // As long as possible
+      |     }
+      | });
+    pre: code
+      | const picker = new OptionPicker(document.querySelector('select'), {
+      |     time: {
+      |         error: 0 // Disable the built-in invalid state
+      |     }
+      | });
+    h5#parameter-state-time-search
+      a(aria-hidden='true' href='#parameter-state-time-search') #
+      = ' '
+      code state.time.search
+    p It contains an array that determines how long a user needs to stop typing to begin filtering or searching and how long they need to stop typing to reset the search query in the “strict” option picker presentation.
+    pre: code
+      | const picker = new OptionPicker(document.querySelector('select'), {
+      |     time: {
+      |         search: [
+      |             // Begin filtering or searching one second after the user stops typing
+      |             1000,
+      |             // Reset the typed search query once the user stops typing
+      |             1000
+      |         ]
+      |     }
       | });
     h4#parameter-state-with
       a(aria-hidden='true' href='#parameter-state-with') #

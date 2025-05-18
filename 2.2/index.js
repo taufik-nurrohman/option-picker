@@ -46,9 +46,9 @@
             var o = 0;
             return function () {
                 return o >= r.length ? {
-                    done: !0
+                    done: true
                 } : {
-                    done: !1,
+                    done: false,
                     value: r[o++]
                 };
             };
@@ -64,8 +64,8 @@
                 i,
                 u,
                 a = [],
-                f = !0,
-                o = !1;
+                f = true,
+                o = false;
             try {
                 if (i = (t = t.call(r)).next, 0 === l) {
                     if (Object(t) !== t) return;
@@ -73,7 +73,7 @@
                 } else
                     for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
             } catch (r) {
-                o = !0, n = r;
+                o = true, n = r;
             } finally {
                 try {
                     if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
@@ -2123,7 +2123,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.1';
+    OptionPicker.version = '2.2.2';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2403,7 +2403,7 @@
     });
     OptionPicker._ = setObjectMethods(OptionPicker, {
         attach: function attach(self, state) {
-            var _max, _min, _state$size;
+            var _state$size;
             var $ = this;
             self = self || $.self;
             state = state || $.state;
@@ -2556,8 +2556,8 @@
             };
             _mask[isInputSelf ? TOKEN_TEXT : TOKEN_VALUE] = textOrValue;
             // Re-assign some state value(s) using the setter to either normalize or reject the initial value
-            $.max = max = isMultipleSelect ? (_max = max) != null ? _max : Infinity : 1;
-            $.min = min = isInputSelf ? 0 : (_min = min) != null ? _min : 1;
+            $.max = max = isMultipleSelect ? max != null ? max : Infinity : 1;
+            $.min = min = isInputSelf ? 0 : min != null ? min : 1;
             if (!isInputSelf) {
                 textOrValue.$ = {};
                 textOrValue.$[VALUE_SELF] = null;

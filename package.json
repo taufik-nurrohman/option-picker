@@ -18,7 +18,7 @@
   },
   "description": "Accessible custom `<select>` (and `<input list>`) element.",
   "devDependencies": {
-    "@taufik-nurrohman/factory": "^2.2.4"
+    "@taufik-nurrohman/factory": "^2.2.5"
   },
   "exports": {
     "import": "./index.mjs",
@@ -56,5 +56,5 @@
   "scripts": {
     "pack": "pack --clean=false --from=.factory --js-format=umd --js-name=OptionPicker --js-top='%(js.license)' --mjs=true --scss=true --to=."
   },
-  "version": "2.2.1"
+  "version": "2.2.2"
 }

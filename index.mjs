@@ -1073,7 +1073,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.2.1';
+OptionPicker.version = '2.2.2';
 
 setObjectAttributes(OptionPicker, {
     name: {

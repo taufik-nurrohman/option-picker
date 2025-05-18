@@ -1104,8 +1104,8 @@
         }
         $.fire('search', [query = "" !== query ? query : null]);
         var call = state.options;
-        // Only fetch when no other option(s) are available to query
-        if (0 === count && isFunction(call)) {
+        // Only fetch when no other option(s) are available to query, or when the current search query is empty
+        if ((0 === count || "" === q) && isFunction(call)) {
             setAria(mask, 'busy', true);
             call = call.call($, query);
             if (isInstance(call, Promise)) {
@@ -1388,27 +1388,21 @@
         var $ = this,
             exit,
             key = e.key,
+            keyIsCtrl = e.ctrlKey,
             picker = getReference($),
             _active = picker._active;
         if (!_active) {
             return offEventDefault(e);
         }
-        var _mask = picker._mask,
-            _options = picker._options,
+        var _options = picker._options,
             mask = picker.mask,
             self = picker.self,
             state = picker.state,
-            hint = _mask.hint,
             strict = state.strict,
             time = state.time,
             search = time.search;
-        delay(function () {
-            return getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
-        })[0](1);
-        if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
-            delay(function () {
-                return picker.enter().fit();
-            })[0](search[0] + 1);
+        if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key) && !keyIsCtrl) {
+            picker.enter().fit();
             searchQuery = 0; // This will make a difference and force the filter to execute
         }
         if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
@@ -1440,7 +1434,7 @@
                     filter(search[0], picker, $, _options);
                     searchQuery = getText($) + "";
                 }
-            })[0](2);
+            })[0](1);
         }
         exit && (offEventDefault(e), offEventPropagation(e));
     }
@@ -2129,7 +2123,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.0';
+    OptionPicker.version = '2.2.1';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2798,8 +2792,6 @@
                 } else {
                     focusTo(value);
                 }
-            } else {
-                selectToNone();
             }
             return $;
         },
@@ -2834,12 +2826,12 @@
         },
         focus: function focus(mode) {
             var $ = this,
-                _active = $._active;
-            $._fix;
-            var _mask = $._mask,
+                _active = $._active,
+                _fix = $._fix,
+                _mask = $._mask,
                 input = _mask.input,
                 value = _mask.value;
-            if (!_active) {
+            if (!_active && !_fix) {
                 return $;
             }
             if (input) {

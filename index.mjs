@@ -138,8 +138,8 @@ const filter = debounce(($, input, _options, selectOnly) => {
     }
     $.fire('search', [query = "" !== query ? query : null]);
     let call = state.options;
-    // Only fetch when no other option(s) are available to query
-    if (0 === count && isFunction(call)) {
+    // Only fetch when no other option(s) are available to query, or when the current search query is empty
+    if ((0 === count || "" === q) && isFunction(call)) {
         setAria(mask, 'busy', true);
         call = call.call($, query);
         if (isInstance(call, Promise)) {
@@ -396,18 +396,17 @@ function onInputTextInput(e) {
 function onKeyDownTextInput(e) {
     let $ = this, exit,
         key = e.key,
+        keyIsCtrl = e.ctrlKey,
         picker = getReference($),
         {_active} = picker;
     if (!_active) {
         return offEventDefault(e);
     }
-    let {_mask, _options, mask, self, state} = picker,
-        {hint} = _mask,
+    let {_options, mask, self, state} = picker,
         {strict, time} = state,
         {search} = time;
-    delay(() => getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY))[0](1);
-    if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key)) {
-        delay(() => picker.enter().fit())[0](search[0] + 1);
+    if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key) && !keyIsCtrl) {
+        picker.enter().fit();
         searchQuery = 0; // This will make a difference and force the filter to execute
     }
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key) {
@@ -439,7 +438,7 @@ function onKeyDownTextInput(e) {
                 filter(search[0], picker, $, _options);
                 searchQuery = getText($) + "";
             }
-        })[0](2);
+        })[0](1);
     }
     exit && (offEventDefault(e), offEventPropagation(e));
 }
@@ -1074,7 +1073,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.2.0';
+OptionPicker.version = '2.2.1';
 
 setObjectAttributes(OptionPicker, {
     name: {
@@ -1675,8 +1674,6 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             } else {
                 focusTo(value);
             }
-        } else {
-            selectToNone();
         }
         return $;
     },
@@ -1711,7 +1708,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         let $ = this,
             {_active, _fix, _mask} = $,
             {input, value} = _mask;
-        if (!_active) {
+        if (!_active && !_fix) {
             return $;
         }
         if (input) {

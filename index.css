@@ -75,6 +75,10 @@
   overflow: hidden;
   position: relative;
 }
+.option-picker__arrow:focus {
+  outline: 1px solid;
+  outline-offset: -2px;
+}
 .option-picker__arrow::after {
   border-left: 0.25em solid transparent;
   border-right: 0.25em solid transparent;

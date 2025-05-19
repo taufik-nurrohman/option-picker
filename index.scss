@@ -79,6 +79,10 @@ $name: 'option-picker';
     position: relative;
   }
   &__arrow {
+    &:focus {
+      outline: 1px solid;
+      outline-offset: -2px;
+    }
     &::after {
       border: {
         left: 0.25em solid transparent;

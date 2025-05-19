@@ -1372,6 +1372,22 @@
         }
     }
 
+    function onKeyDownArrow(e) {
+        var $ = this,
+            picker = getReference($),
+            options = picker.options,
+            key = e.key,
+            exit;
+        if (KEY_ENTER === key || ' ' === key) {
+            picker[options.open ? 'exit' : 'enter'](!(exit = true)).fit();
+        } else if (KEY_ESCAPE === key) {
+            picker.exit(exit = true);
+        } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_TAB === key) {
+            picker.enter(exit = true);
+        }
+        exit && offEventDefault(e);
+    }
+
     function onKeyDownTextInput(e) {
         var $ = this,
             exit,
@@ -1765,17 +1781,32 @@
             _options = picker._options,
             max = picker.max,
             self = picker.self,
+            arrow = _mask.arrow,
             options = _mask.options,
-            target = e.target;
+            target = e.target,
+            focusToArrow;
         if (_fix) {
             return focusTo(picker);
         }
         if (!_active || getDatum($, 'size')) {
             return;
         }
-        if ('listbox' === getRole(target) || getParent(target, '[role=listbox]')) {
-            // The user is likely browsing through the available option(s) by dragging the scroll bar
+        if (arrow === target) {
+            focusToArrow = 1;
+        }
+        // The user is likely browsing through the available option(s) by dragging the scroll bar
+        if (options === target) {
             return;
+        }
+        while ($ !== target) {
+            target = getParent(target);
+            if (arrow === target) {
+                focusToArrow = 1;
+                break;
+            }
+            if (options === target) {
+                return;
+            }
         }
         forEachMap(_options, function (v) {
             return v[2].hidden = false;
@@ -1784,9 +1815,15 @@
             setStyle(options, 'max-height', 0);
         }
         if (getReference(R) !== picker) {
-            picker.enter(true).fit();
+            picker.enter(!focusToArrow).fit();
+            if (focusToArrow) {
+                focusTo(arrow);
+            }
         } else {
-            picker.exit(1 === max || isInput(self));
+            picker.exit(!focusToArrow ? 1 === max || isInput(self) : 0);
+            if (focusToArrow) {
+                focusTo(arrow);
+            }
         }
     }
 
@@ -2422,7 +2459,8 @@
                 'aria': {
                     'hidden': TOKEN_TRUE
                 },
-                'class': n + '__arrow'
+                'class': n + '__arrow',
+                'tabindex': -1
             });
             var form = getParentForm(self);
             var mask = setElement('div', {
@@ -2513,6 +2551,7 @@
             }
             onEvent(EVENT_FOCUS, self, onFocusSelf);
             onEvent(EVENT_INVALID, self, onInvalidSelf);
+            onEvent(EVENT_KEY_DOWN, arrow, onKeyDownArrow);
             onEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
             onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
             onEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
@@ -2530,6 +2569,7 @@
             onEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
             onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
             self[TOKEN_TAB_INDEX] = -1;
+            setReference(arrow, $);
             setReference(mask, $);
             var _mask = {
                 arrow: arrow,
@@ -2644,6 +2684,7 @@
                 mask = $.mask,
                 self = $.self,
                 state = $.state,
+                arrow = _mask.arrow,
                 input = _mask.input,
                 value = _mask.value;
             var form = getParentForm(self);
@@ -2675,6 +2716,7 @@
             }
             offEvent(EVENT_FOCUS, self, onFocusSelf);
             offEvent(EVENT_INVALID, self, onInvalidSelf);
+            offEvent(EVENT_KEY_DOWN, arrow, onKeyDownArrow);
             offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
             offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
             offEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);

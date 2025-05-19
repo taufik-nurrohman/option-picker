@@ -1760,6 +1760,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
     count: function () {
         return toMapCount(this[TOKEN_VALUES]);
     },
+    // To be used by the `letValueInMap()` function
     delete: function (key, _fireHook = 1, _fireValue = 1) {
         let $ = this,
             {of, values} = $,
@@ -1798,13 +1799,16 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
             options.hidden = true;
         // Reset value to the first option if removed option is the selected option
         } else {
-            setValue(self, "");
             value === valueReal && selectToOptionFirst(of);
         }
         if (!isFunction(state.options)) {
             state.options = values;
         }
         return (_fireHook && of.fire('let.option', [key])), r;
+    },
+    // To be used by the `forEachMap()` function
+    entries: function () {
+        return this.values.entries();
     },
     get: function (key) {
         let $ = this,

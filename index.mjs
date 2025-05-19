@@ -36,6 +36,7 @@ const EVENT_TOUCH = 'touch';
 const EVENT_TOUCH_END = EVENT_TOUCH + 'end';
 const EVENT_TOUCH_MOVE = EVENT_TOUCH + EVENT_MOVE;
 const EVENT_TOUCH_START = EVENT_TOUCH + 'start';
+const EVENT_WHEEL = 'wheel';
 
 const KEY_DOWN = 'Down';
 const KEY_LEFT = 'Left';
@@ -229,6 +230,64 @@ function focusToOptionLast(picker) {
     return focusToOptionFirst(picker, 'Last');
 }
 
+function getOptionNext(option) {
+    let optionNext = getNext(option), optionParent;
+    // Skip disabled and hidden option(s)…
+    while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
+        optionNext = getNext(optionNext);
+    }
+    if (optionNext) {
+        // Next option is a group?
+        if ('group' === getRole(optionNext)) {
+            optionNext = getChildFirst(optionNext);
+        }
+    // Is the last option?
+    } else {
+        // Is in a group?
+        if ((optionParent = getParent(option)) && 'group' === getRole(optionParent)) {
+            optionNext = getNext(optionParent);
+        }
+        // Next option is a group?
+        if (optionNext && 'group' === getRole(optionNext)) {
+            optionNext = getChildFirst(optionNext);
+        }
+    }
+    // Skip disabled and hidden option(s)…
+    while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
+        optionNext = getNext(optionNext);
+    }
+    return optionNext;
+}
+
+function getOptionPrev(option) {
+    let optionParent, optionPrev = getPrev(option);
+    // Skip disabled and hidden option(s)…
+    while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
+        optionPrev = getPrev(optionPrev);
+    }
+    if (optionPrev) {
+        // Previous option is a group?
+        if ('group' === getRole(optionPrev)) {
+            optionPrev = getChildLast(optionPrev);
+        }
+    // Is the first option?
+    } else {
+        // Is in a group?
+        if ((optionParent = getParent(option)) && 'group' === getRole(optionParent)) {
+            optionPrev = getPrev(optionParent);
+        }
+        // Previous option is a group?
+        if (optionPrev && 'group' === getRole(optionPrev)) {
+            optionPrev = getChildLast(optionPrev);
+        }
+    }
+    // Skip disabled and hidden option(s)…
+    while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
+        optionPrev = getPrev(optionPrev);
+    }
+    return optionPrev;
+}
+
 function getOptionSelected($, strict) {
     let {_options, self} = $, selected;
     forEachMap(_options, (v, k) => {
@@ -304,6 +363,10 @@ function goToOptionFirst(picker, k) {
     if (option = toValuesFromMap(_options)['find' + (k || "")](v => !getAria(v[2], TOKEN_DISABLED) && !v[2].hidden)) {
         return option[2];
     }
+}
+
+function goToOptionLast(picker) {
+    return goToOptionFirst(picker, 'Last');
 }
 
 function isInput(self) {
@@ -497,65 +560,17 @@ function onKeyDownOption(e) {
     } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
         exit = true;
         if (KEY_PAGE_DOWN === key && 'group' === getRole(optionParent = getParent($))) {
-            optionNext = getNext(optionParent);
+            optionNext = getOptionNext(optionParent);
         } else {
-            optionNext = getNext($);
-        }
-        // Skip disabled and hidden option(s)…
-        while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
-            optionNext = getNext(optionNext);
-        }
-        if (optionNext) {
-            // Next option is a group?
-            if ('group' === getRole(optionNext)) {
-                optionNext = getChildFirst(optionNext);
-            }
-        // Is the last option?
-        } else {
-            // Is in a group?
-            if ((optionParent = getParent($)) && 'group' === getRole(optionParent)) {
-                optionNext = getNext(optionParent);
-            }
-            // Next option is a group?
-            if (optionNext && 'group' === getRole(optionNext)) {
-                optionNext = getChildFirst(optionNext);
-            }
-        }
-        // Skip disabled and hidden option(s)…
-        while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
-            optionNext = getNext(optionNext);
+            optionNext = getOptionNext($);
         }
         optionNext ? focusToOption(optionNext, picker) : focusToOptionFirst(picker);
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
         if (KEY_PAGE_UP === key && 'group' === getRole(optionParent = getParent($))) {
-            optionPrev = getPrev(optionParent);
+            optionPrev = getOptionPrev(optionParent);
         } else {
-            optionPrev = getPrev($);
-        }
-        // Skip disabled and hidden option(s)…
-        while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
-            optionPrev = getPrev(optionPrev);
-        }
-        if (optionPrev) {
-            // Previous option is a group?
-            if ('group' === getRole(optionPrev)) {
-                optionPrev = getChildLast(optionPrev);
-            }
-        // Is the first option?
-        } else {
-            // Is in a group?
-            if ((optionParent = getParent($)) && 'group' === getRole(optionParent)) {
-                optionPrev = getPrev(optionParent);
-            }
-            // Previous option is a group?
-            if (optionPrev && 'group' === getRole(optionPrev)) {
-                optionPrev = getChildLast(optionPrev);
-            }
-        }
-        // Skip disabled and hidden option(s)…
-        while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
-            optionPrev = getPrev(optionPrev);
+            optionPrev = getOptionPrev($);
         }
         optionPrev ? focusToOption(optionPrev, picker) : focusToOptionLast(picker);
     } else if (KEY_BEGIN === key) {
@@ -827,9 +842,10 @@ function onPointerDownRoot(e) {
     if (!picker) {
         return;
     }
-    let {mask} = picker,
+    let {mask, state} = picker,
+        {n} = state,
         {target} = e;
-    if (mask !== target && mask !== getParent(target, '[role=combobox]')) {
+    if (mask !== target && mask !== getParent(target, '.' + n)) {
         letReference($), picker.exit();
     }
 }
@@ -910,6 +926,45 @@ function onScrollWindow() {
     onResizeWindow.call(this);
 }
 
+function onWheelMask(e) {
+    let $ = this,
+        picker = getReference($),
+        {_active} = picker;
+    if (!_active) {
+        return;
+    }
+    let {_mask} = picker,
+        {options} = _mask,
+        {deltaY, target} = e,
+        optionCurrent, optionNext, optionPrev;
+    if (options === target) {
+        return;
+    }
+    while ($ !== target) {
+        target = getParent(target);
+        if (options === target) {
+            return;
+        }
+    }
+    if (!(optionCurrent = getOptionSelected(picker))) {
+        return;
+    }
+    offEventDefault(e);
+    if (deltaY < 0) {
+        if (optionPrev = getOptionPrev(optionCurrent)) {
+            focusTo(selectToOption(optionPrev, picker));
+        } else {
+            focusTo(selectToOptionLast(picker));
+        }
+    } else {
+        if (optionNext = getOptionNext(optionCurrent)) {
+            focusTo(selectToOption(optionNext, picker));
+        } else {
+            focusTo(selectToOptionFirst(picker));
+        }
+    }
+}
+
 function scrollTo(node) {
     node.scrollIntoView({
         block: 'nearest'
@@ -941,6 +996,13 @@ function selectToOption(option, picker) {
 function selectToOptionFirst(picker) {
     let option;
     if (option = goToOptionFirst(picker)) {
+        return selectToOption(option, picker);
+    }
+}
+
+function selectToOptionLast(picker) {
+    let option;
+    if (option = goToOptionLast(picker)) {
         return selectToOption(option, picker);
     }
 }
@@ -1487,6 +1549,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         onEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot, {passive: true});
         onEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
         onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
+        onEvent(EVENT_WHEEL, mask, onWheelMask);
         self[TOKEN_TAB_INDEX] = -1;
         setReference(arrow, $);
         setReference(mask, $);
@@ -1638,6 +1701,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         offEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot);
         offEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
         offEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
+        offEvent(EVENT_WHEEL, mask, onWheelMask);
         // Detach extension(s)
         if (isArray(state.with)) {
             forEachArray(state.with, (v, k) => {

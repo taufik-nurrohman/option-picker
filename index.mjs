@@ -65,7 +65,9 @@ const OPTION_TEXT = 1;
 const TOKEN_CONTENTEDITABLE = 'contenteditable';
 const TOKEN_DISABLED = 'disabled';
 const TOKEN_FALSE = 'false';
+const TOKEN_GROUP = 'group';
 const TOKEN_INVALID = 'invalid';
+const TOKEN_OPTGROUP = 'opt' + TOKEN_GROUP;
 const TOKEN_READONLY = 'readonly';
 const TOKEN_READ_ONLY = 'readOnly';
 const TOKEN_REQUIRED = 'required';
@@ -155,6 +157,20 @@ const filter = debounce(($, input, _options, selectOnly) => {
     }
 })[0];
 
+const [letError, letErrorAbort] = delay(function (picker) {
+    letAria(picker.mask, TOKEN_INVALID);
+});
+
+const setError = function (picker) {
+    setAria(picker.mask, TOKEN_INVALID, true);
+};
+
+const [toggleHint] = delay(function (picker) {
+    let {_mask} = picker,
+        {hint, input} = _mask;
+    getText(input, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+});
+
 const name = 'OptionPicker';
 
 function createOptions($, options) {
@@ -238,17 +254,17 @@ function getOptionNext(option) {
     }
     if (optionNext) {
         // Next option is a group?
-        if ('group' === getRole(optionNext)) {
+        if (TOKEN_GROUP === getRole(optionNext)) {
             optionNext = getChildFirst(optionNext);
         }
     // Is the last option?
     } else {
         // Is in a group?
-        if ((optionParent = getParent(option)) && 'group' === getRole(optionParent)) {
+        if ((optionParent = getParent(option)) && TOKEN_GROUP === getRole(optionParent)) {
             optionNext = getNext(optionParent);
         }
         // Next option is a group?
-        if (optionNext && 'group' === getRole(optionNext)) {
+        if (optionNext && TOKEN_GROUP === getRole(optionNext)) {
             optionNext = getChildFirst(optionNext);
         }
     }
@@ -267,17 +283,17 @@ function getOptionPrev(option) {
     }
     if (optionPrev) {
         // Previous option is a group?
-        if ('group' === getRole(optionPrev)) {
+        if (TOKEN_GROUP === getRole(optionPrev)) {
             optionPrev = getChildLast(optionPrev);
         }
     // Is the first option?
     } else {
         // Is in a group?
-        if ((optionParent = getParent(option)) && 'group' === getRole(optionParent)) {
+        if ((optionParent = getParent(option)) && TOKEN_GROUP === getRole(optionParent)) {
             optionPrev = getPrev(optionParent);
         }
         // Previous option is a group?
-        if (optionPrev && 'group' === getRole(optionPrev)) {
+        if (optionPrev && TOKEN_GROUP === getRole(optionPrev)) {
             optionPrev = getChildLast(optionPrev);
         }
     }
@@ -328,7 +344,7 @@ function getOptions(self) {
             attributes.mark = "" === attributes[TOKEN_SELECTED] ? true : !!attributes[TOKEN_SELECTED];
             delete attributes[TOKEN_SELECTED];
         }
-        if ('optgroup' === getName(v)) {
+        if (TOKEN_OPTGROUP === getName(v)) {
             forEachMap(getOptions(v), (vv, kk) => {
                 vv[1]['&'] = v.label;
                 setValueInMap(toValue(kk), vv, map);
@@ -376,7 +392,7 @@ function isInput(self) {
 function onBlurTextInput() {
     let $ = this,
         picker = getReference($),
-        {_mask, mask, state} = picker,
+        {_mask, state} = picker,
         {options} = _mask,
         {strict, time} = state,
         {error} = time, option;
@@ -384,11 +400,7 @@ function onBlurTextInput() {
         if (!options.hidden && (option = getOptionSelected(picker, 1))) {
             selectToOption(option, picker);
         } else {
-            if (isInteger(error) && error > 0) {
-                delay(() => letAria(mask, TOKEN_INVALID))[0](error);
-            } else {
-                letAria(mask, TOKEN_INVALID);
-            }
+            letError(isInteger(error) && error > 0 ? error : 0, picker);
             options.hidden = false;
             selectToOptionsNone(picker, 1);
         }
@@ -398,15 +410,14 @@ function onBlurTextInput() {
 function onCutTextInput() {
     let $ = this,
         picker = getReference($),
-        {_mask, self, state} = picker,
-        {hint} = _mask,
+        {self, state} = picker,
         {strict} = state;
     delay(() => {
-        getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
         if (!strict) {
             setValue(self, getText($));
         }
     })[0](1);
+    toggleHint(1, picker);
 }
 
 function onFocusOption() {
@@ -415,10 +426,11 @@ function onFocusOption() {
 
 // Focus on the “visually hidden” self will move its focus to the mask, maintains the natural flow of the tab(s)!
 function onFocusSelf() {
-    getReference(this).focus();
+    focusTo(getReference(this));
 }
 
 function onFocusTextInput() {
+    letErrorAbort();
     let $ = this,
         picker = getReference($);
     getText($, 0) ? selectTo($) : picker.enter().fit();
@@ -428,13 +440,10 @@ function onInvalidSelf(e) {
     e && offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {mask, state} = picker,
+        {state} = picker,
         {time} = state,
         {error} = time;
-    if (isInteger(error) && error > 0) {
-        setAria(mask, TOKEN_INVALID, true);
-        delay(() => letAria(mask, TOKEN_INVALID))[0](error);
-    }
+    letError(isInteger(error) && error > 0 ? error : 0, picker), setError(picker);
 }
 
 let searchQuery = "";
@@ -559,7 +568,7 @@ function onKeyDownOption(e) {
         }
     } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
         exit = true;
-        if (KEY_PAGE_DOWN === key && 'group' === getRole(optionParent = getParent($))) {
+        if (KEY_PAGE_DOWN === key && TOKEN_GROUP === getRole(optionParent = getParent($))) {
             optionNext = getOptionNext(optionParent);
         } else {
             optionNext = getOptionNext($);
@@ -567,7 +576,7 @@ function onKeyDownOption(e) {
         optionNext ? focusToOption(optionNext, picker) : focusToOptionFirst(picker);
     } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
         exit = true;
-        if (KEY_PAGE_UP === key && 'group' === getRole(optionParent = getParent($))) {
+        if (KEY_PAGE_UP === key && TOKEN_GROUP === getRole(optionParent = getParent($))) {
             optionPrev = getOptionPrev(optionParent);
         } else {
             optionPrev = getOptionPrev($);
@@ -752,16 +761,14 @@ function onPasteTextInput(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {_mask, self, state} = picker,
-        {hint} = _mask,
+        {self, state} = picker,
         {strict} = state;
     delay(() => {
-        getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
         if (!strict) {
             setValue(self, getText($));
         }
     })[0](1);
-    insertAtSelection($, e.clipboardData.getData('text/plain'));
+    toggleHint(1, picker), insertAtSelection($, e.clipboardData.getData('text/plain'));
 }
 
 // The default state is `0`. When the pointer is pressed on the option mask, its value will become `1`. This check is
@@ -1465,7 +1472,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         $.mask = mask;
         const maskFlex = setElement('div', {
             'class': n + '__flex',
-            'role': 'group'
+            'role': TOKEN_GROUP
         });
         const maskOptions = setElement('div', {
             'class': n + '__options',
@@ -1893,8 +1900,8 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         letElement(r[2]), letElement(r[3]);
         r = letValueInMap(key, values);
         // Remove empty group(s)
-        parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
-        parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
+        parent && TOKEN_GROUP === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
+        parentReal && TOKEN_OPTGROUP === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
         // Clear value if there are no option(s)
         if (0 === toCount(getChildren(lot))) {
             selectToOptionsNone(of, !isInput(self));
@@ -1916,7 +1923,7 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         let $ = this,
             {values} = $,
             value = getValueInMap(toValue(key), values), parent;
-        if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
+        if (value && (parent = getParent(value[2])) && TOKEN_GROUP === getRole(parent)) {
             return [getElementIndex(value[2]), getElementIndex(parent)];
         }
         return value ? getElementIndex(value[2]) : -1;
@@ -1959,14 +1966,14 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         } else {}
         if (hasState(value[1], '&')) {
             optionGroup = getElement('.' + n + '__options-batch[value="' + fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', lot);
-            optionGroupReal = getElement('optgroup[label="' + fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
+            optionGroupReal = getElement(TOKEN_OPTGROUP + '[label="' + fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', self) || setElement(TOKEN_OPTGROUP, {
                 'label': value[1]['&'],
                 'title': getState(value[1], 'title') ?? false
             });
             if (!optionGroup || getOptionValue(optionGroup) !== value[1]['&']) {
                 setChildLast(lot, optionGroup = setElement('data', {
                     'class': n + '__options-batch',
-                    'role': 'group',
+                    'role': TOKEN_GROUP,
                     'title': getState(value[1], 'title') ?? false,
                     'value': value[1]['&']
                 }));

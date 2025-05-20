@@ -38,24 +38,6 @@
         if (Array.isArray(r)) return r;
     }
 
-    function _createForOfIteratorHelperLoose(r, e) {
-        var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
-        if (t) return (t = t.call(r)).next.bind(t);
-        if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || r && "number" == typeof r.length) {
-            t && (r = t);
-            var o = 0;
-            return function () {
-                return o >= r.length ? {
-                    done: true
-                } : {
-                    done: false,
-                    value: r[o++]
-                };
-            };
-        }
-        throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-
     function _iterableToArrayLimit(r, l) {
         var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
         if (null != t) {
@@ -88,7 +70,7 @@
     function _maybeArrayLike(r, a, e) {
         if (a && !Array.isArray(a) && "number" == typeof a.length) {
             var y = a.length;
-            return _arrayLikeToArray(a, e < y ? e : y);
+            return _arrayLikeToArray(a, void 0 !== e && e < y ? e : y);
         }
         return r(a, e);
     }
@@ -287,7 +269,7 @@
     };
     var forEachArray = function forEachArray(array, at) {
         for (var i = 0, j = toCount(array), v; i < j; ++i) {
-            v = at(array[i], i);
+            v = at.call(array, array[i], i);
             if (-1 === v) {
                 array.splice(i, 1);
                 continue;
@@ -302,11 +284,13 @@
         return array;
     };
     var forEachMap = function forEachMap(map, at) {
-        for (var _iterator = _createForOfIteratorHelperLoose(map), _step; !(_step = _iterator()).done;) {
-            var _step$value = _maybeArrayLike(_slicedToArray, _step.value, 2),
-                k = _step$value[0],
-                v = _step$value[1];
-            v = at(v, k);
+        var items = map.entries(),
+            item = items.next();
+        while (!item.done) {
+            var _item$value = _maybeArrayLike(_slicedToArray, item.value, 2),
+                k = _item$value[0],
+                v = _item$value[1];
+            v = at.call(map, v, k);
             if (-1 === v) {
                 letValueInMap(k, map);
                 continue;
@@ -317,13 +301,14 @@
             if (1 === v) {
                 continue;
             }
+            item = items.next();
         }
         return map;
     };
     var forEachObject = function forEachObject(object, at) {
         var v;
         for (var k in object) {
-            v = at(object[k], k);
+            v = at.call(object, object[k], k);
             if (-1 === v) {
                 delete object[k];
                 continue;
@@ -338,11 +323,13 @@
         return object;
     };
     var forEachSet = function forEachSet(set, at) {
-        for (var _iterator2 = _createForOfIteratorHelperLoose(set.entries()), _step2; !(_step2 = _iterator2()).done;) {
-            var _step2$value = _maybeArrayLike(_slicedToArray, _step2.value, 2),
-                k = _step2$value[0],
-                v = _step2$value[1];
-            v = at(v, k);
+        var items = set.entries(),
+            item = items.next();
+        while (!item.done) {
+            var _item$value2 = _maybeArrayLike(_slicedToArray, item.value, 2),
+                k = _item$value2[0],
+                v = _item$value2[1];
+            v = at.call(set, v, k);
             if (-1 === v) {
                 letValueInMap(k, set);
                 continue;
@@ -353,6 +340,7 @@
             if (1 === v) {
                 continue;
             }
+            item = items.next();
         }
         return set;
     };
@@ -1004,6 +992,7 @@
     var EVENT_TOUCH_END = EVENT_TOUCH + 'end';
     var EVENT_TOUCH_MOVE = EVENT_TOUCH + EVENT_MOVE;
     var EVENT_TOUCH_START = EVENT_TOUCH + 'start';
+    var EVENT_WHEEL = 'wheel';
     var KEY_DOWN = 'Down';
     var KEY_LEFT = 'Left';
     var KEY_RIGHT = 'Right';
@@ -1028,7 +1017,9 @@
     var TOKEN_CONTENTEDITABLE = 'contenteditable';
     var TOKEN_DISABLED = 'disabled';
     var TOKEN_FALSE = 'false';
+    var TOKEN_GROUP = 'group';
     var TOKEN_INVALID = 'invalid';
+    var TOKEN_OPTGROUP = 'opt' + TOKEN_GROUP;
     var TOKEN_READONLY = 'readonly';
     var TOKEN_READ_ONLY = 'readOnly';
     var TOKEN_REQUIRED = 'required';
@@ -1119,6 +1110,23 @@
             }
         }
     })[0];
+    var _delay = delay(function (picker) {
+            letAria(picker.mask, TOKEN_INVALID);
+        }),
+        _delay2 = _maybeArrayLike(_slicedToArray, _delay, 2),
+        letError = _delay2[0],
+        letErrorAbort = _delay2[1];
+    var setError = function setError(picker) {
+        setAria(picker.mask, TOKEN_INVALID, true);
+    };
+    var _delay3 = delay(function (picker) {
+            var _mask = picker._mask,
+                hint = _mask.hint,
+                input = _mask.input;
+            getText(input, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+        }),
+        _delay4 = _maybeArrayLike(_slicedToArray, _delay3, 1),
+        toggleHint = _delay4[0];
     var name = 'OptionPicker';
 
     function createOptions($, options) {
@@ -1200,6 +1208,66 @@
         return focusToOptionFirst(picker, 'Last');
     }
 
+    function getOptionNext(option) {
+        var optionNext = getNext(option),
+            optionParent;
+        // Skip disabled and hidden option(s)…
+        while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
+            optionNext = getNext(optionNext);
+        }
+        if (optionNext) {
+            // Next option is a group?
+            if (TOKEN_GROUP === getRole(optionNext)) {
+                optionNext = getChildFirst(optionNext);
+            }
+            // Is the last option?
+        } else {
+            // Is in a group?
+            if ((optionParent = getParent(option)) && TOKEN_GROUP === getRole(optionParent)) {
+                optionNext = getNext(optionParent);
+            }
+            // Next option is a group?
+            if (optionNext && TOKEN_GROUP === getRole(optionNext)) {
+                optionNext = getChildFirst(optionNext);
+            }
+        }
+        // Skip disabled and hidden option(s)…
+        while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
+            optionNext = getNext(optionNext);
+        }
+        return optionNext;
+    }
+
+    function getOptionPrev(option) {
+        var optionParent,
+            optionPrev = getPrev(option);
+        // Skip disabled and hidden option(s)…
+        while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
+            optionPrev = getPrev(optionPrev);
+        }
+        if (optionPrev) {
+            // Previous option is a group?
+            if (TOKEN_GROUP === getRole(optionPrev)) {
+                optionPrev = getChildLast(optionPrev);
+            }
+            // Is the first option?
+        } else {
+            // Is in a group?
+            if ((optionParent = getParent(option)) && TOKEN_GROUP === getRole(optionParent)) {
+                optionPrev = getPrev(optionParent);
+            }
+            // Previous option is a group?
+            if (optionPrev && TOKEN_GROUP === getRole(optionPrev)) {
+                optionPrev = getChildLast(optionPrev);
+            }
+        }
+        // Skip disabled and hidden option(s)…
+        while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
+            optionPrev = getPrev(optionPrev);
+        }
+        return optionPrev;
+    }
+
     function getOptionSelected($, strict) {
         var _options = $._options,
             self = $.self,
@@ -1245,7 +1313,7 @@
                 attributes.mark = "" === attributes[TOKEN_SELECTED] ? true : !!attributes[TOKEN_SELECTED];
                 delete attributes[TOKEN_SELECTED];
             }
-            if ('optgroup' === getName(v)) {
+            if (TOKEN_OPTGROUP === getName(v)) {
                 forEachMap(getOptions(v), function (vv, kk) {
                     vv[1]['&'] = v.label;
                     setValueInMap(_toValue(kk), vv, map);
@@ -1288,6 +1356,10 @@
         }
     }
 
+    function goToOptionLast(picker) {
+        return goToOptionFirst(picker, 'Last');
+    }
+
     function isInput(self) {
         return 'input' === getName(self);
     }
@@ -1296,7 +1368,6 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
-            mask = picker.mask,
             state = picker.state,
             options = _mask.options,
             strict = state.strict,
@@ -1307,13 +1378,7 @@
             if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
             } else {
-                if (isInteger(error) && error > 0) {
-                    delay(function () {
-                        return letAria(mask, TOKEN_INVALID);
-                    })[0](error);
-                } else {
-                    letAria(mask, TOKEN_INVALID);
-                }
+                letError(isInteger(error) && error > 0 ? error : 0, picker);
                 options.hidden = false;
                 selectToOptionsNone(picker, 1);
             }
@@ -1323,17 +1388,15 @@
     function onCutTextInput() {
         var $ = this,
             picker = getReference($),
-            _mask = picker._mask,
             self = picker.self,
             state = picker.state,
-            hint = _mask.hint,
             strict = state.strict;
         delay(function () {
-            getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
             if (!strict) {
                 setValue(self, getText($));
             }
         })[0](1);
+        toggleHint(1, picker);
     }
 
     function onFocusOption() {
@@ -1341,10 +1404,11 @@
     }
     // Focus on the “visually hidden” self will move its focus to the mask, maintains the natural flow of the tab(s)!
     function onFocusSelf() {
-        getReference(this).focus();
+        focusTo(getReference(this));
     }
 
     function onFocusTextInput() {
+        letErrorAbort();
         var $ = this,
             picker = getReference($);
         getText($, 0) ? selectTo($) : picker.enter().fit();
@@ -1354,16 +1418,10 @@
         e && offEventDefault(e);
         var $ = this,
             picker = getReference($),
-            mask = picker.mask,
             state = picker.state,
             time = state.time,
             error = time.error;
-        if (isInteger(error) && error > 0) {
-            setAria(mask, TOKEN_INVALID, true);
-            delay(function () {
-                return letAria(mask, TOKEN_INVALID);
-            })[0](error);
-        }
+        letError(isInteger(error) && error > 0 ? error : 0, picker), setError(picker);
     }
     var searchQuery = "";
 
@@ -1382,6 +1440,22 @@
         } else if ('insertText' === inputType) {
             setStyle(hint, TOKEN_VISIBILITY, 'hidden');
         }
+    }
+
+    function onKeyDownArrow(e) {
+        var $ = this,
+            picker = getReference($),
+            options = picker.options,
+            key = e.key,
+            exit;
+        if (KEY_ENTER === key || ' ' === key) {
+            picker[options.open ? 'exit' : 'enter'](!(exit = true)).fit();
+        } else if (KEY_ESCAPE === key) {
+            picker.exit(exit = true);
+        } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_TAB === key) {
+            picker.enter(exit = true);
+        }
+        exit && offEventDefault(e);
     }
 
     function onKeyDownTextInput(e) {
@@ -1485,66 +1559,18 @@
             }
         } else if (KEY_ARROW_DOWN === key || KEY_PAGE_DOWN === key) {
             exit = true;
-            if (KEY_PAGE_DOWN === key && 'group' === getRole(optionParent = getParent($))) {
-                optionNext = getNext(optionParent);
+            if (KEY_PAGE_DOWN === key && TOKEN_GROUP === getRole(optionParent = getParent($))) {
+                optionNext = getOptionNext(optionParent);
             } else {
-                optionNext = getNext($);
-            }
-            // Skip disabled and hidden option(s)…
-            while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
-                optionNext = getNext(optionNext);
-            }
-            if (optionNext) {
-                // Next option is a group?
-                if ('group' === getRole(optionNext)) {
-                    optionNext = getChildFirst(optionNext);
-                }
-                // Is the last option?
-            } else {
-                // Is in a group?
-                if ((optionParent = getParent($)) && 'group' === getRole(optionParent)) {
-                    optionNext = getNext(optionParent);
-                }
-                // Next option is a group?
-                if (optionNext && 'group' === getRole(optionNext)) {
-                    optionNext = getChildFirst(optionNext);
-                }
-            }
-            // Skip disabled and hidden option(s)…
-            while (optionNext && (getAria(optionNext, TOKEN_DISABLED) || optionNext.hidden)) {
-                optionNext = getNext(optionNext);
+                optionNext = getOptionNext($);
             }
             optionNext ? focusToOption(optionNext) : focusToOptionFirst(picker);
         } else if (KEY_ARROW_UP === key || KEY_PAGE_UP === key) {
             exit = true;
-            if (KEY_PAGE_UP === key && 'group' === getRole(optionParent = getParent($))) {
-                optionPrev = getPrev(optionParent);
+            if (KEY_PAGE_UP === key && TOKEN_GROUP === getRole(optionParent = getParent($))) {
+                optionPrev = getOptionPrev(optionParent);
             } else {
-                optionPrev = getPrev($);
-            }
-            // Skip disabled and hidden option(s)…
-            while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
-                optionPrev = getPrev(optionPrev);
-            }
-            if (optionPrev) {
-                // Previous option is a group?
-                if ('group' === getRole(optionPrev)) {
-                    optionPrev = getChildLast(optionPrev);
-                }
-                // Is the first option?
-            } else {
-                // Is in a group?
-                if ((optionParent = getParent($)) && 'group' === getRole(optionParent)) {
-                    optionPrev = getPrev(optionParent);
-                }
-                // Previous option is a group?
-                if (optionPrev && 'group' === getRole(optionPrev)) {
-                    optionPrev = getChildLast(optionPrev);
-                }
-            }
-            // Skip disabled and hidden option(s)…
-            while (optionPrev && (getAria(optionPrev, TOKEN_DISABLED) || optionPrev.hidden)) {
-                optionPrev = getPrev(optionPrev);
+                optionPrev = getOptionPrev($);
             }
             optionPrev ? focusToOption(optionPrev) : focusToOptionLast(picker);
         } else if (KEY_BEGIN === key) {
@@ -1744,18 +1770,15 @@
         offEventDefault(e);
         var $ = this,
             picker = getReference($),
-            _mask = picker._mask,
             self = picker.self,
             state = picker.state,
-            hint = _mask.hint,
             strict = state.strict;
         delay(function () {
-            getText($, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
             if (!strict) {
                 setValue(self, getText($));
             }
         })[0](1);
-        insertAtSelection($, e.clipboardData.getData('text/plain'));
+        toggleHint(1, picker), insertAtSelection($, e.clipboardData.getData('text/plain'));
     }
     // The default state is `0`. When the pointer is pressed on the option mask, its value will become `1`. This check is
     // done to distinguish between a “touch only” and a “touch move” on touch device(s). It is also checked on pointer
@@ -1777,17 +1800,32 @@
             _options = picker._options,
             max = picker.max,
             self = picker.self,
+            arrow = _mask.arrow,
             options = _mask.options,
-            target = e.target;
+            target = e.target,
+            focusToArrow;
         if (_fix) {
             return focusTo(picker);
         }
         if (!_active || getDatum($, 'size')) {
             return;
         }
-        if ('listbox' === getRole(target) || getParent(target, '[role=listbox]')) {
-            // The user is likely browsing through the available option(s) by dragging the scroll bar
+        if (arrow === target) {
+            focusToArrow = 1;
+        }
+        // The user is likely browsing through the available option(s) by dragging the scroll bar
+        if (options === target) {
             return;
+        }
+        while ($ !== target) {
+            target = getParent(target);
+            if (arrow === target) {
+                focusToArrow = 1;
+                break;
+            }
+            if (options === target) {
+                return;
+            }
         }
         forEachMap(_options, function (v) {
             return v[2].hidden = false;
@@ -1796,9 +1834,15 @@
             setStyle(options, 'max-height', 0);
         }
         if (getReference(R) !== picker) {
-            picker.enter(true).fit();
+            picker.enter(!focusToArrow).fit();
+            if (focusToArrow) {
+                focusTo(arrow);
+            }
         } else {
-            picker.exit(1 === max || isInput(self));
+            picker.exit(!focusToArrow ? 1 === max || isInput(self) : 0);
+            if (focusToArrow) {
+                focusTo(arrow);
+            }
         }
     }
 
@@ -1823,8 +1867,10 @@
             return;
         }
         var mask = picker.mask,
+            state = picker.state,
+            n = state.n,
             target = e.target;
-        if (mask !== target && mask !== getParent(target, '[role=combobox]')) {
+        if (mask !== target && mask !== getParent(target, '.' + n)) {
             letReference($), picker.exit();
         }
     }
@@ -1907,6 +1953,48 @@
         onResizeWindow.call(this);
     }
 
+    function onWheelMask(e) {
+        var $ = this,
+            picker = getReference($),
+            _active = picker._active;
+        if (!_active) {
+            return;
+        }
+        var _mask = picker._mask,
+            options = _mask.options,
+            deltaY = e.deltaY,
+            target = e.target,
+            optionCurrent,
+            optionNext,
+            optionPrev;
+        if (options === target) {
+            return;
+        }
+        while ($ !== target) {
+            target = getParent(target);
+            if (options === target) {
+                return;
+            }
+        }
+        if (!(optionCurrent = getOptionSelected(picker))) {
+            return;
+        }
+        offEventDefault(e);
+        if (deltaY < 0) {
+            if (optionPrev = getOptionPrev(optionCurrent)) {
+                focusTo(selectToOption(optionPrev, picker));
+            } else {
+                focusTo(selectToOptionLast(picker));
+            }
+        } else {
+            if (optionNext = getOptionNext(optionCurrent)) {
+                focusTo(selectToOption(optionNext, picker));
+            } else {
+                focusTo(selectToOptionFirst(picker));
+            }
+        }
+    }
+
     function scrollTo(node) {
         node.scrollIntoView({
             block: 'nearest'
@@ -1944,6 +2032,13 @@
     function selectToOptionFirst(picker) {
         var option;
         if (option = goToOptionFirst(picker)) {
+            return selectToOption(option, picker);
+        }
+    }
+
+    function selectToOptionLast(picker) {
+        var option;
+        if (option = goToOptionLast(picker)) {
             return selectToOption(option, picker);
         }
     }
@@ -2434,7 +2529,8 @@
                 'aria': {
                     'hidden': TOKEN_TRUE
                 },
-                'class': n + '__arrow'
+                'class': n + '__arrow',
+                'tabindex': -1
             });
             var form = getParentForm(self);
             var mask = setElement('div', {
@@ -2452,7 +2548,7 @@
             $.mask = mask;
             var maskFlex = setElement('div', {
                 'class': n + '__flex',
-                'role': 'group'
+                'role': TOKEN_GROUP
             });
             var maskOptions = setElement('div', {
                 'class': n + '__options',
@@ -2525,6 +2621,7 @@
             }
             onEvent(EVENT_FOCUS, self, onFocusSelf);
             onEvent(EVENT_INVALID, self, onInvalidSelf);
+            onEvent(EVENT_KEY_DOWN, arrow, onKeyDownArrow);
             onEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
             onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
             onEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
@@ -2541,7 +2638,9 @@
             });
             onEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
             onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
+            onEvent(EVENT_WHEEL, mask, onWheelMask);
             self[TOKEN_TAB_INDEX] = -1;
+            setReference(arrow, $);
             setReference(mask, $);
             var _mask = {
                 arrow: arrow,
@@ -2656,6 +2755,7 @@
                 mask = $.mask,
                 self = $.self,
                 state = $.state,
+                arrow = _mask.arrow,
                 input = _mask.input,
                 value = _mask.value;
             var form = getParentForm(self);
@@ -2687,6 +2787,7 @@
             }
             offEvent(EVENT_FOCUS, self, onFocusSelf);
             offEvent(EVENT_INVALID, self, onInvalidSelf);
+            offEvent(EVENT_KEY_DOWN, arrow, onKeyDownArrow);
             offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
             offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
             offEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
@@ -2697,6 +2798,7 @@
             offEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot);
             offEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
             offEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
+            offEvent(EVENT_WHEEL, mask, onWheelMask);
             // Detach extension(s)
             if (isArray(state.with)) {
                 forEachArray(state.with, function (v, k) {
@@ -2884,6 +2986,7 @@
         count: function count() {
             return toMapCount(this[TOKEN_VALUES]);
         },
+        // To be used by the `letValueInMap()` function
         delete: function _delete(key, _fireHook, _fireValue) {
             if (_fireHook === void 0) {
                 _fireHook = 1;
@@ -2930,15 +3033,14 @@
             letElement(r[2]), letElement(r[3]);
             r = letValueInMap(key, values);
             // Remove empty group(s)
-            parent && 'group' === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
-            parentReal && 'optgroup' === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
+            parent && TOKEN_GROUP === getRole(parent) && 0 === toCount(getChildren(parent)) && letElement(parent);
+            parentReal && TOKEN_OPTGROUP === getName(parentReal) && 0 === toCount(getChildren(parentReal)) && letElement(parentReal);
             // Clear value if there are no option(s)
             if (0 === toCount(getChildren(lot))) {
                 selectToOptionsNone(of, !isInput(self));
                 options.hidden = true;
                 // Reset value to the first option if removed option is the selected option
             } else {
-                setValue(self, "");
                 value === valueReal && selectToOptionFirst(of);
             }
             if (!isFunction(state.options)) {
@@ -2946,12 +3048,16 @@
             }
             return _fireHook && of.fire('let.option', [key]), r;
         },
+        // To be used by the `forEachMap()` function
+        entries: function entries() {
+            return this.values.entries();
+        },
         get: function get(key) {
             var $ = this,
                 values = $.values,
                 value = getValueInMap(_toValue(key), values),
                 parent;
-            if (value && (parent = getParent(value[2])) && 'group' === getRole(parent)) {
+            if (value && (parent = getParent(value[2])) && TOKEN_GROUP === getRole(parent)) {
                 return [getElementIndex(value[2]), getElementIndex(parent)];
             }
             return value ? getElementIndex(value[2]) : -1;
@@ -3014,7 +3120,7 @@
             if (hasState(value[1], '&')) {
                 var _getState;
                 optionGroup = getElement('.' + n + '__options-batch[value="' + _fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', lot);
-                optionGroupReal = getElement('optgroup[label="' + _fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', self) || setElement('optgroup', {
+                optionGroupReal = getElement(TOKEN_OPTGROUP + '[label="' + _fromValue(value[1]['&']).replace(/"/g, '\\"') + '"]', self) || setElement(TOKEN_OPTGROUP, {
                     'label': value[1]['&'],
                     'title': (_getState = getState(value[1], 'title')) != null ? _getState : false
                 });
@@ -3022,7 +3128,7 @@
                     var _getState2;
                     setChildLast(lot, optionGroup = setElement('data', {
                         'class': n + '__options-batch',
-                        'role': 'group',
+                        'role': TOKEN_GROUP,
                         'title': (_getState2 = getState(value[1], 'title')) != null ? _getState2 : false,
                         'value': value[1]['&']
                     }));

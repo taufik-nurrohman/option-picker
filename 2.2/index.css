@@ -24,6 +24,7 @@
 
 .option-picker,
 .option-picker * {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   box-sizing: border-box;
   color: inherit;
   font: inherit;
@@ -74,6 +75,10 @@
 .option-picker__value {
   overflow: hidden;
   position: relative;
+}
+.option-picker__arrow:focus {
+  outline: 1px solid;
+  outline-offset: -2px;
 }
 .option-picker__arrow::after {
   border-left: 0.25em solid transparent;

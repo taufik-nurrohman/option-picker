@@ -1111,12 +1111,16 @@
     };
     var _delay3 = delay(function (picker) {
             var _mask = picker._mask,
-                hint = _mask.hint,
                 input = _mask.input;
-            getText(input, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+            toggleHintByValue(picker, getText(input, 0));
         }),
         _delay4 = _maybeArrayLike(_slicedToArray, _delay3, 1),
         toggleHint = _delay4[0];
+    var toggleHintByValue = function toggleHintByValue(picker, value) {
+        var _mask = picker._mask,
+            hint = _mask.hint;
+        value ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+    };
     var name = 'OptionPicker';
 
     function createOptions($, options) {
@@ -1423,12 +1427,10 @@
         if (!_active) {
             return offEventDefault(e);
         }
-        var _mask = picker._mask,
-            hint = _mask.hint;
         if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
-            letStyle(hint, TOKEN_VISIBILITY);
+            toggleHintByValue(picker, 0);
         } else if ('insertText' === inputType) {
-            setStyle(hint, TOKEN_VISIBILITY, 'hidden');
+            toggleHintByValue(picker, 1);
         }
     }
 
@@ -1518,7 +1520,6 @@
             _mask = picker._mask,
             max = picker.max,
             self = picker.self,
-            hint = _mask.hint,
             value = _mask.value,
             optionNext,
             optionParent,
@@ -1573,7 +1574,7 @@
             if (!keyIsCtrl) {
                 if (1 === toCount(key) && !keyIsAlt) {
                     if (isInput(self)) {
-                        setStyle(hint, TOKEN_VISIBILITY, 'hidden');
+                        toggleHintByValue(picker, key);
                     } else {
                         searchTerm += key; // Initialize search term, right before exit
                     }
@@ -1995,7 +1996,6 @@
         var _mask = picker._mask,
             mask = picker.mask,
             self = picker.self,
-            hint = _mask.hint,
             input = _mask.input,
             value = _mask.value,
             optionReal,
@@ -2009,8 +2009,8 @@
             if (isInput(self)) {
                 letAria(mask, TOKEN_INVALID);
                 setAria(input, 'activedescendant', getID(option));
-                setStyle(hint, TOKEN_VISIBILITY, 'hidden');
                 setText(input, getText(option));
+                toggleHintByValue(picker, 1);
             } else {
                 setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));
                 setValue(value, v);
@@ -2037,7 +2037,6 @@
         var _mask = picker._mask,
             _options = picker._options,
             self = picker.self,
-            hint = _mask.hint,
             input = _mask.input,
             value = _mask.value,
             v;
@@ -2049,8 +2048,8 @@
             setValue(self, v = "");
             if (isInput(self)) {
                 letAria(input, 'activedescendant');
-                letStyle(hint, TOKEN_VISIBILITY);
                 setText(input, "");
+                toggleHintByValue(picker, 0);
             } else {
                 letAttribute(value, TOKEN_VALUE);
                 setHTML(value.$[VALUE_TEXT], v);
@@ -2208,7 +2207,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.2';
+    OptionPicker.version = '2.2.3';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2400,17 +2399,19 @@
             },
             set: function set(value) {
                 var $ = this,
-                    _active = $._active,
-                    _mask = $._mask,
-                    hint = _mask.hint,
-                    input = _mask.input,
-                    text = _mask.text,
-                    v;
-                if (!_active || !text) {
+                    _active = $._active;
+                if (!_active) {
                     return $;
                 }
-                setText(input, v = _fromValue(value));
-                return v ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY), $;
+                var _mask2 = _mask,
+                    text = _mask2.text;
+                if (!text) {
+                    return $;
+                }
+                var _mask3 = _mask,
+                    input = _mask3.input,
+                    v;
+                return setText(input, v = _fromValue(value)), toggleHintByValue($, v), $;
             }
         },
         value: {

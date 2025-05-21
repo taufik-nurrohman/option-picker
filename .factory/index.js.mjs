@@ -167,9 +167,15 @@ const setError = function (picker) {
 
 const [toggleHint] = delay(function (picker) {
     let {_mask} = picker,
-        {hint, input} = _mask;
-    getText(input, 0) ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+        {input} = _mask;
+    toggleHintByValue(picker, getText(input, 0));
 });
+
+const toggleHintByValue = function (picker, value) {
+    let {_mask} = picker,
+        {hint} = _mask;
+    value ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY);
+};
 
 const name = 'OptionPicker';
 
@@ -456,12 +462,10 @@ function onInputTextInput(e) {
     if (!_active) {
         return offEventDefault(e);
     }
-    let {_mask} = picker,
-        {hint} = _mask;
     if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
-        letStyle(hint, TOKEN_VISIBILITY);
+        toggleHintByValue(picker, 0);
     } else if ('insertText' === inputType) {
-        setStyle(hint, TOKEN_VISIBILITY, 'hidden');
+        toggleHintByValue(picker, 1);
     }
 }
 
@@ -541,7 +545,7 @@ function onKeyDownOption(e) {
         keyIsShift = e.shiftKey,
         picker = getReference($),
         {_mask, max, self} = picker,
-        {hint, value} = _mask,
+        {value} = _mask,
         optionNext, optionParent, optionPrev, valueCurrent;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key) {
         exit = true;
@@ -592,7 +596,7 @@ function onKeyDownOption(e) {
         if (!keyIsCtrl) {
             if (1 === toCount(key) && !keyIsAlt) {
                 if (isInput(self)) {
-                    setStyle(hint, TOKEN_VISIBILITY, 'hidden');
+                    toggleHintByValue(picker, key);
                 } else {
                     searchTerm += key; // Initialize search term, right before exit
                 }
@@ -980,7 +984,7 @@ function scrollTo(node) {
 
 function selectToOption(option, picker) {
     let {_mask, mask, self} = picker,
-        {hint, input, value} = _mask, optionReal, v;
+        {input, value} = _mask, optionReal, v;
     if (option) {
         optionReal = option.$[OPTION_SELF];
         selectToOptionsNone(picker);
@@ -990,8 +994,8 @@ function selectToOption(option, picker) {
         if (isInput(self)) {
             letAria(mask, TOKEN_INVALID);
             setAria(input, 'activedescendant', getID(option));
-            setStyle(hint, TOKEN_VISIBILITY, 'hidden');
             setText(input, getText(option));
+            toggleHintByValue(picker, 1);
         } else {
             setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));
             setValue(value, v);
@@ -1016,7 +1020,7 @@ function selectToOptionLast(picker) {
 
 function selectToOptionsNone(picker, fireValue) {
     let {_mask, _options, self} = picker,
-        {hint, input, value} = _mask, v;
+        {input, value} = _mask, v;
     forEachMap(_options, v => {
         letAria(v[2], TOKEN_SELECTED);
         v[3][TOKEN_SELECTED] = false;
@@ -1025,8 +1029,8 @@ function selectToOptionsNone(picker, fireValue) {
         setValue(self, v = "");
         if (isInput(self)) {
             letAria(input, 'activedescendant');
-            letStyle(hint, TOKEN_VISIBILITY);
             setText(input, "");
+            toggleHintByValue(picker, 0);
         } else {
             letAttribute(value, TOKEN_VALUE);
             setHTML(value.$[VALUE_TEXT], v);
@@ -1348,13 +1352,16 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active, _mask} = $,
-                {hint, input, text} = _mask, v;
-            if (!_active || !text) {
+                {_active} = $;
+            if (!_active) {
                 return $;
             }
-            setText(input, v = fromValue(value));
-            return (v ? setStyle(hint, TOKEN_VISIBILITY, 'hidden') : letStyle(hint, TOKEN_VISIBILITY)), $;
+            let {text} = _mask;
+            if (!text) {
+                return $;
+            }
+            let {input} = _mask, v;
+            return setText(input, v = fromValue(value)), toggleHintByValue($, v), $;
         }
     },
     value: {

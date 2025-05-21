@@ -3,8 +3,7 @@ import {R, W, getAria, getAttributes, getChildFirst, getChildLast, getChildren, 
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {forEachArray, forEachMap, forEachObject, forEachSet, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, onAnimationsEnd, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toValuesFromMap, toValueFirstFromMap} from '@taufik-nurrohman/f';
 import {fromStates, fromValue} from '@taufik-nurrohman/from';
-import {getRect} from '@taufik-nurrohman/rect';
-import {getScroll, setScroll} from '@taufik-nurrohman/rect';
+import {getRect, getScroll, setScroll} from '@taufik-nurrohman/rect';
 import {hasValue} from '@taufik-nurrohman/has';
 import {hook} from '@taufik-nurrohman/hook';
 import {isArray, isBoolean, isFloat, isFunction, isInstance, isInteger, isObject, isSet, isString} from '@taufik-nurrohman/is';

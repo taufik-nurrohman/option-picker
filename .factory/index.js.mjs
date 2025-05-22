@@ -856,7 +856,7 @@ function onPointerDownRoot(e) {
         {n} = state,
         {target} = e;
     if (mask !== target && mask !== getParent(target, '.' + n)) {
-        letReference($), picker.exit();
+        picker.exit();
     }
 }
 
@@ -1254,10 +1254,15 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active, mask, self, state} = $;
-            if (!_active || isInput(self)) {
+                {_active} = $;
+            if (!_active) {
                 return $;
             }
+            let {self} = $;
+            if (isInput(self)) {
+                return $;
+            }
+            let {mask, state} = $;
             value = (Infinity === value || isInteger(value)) && value > 0 ? value : 0;
             self.multiple = value > 1;
             state.max = value;
@@ -1274,10 +1279,11 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active, state} = $;
+                {_active} = $;
             if (!_active) {
                 return $;
             }
+            let {state} = $;
             state.min = isInteger(value) && value > 0 ? value : 0;
             return $;
         }
@@ -1552,15 +1558,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         onEvent(EVENT_FOCUS, self, onFocusSelf);
         onEvent(EVENT_INVALID, self, onInvalidSelf);
         onEvent(EVENT_KEY_DOWN, arrow, onKeyDownArrow);
-        onEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
         onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
-        onEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
-        onEvent(EVENT_MOUSE_UP, R, onPointerUpRoot);
-        onEvent(EVENT_RESIZE, W, onResizeWindow, {passive: true});
-        onEvent(EVENT_SCROLL, W, onScrollWindow, {passive: true});
-        onEvent(EVENT_TOUCH_END, R, onPointerUpRoot);
-        onEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot, {passive: true});
-        onEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
         onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
         onEvent(EVENT_WHEEL, mask, onWheelMask);
         self[TOKEN_TAB_INDEX] = -1;
@@ -1704,15 +1702,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         offEvent(EVENT_FOCUS, self, onFocusSelf);
         offEvent(EVENT_INVALID, self, onInvalidSelf);
         offEvent(EVENT_KEY_DOWN, arrow, onKeyDownArrow);
-        offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
         offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
-        offEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
-        offEvent(EVENT_MOUSE_UP, R, onPointerUpRoot);
-        offEvent(EVENT_RESIZE, W, onResizeWindow);
-        offEvent(EVENT_SCROLL, W, onScrollWindow);
-        offEvent(EVENT_TOUCH_END, R, onPointerUpRoot);
-        offEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot);
-        offEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
         offEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
         offEvent(EVENT_WHEEL, mask, onWheelMask);
         // Detach extension(s)
@@ -1766,6 +1756,14 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 focusTo(value);
             }
         }
+        onEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
+        onEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
+        onEvent(EVENT_MOUSE_UP, R, onPointerUpRoot);
+        onEvent(EVENT_RESIZE, W, onResizeWindow, {passive: true});
+        onEvent(EVENT_SCROLL, W, onScrollWindow, {passive: true});
+        onEvent(EVENT_TOUCH_END, R, onPointerUpRoot);
+        onEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot, {passive: true});
+        onEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
         return $;
     },
     exit: function (focus, mode) {
@@ -1790,6 +1788,14 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 focusTo(value);
             }
         }
+        offEvent(EVENT_MOUSE_DOWN, R, onPointerDownRoot);
+        offEvent(EVENT_MOUSE_MOVE, R, onPointerMoveRoot);
+        offEvent(EVENT_MOUSE_UP, R, onPointerUpRoot);
+        offEvent(EVENT_RESIZE, W, onResizeWindow);
+        offEvent(EVENT_SCROLL, W, onScrollWindow);
+        offEvent(EVENT_TOUCH_END, R, onPointerUpRoot);
+        offEvent(EVENT_TOUCH_MOVE, R, onPointerMoveRoot);
+        offEvent(EVENT_TOUCH_START, R, onPointerDownRoot);
         return $;
     },
     fit: function () {

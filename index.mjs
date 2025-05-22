@@ -397,10 +397,12 @@ function isInput(self) {
 function onBlurTextInput() {
     let $ = this,
         picker = getReference($),
-        {_mask, state} = picker,
+        {_mask, mask, state} = picker,
         {options} = _mask,
         {strict, time} = state,
         {error} = time, option;
+    onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+    onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
     if (strict) {
         if (!options.hidden && (option = getOptionSelected(picker, 1))) {
             selectToOption(option, picker);
@@ -437,7 +439,13 @@ function onFocusSelf() {
 function onFocusTextInput() {
     letErrorAbort();
     let $ = this,
-        picker = getReference($);
+        picker = getReference($),
+        {mask, options} = picker;
+    if (options.open) {
+        offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+        offEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
+        return;
+    }
     getText($, 0) ? selectTo($) : picker.enter().fit();
 }
 

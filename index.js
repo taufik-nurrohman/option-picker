@@ -1364,12 +1364,15 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
+            mask = picker.mask,
             state = picker.state,
             options = _mask.options,
             strict = state.strict,
             time = state.time,
             error = time.error,
             option;
+        onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+        onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
         if (strict) {
             if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
@@ -1406,7 +1409,14 @@
     function onFocusTextInput() {
         letErrorAbort();
         var $ = this,
-            picker = getReference($);
+            picker = getReference($),
+            mask = picker.mask,
+            options = picker.options;
+        if (options.open) {
+            offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+            offEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
+            return;
+        }
         getText($, 0) ? selectTo($) : picker.enter().fit();
     }
 

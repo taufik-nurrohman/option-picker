@@ -206,26 +206,25 @@ $name: 'option-picker';
   }
   &__text {
     border-color: transparent;
-    cursor: text;
     flex: 1;
-    user-select: text;
     span {
       flex: 1;
       position: relative;
       z-index: 1;
-      &:empty {
-        &::after {
-          content: '\200c';
-        }
+      // Ensure height even when it is empty
+      &::after {
+        content: '\200c';
       }
       * {
-        display: inline; // Remove (hide) line-break in text box
+        display: inline; // Remove (hide) line-break in tag editor
       }
       br {
         display: none;
       }
       + span {
+        align-items: center;
         bottom: 0;
+        display: flex;
         left: 0;
         opacity: 0.5;
         padding: inherit;

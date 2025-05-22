@@ -25,13 +25,6 @@ block style
     |   color: #000;
     |   flex: 1;
     | }
-    | .option-picker__arrow,
-    | .option-picker__text,
-    | .option-picker__value {
-    |   border-width: 0;
-    |   gap: 0;
-    |   padding: 0 0.5em;
-    | }
     | .option-picker:focus-within {
     |   border-color: #00f;
     | }
@@ -47,8 +40,19 @@ block style
     |   border-color: #f00;
     |   color: #000;
     | }
+    | .option-picker__arrow,
+    | .option-picker__text,
+    | .option-picker__value {
+    |   border-width: 0;
+    |   gap: 0;
+    |   padding: 0 0.5em;
+    | }
     | .option-picker__arrow:focus {
     |   outline: 0;
+    | }
+    | .option-picker__flex {
+    |   gap: 2px;
+    |   padding: 2px;
     | }
     | .option-picker__option {
     |   border: 0;

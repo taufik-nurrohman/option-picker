@@ -183,6 +183,9 @@
   border-color: transparent;
   flex: 1;
 }
+.option-picker__text:focus-within {
+  cursor: text;
+}
 .option-picker__text span {
   flex: 1;
   position: relative;

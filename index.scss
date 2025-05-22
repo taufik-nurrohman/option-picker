@@ -207,6 +207,9 @@ $name: 'option-picker';
   &__text {
     border-color: transparent;
     flex: 1;
+    &:focus-within {
+      cursor: text;
+    }
     span {
       flex: 1;
       position: relative;

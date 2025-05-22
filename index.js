@@ -325,12 +325,10 @@
         var items = _toIterator(set),
             item = items.next();
         while (!item.done) {
-            var _item$value2 = _maybeArrayLike(_slicedToArray, item.value, 2),
-                k = _item$value2[0],
-                v = _item$value2[1];
-            v = at.call(set, v, k);
+            var v = item.value;
+            v = at.call(set, v, v);
             if (-1 === v) {
-                letValueInMap(k, set);
+                letValueInMap(v, set);
             } else if (0 === v) {
                 break;
             }

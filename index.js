@@ -2740,6 +2740,7 @@
                 arrow = _mask.arrow,
                 input = _mask.input,
                 value = _mask.value;
+            $.exit();
             var form = getParentForm(self);
             $._active = false;
             $._options = new OptionPickerOptions($);

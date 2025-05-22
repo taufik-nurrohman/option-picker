@@ -1672,6 +1672,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         let $ = this,
             {_mask, mask, self, state} = $,
             {arrow, input, value} = _mask;
+        $.exit();
         const form = getParentForm(self);
         $._active = false;
         $._options = new OptionPickerOptions($);

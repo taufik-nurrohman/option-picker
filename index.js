@@ -267,6 +267,10 @@
         }
         return x;
     };
+
+    function _toIterator(v) {
+        return v[Symbol.iterator]();
+    }
     var forEachArray = function forEachArray(array, at) {
         for (var i = 0, j = toCount(array), v; i < j; ++i) {
             v = at.call(array, array[i], i);
@@ -284,7 +288,7 @@
         return array;
     };
     var forEachMap = function forEachMap(map, at) {
-        var items = map.entries(),
+        var items = _toIterator(map),
             item = items.next();
         while (!item.done) {
             var _item$value = _maybeArrayLike(_slicedToArray, item.value, 2),
@@ -318,7 +322,7 @@
         return object;
     };
     var forEachSet = function forEachSet(set, at) {
-        var items = set.entries(),
+        var items = _toIterator(set),
             item = items.next();
         while (!item.done) {
             var _item$value2 = _maybeArrayLike(_slicedToArray, item.value, 2),
@@ -3038,10 +3042,6 @@
                 state.options = values;
             }
             return _fireHook && of.fire('let.option', [key]), r;
-        },
-        // To be used by the `forEachMap()` function
-        entries: function entries() {
-            return this.values.entries();
         },
         get: function get(key) {
             var $ = this,

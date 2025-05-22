@@ -1921,10 +1921,6 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
         }
         return (_fireHook && of.fire('let.option', [key])), r;
     },
-    // To be used by the `forEachMap()` function
-    entries: function () {
-        return this.values.entries();
-    },
     get: function (key) {
         let $ = this,
             {values} = $,

@@ -325,10 +325,11 @@
         var items = _toIterator(set),
             item = items.next();
         while (!item.done) {
-            var v = item.value;
-            v = at.call(set, v, v);
+            var k = void 0,
+                v = item.value;
+            v = at.call(set, v, k = v);
             if (-1 === v) {
-                letValueInMap(v, set);
+                letValueInMap(k, set);
             } else if (0 === v) {
                 break;
             }
@@ -1468,13 +1469,9 @@
             key = e.key,
             keyIsCtrl = e.ctrlKey,
             picker = getReference($),
-            _active = picker._active,
-            _fix = picker._fix;
+            _active = picker._active;
         if (!_active) {
-            if (_fix && KEY_TAB === key) {
-                return selectToNone();
-            }
-            return offEventDefault(e);
+            return;
         }
         var _options = picker._options,
             mask = picker.mask,
@@ -1508,7 +1505,7 @@
                 currentOption && focusTo(currentOption);
             }
         } else if (KEY_TAB === key) {
-            picker.exit();
+            selectToNone(), picker.exit();
         } else {
             delay(function () {
                 // Only execute the filter if the previous search query is different from the current search query
@@ -1518,7 +1515,7 @@
                 }
             })[0](1);
         }
-        exit && (offEventDefault(e), offEventPropagation(e));
+        exit && offEventDefault(e);
     }
     var searchTerm = "",
         searchTermClear = debounce(function () {
@@ -1597,116 +1594,36 @@
                 }!keyIsShift && picker.exit(!(exit = false));
             }
         }
-        exit && (offEventDefault(e), offEventPropagation(e));
+        exit && offEventDefault(e);
     }
 
     function onKeyDownValue(e) {
         var $ = this,
-            exit,
-            key = e.key,
+            picker = getReference($),
+            _active = picker._active;
+        if (!_active) {
+            return;
+        }
+        var key = e.key,
             keyIsAlt = e.altKey,
             keyIsCtrl = e.ctrlKey,
-            picker = getReference($),
-            _active = picker._active,
-            _fix = picker._fix,
             _mask = picker._mask,
             _options = picker._options,
             max = picker.max,
             min = picker.min,
             self = picker.self,
             state = picker.state,
+            arrow = _mask.arrow,
             options = _mask.options,
             values = _mask.values,
             time = state.time,
             search = time.search,
+            exit,
             valueCurrent,
             valueNext,
             valuePrev;
         searchTermClear(search[1]);
-        if (!_active || isInput(self) && _fix) {
-            return offEventDefault(e);
-        }
-        if (KEY_DELETE_LEFT === key) {
-            searchTerm = "";
-            var countValues = toSetCount(values);
-            if (min < countValues) {
-                if (valueCurrent = _options.at(getOptionValue($))) {
-                    letAria(valueCurrent[2], TOKEN_SELECTED);
-                    valueCurrent[3][TOKEN_SELECTED] = false;
-                    if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values) || (valuePrev = getNext($)) && hasKeyInMap(valuePrev, values)) {
-                        focusTo(_mask[TOKEN_VALUE] = valuePrev);
-                        offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
-                        offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
-                        offEvent(EVENT_MOUSE_DOWN, $.$[VALUE_X], onPointerDownValueX);
-                        offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
-                        offEvent(EVENT_TOUCH_START, $.$[VALUE_X], onPointerDownValueX);
-                        letValueInMap($, values), letElement($);
-                        // Do not remove the only option value
-                    } else {
-                        letAttribute(_mask[TOKEN_VALUE] = $, TOKEN_VALUE);
-                        setHTML($.$[VALUE_TEXT], "");
-                        // No option(s) selected
-                        if (0 === min) {
-                            selectToOptionsNone(picker, 1);
-                        }
-                    }
-                }
-            } else {
-                onInvalidSelf.call(self);
-                picker.fire('min.options', [countValues, min]);
-            }
-            if (max !== Infinity && max > countValues) {
-                forEachMap(_options, function (v, k) {
-                    if (!v[3][TOKEN_DISABLED]) {
-                        letAria(v[2], TOKEN_DISABLED);
-                        setAttribute(v[2], TOKEN_TABINDEX, 0);
-                    }
-                });
-            }
-        } else if (KEY_DELETE_RIGHT === key) {
-            searchTerm = "";
-            var _countValues = toSetCount(values);
-            if (min < _countValues) {
-                if (valueCurrent = _options.at(getOptionValue($))) {
-                    letAria(valueCurrent[2], TOKEN_SELECTED);
-                    valueCurrent[3][TOKEN_SELECTED] = false;
-                    if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values) || (valueNext = getPrev($)) && hasKeyInMap(valueNext, values)) {
-                        focusTo(_mask[TOKEN_VALUE] = valueNext);
-                        offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
-                        offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
-                        offEvent(EVENT_MOUSE_DOWN, $.$[VALUE_X], onPointerDownValueX);
-                        offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
-                        offEvent(EVENT_TOUCH_START, $.$[VALUE_X], onPointerDownValueX);
-                        letValueInMap($, values), letElement($);
-                        // Do not remove the only option value
-                    } else {
-                        letAttribute(_mask[TOKEN_VALUE] = $, TOKEN_VALUE);
-                        setHTML($.$[VALUE_TEXT], "");
-                        // No option(s) selected
-                        if (0 === min) {
-                            selectToOptionsNone(picker, 1);
-                        }
-                    }
-                }
-            } else {
-                onInvalidSelf.call(self);
-                picker.fire('min.options', [_countValues, min]);
-            }
-            if (max !== Infinity && max > _countValues) {
-                forEachMap(_options, function (v, k) {
-                    if (!v[3][TOKEN_DISABLED]) {
-                        letAria(v[2], TOKEN_DISABLED);
-                        setAttribute(v[2], TOKEN_TABINDEX, -1);
-                    }
-                });
-            }
-        } else if (KEY_ESCAPE === key) {
-            searchTerm = "";
-            picker.exit(exit = true);
-        } else if (KEY_TAB === key) {
-            searchTerm = "";
-            picker.exit(exit = false);
-        } else if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
+        if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || "" === searchTerm && ' ' === key) {
             var focus = exit = true;
             if (KEY_ENTER === key || ' ' === key) {
                 if (valueCurrent = _options.at(getOptionValue($))) {
@@ -1730,9 +1647,101 @@
             if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values)) {
                 focusTo(valueNext);
             }
-        } else if (1 === toCount(key) && !keyIsAlt) {
+        } else if (KEY_BEGIN === key) {
             exit = true;
-            if (!keyIsCtrl) {
+            forEachSet(values, function (v) {
+                valueCurrent = v;
+                return 0; // Break
+            });
+            valueCurrent && focusTo(valueCurrent);
+        } else if (KEY_DELETE_LEFT === key) {
+            exit = true;
+            searchTerm = "";
+            var countValues = toSetCount(values);
+            if (min >= countValues) {
+                onInvalidSelf.call(self);
+                picker.fire('min.options', [countValues, min]);
+            } else if (valueCurrent = _options.at(getOptionValue($))) {
+                letAria(valueCurrent[2], TOKEN_SELECTED);
+                valueCurrent[3][TOKEN_SELECTED] = false;
+                if ((valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values) || (valueNext = getNext($)) && hasKeyInMap(valueNext, values)) {
+                    focusTo(_mask[TOKEN_VALUE] = valuePrev || valueNext);
+                    offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $.$[VALUE_X], onPointerDownValueX);
+                    offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, $.$[VALUE_X], onPointerDownValueX);
+                    letValueInMap($, values), letElement($);
+                    // Do not remove the only option value
+                } else {
+                    letAttribute(_mask[TOKEN_VALUE] = $, TOKEN_VALUE);
+                    setHTML($.$[VALUE_TEXT], "");
+                    // No option(s) selected
+                    if (0 === min) {
+                        selectToOptionsNone(picker, 1);
+                    }
+                }
+                if (max !== Infinity && max > countValues) {
+                    forEachMap(_options, function (v, k) {
+                        if (!v[3][TOKEN_DISABLED]) {
+                            letAria(v[2], TOKEN_DISABLED);
+                            setAttribute(v[2], TOKEN_TABINDEX, 0);
+                        }
+                    });
+                }
+            }
+        } else if (KEY_DELETE_RIGHT === key) {
+            exit = true;
+            searchTerm = "";
+            var _countValues = toSetCount(values);
+            if (min >= _countValues) {
+                onInvalidSelf.call(self);
+                picker.fire('min.options', [_countValues, min]);
+            } else if (valueCurrent = _options.at(getOptionValue($))) {
+                letAria(valueCurrent[2], TOKEN_SELECTED);
+                valueCurrent[3][TOKEN_SELECTED] = false;
+                if ((valueNext = getNext($)) && hasKeyInMap(valueNext, values) || (valuePrev = getPrev($)) && hasKeyInMap(valuePrev, values)) {
+                    focusTo(_mask[TOKEN_VALUE] = valueNext && valueNext !== arrow ? valueNext : valuePrev);
+                    offEvent(EVENT_KEY_DOWN, $, onKeyDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $, onPointerDownValue);
+                    offEvent(EVENT_MOUSE_DOWN, $.$[VALUE_X], onPointerDownValueX);
+                    offEvent(EVENT_TOUCH_START, $, onPointerDownValue);
+                    offEvent(EVENT_TOUCH_START, $.$[VALUE_X], onPointerDownValueX);
+                    letValueInMap($, values), letElement($);
+                    // Do not remove the only option value
+                } else {
+                    letAttribute(_mask[TOKEN_VALUE] = $, TOKEN_VALUE);
+                    setHTML($.$[VALUE_TEXT], "");
+                    // No option(s) selected
+                    if (0 === min) {
+                        selectToOptionsNone(picker, 1);
+                    }
+                }
+                if (max !== Infinity && max > _countValues) {
+                    forEachMap(_options, function (v, k) {
+                        if (!v[3][TOKEN_DISABLED]) {
+                            letAria(v[2], TOKEN_DISABLED);
+                            setAttribute(v[2], TOKEN_TABINDEX, -1);
+                        }
+                    });
+                }
+            }
+        } else if (KEY_END === key) {
+            exit = true;
+            forEachSet(values, function (v) {
+                return valueCurrent = v;
+            });
+            valueCurrent && focusTo(valueCurrent);
+        } else if (KEY_ESCAPE === key) {
+            searchTerm = "";
+            picker.exit(exit = true);
+        } else if (KEY_TAB === key) {
+            searchTerm = "";
+            picker.exit(exit = false);
+        } else if (1 === toCount(key) && !keyIsAlt) {
+            if (keyIsCtrl);
+            else {
+                exit = true;
                 searchTerm += key;
             }
         }
@@ -1830,7 +1839,7 @@
                 focusToArrow = 1;
                 break;
             }
-            if (options === target) {
+            if (!target || options === target) {
                 return;
             }
         }
@@ -1963,8 +1972,9 @@
     function onWheelMask(e) {
         var $ = this,
             picker = getReference($),
-            _active = picker._active;
-        if (!_active) {
+            _active = picker._active,
+            max = picker.max;
+        if (!_active || max > 1) {
             return;
         }
         var _mask = picker._mask,
@@ -2025,7 +2035,7 @@
             if (isInput(self)) {
                 letAria(mask, TOKEN_INVALID);
                 setAria(input, 'activedescendant', getID(option));
-                setText(input, getText(option));
+                setText(input, getText(option.$[OPTION_TEXT]));
                 toggleHintByValue(picker, 1);
             } else {
                 setHTML(value.$[VALUE_TEXT], getHTML(option.$[OPTION_TEXT]));

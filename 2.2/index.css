@@ -79,6 +79,9 @@
 .option-picker[aria-invalid=true] .option-picker__value[aria-selected=true] {
   background: rgba(255, 0, 0, 0.25);
 }
+.option-picker:not([aria-readonly=true]) .option-picker__text:focus-within {
+  cursor: text;
+}
 .option-picker__arrow,
 .option-picker__text,
 .option-picker__value {
@@ -182,9 +185,6 @@
 .option-picker__text {
   border-color: transparent;
   flex: 1;
-}
-.option-picker__text:focus-within {
-  cursor: text;
 }
 .option-picker__text span {
   flex: 1;

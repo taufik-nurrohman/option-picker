@@ -83,6 +83,13 @@ $name: 'option-picker';
       }
     }
   }
+  &:not([aria-readonly='true']) {
+    .#{$name}__text {
+      &:focus-within {
+        cursor: text;
+      }
+    }
+  }
   &__arrow,
   &__text,
   &__value {
@@ -207,9 +214,6 @@ $name: 'option-picker';
   &__text {
     border-color: transparent;
     flex: 1;
-    &:focus-within {
-      cursor: text;
-    }
     span {
       flex: 1;
       position: relative;

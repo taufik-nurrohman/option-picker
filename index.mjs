@@ -496,8 +496,11 @@ function onKeyDownTextInput(e) {
         key = e.key,
         keyIsCtrl = e.ctrlKey,
         picker = getReference($),
-        {_active} = picker;
+        {_active, _fix} = picker;
     if (!_active) {
+        if (_fix && KEY_TAB === key) {
+            return selectToNone();
+        }
         return offEventDefault(e);
     }
     let {_options, mask, self, state} = picker,
@@ -1187,7 +1190,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.2.3';
+OptionPicker.version = '2.2.4';
 
 setObjectAttributes(OptionPicker, {
     name: {

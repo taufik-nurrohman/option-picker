@@ -496,8 +496,11 @@ function onKeyDownTextInput(e) {
         key = e.key,
         keyIsCtrl = e.ctrlKey,
         picker = getReference($),
-        {_active} = picker;
+        {_active, _fix} = picker;
     if (!_active) {
+        if (_fix && KEY_TAB === key) {
+            return selectToNone();
+        }
         return offEventDefault(e);
     }
     let {_options, mask, self, state} = picker,

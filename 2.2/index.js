@@ -1364,12 +1364,15 @@
         var $ = this,
             picker = getReference($),
             _mask = picker._mask,
+            mask = picker.mask,
             state = picker.state,
             options = _mask.options,
             strict = state.strict,
             time = state.time,
             error = time.error,
             option;
+        onEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+        onEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
         if (strict) {
             if (!options.hidden && (option = getOptionSelected(picker, 1))) {
                 selectToOption(option, picker);
@@ -1406,7 +1409,14 @@
     function onFocusTextInput() {
         letErrorAbort();
         var $ = this,
-            picker = getReference($);
+            picker = getReference($),
+            mask = picker.mask,
+            options = picker.options;
+        if (options.open) {
+            offEvent(EVENT_MOUSE_DOWN, mask, onPointerDownMask);
+            offEvent(EVENT_TOUCH_START, mask, onPointerDownMask);
+            return;
+        }
         getText($, 0) ? selectTo($) : picker.enter().fit();
     }
 
@@ -2427,11 +2437,12 @@
             set: function set(value) {
                 var $ = this,
                     _active = $._active,
-                    _options = $._options,
-                    option;
-                if (!_active) {
+                    _fix = $._fix;
+                if (!_active && !_fix) {
                     return $;
                 }
+                var _options = $._options,
+                    option;
                 if (option = _options.at(value)) {
                     selectToOption(option[2], $);
                 }
@@ -2445,12 +2456,13 @@
             set: function set(values) {
                 var $ = this,
                     _active = $._active,
-                    _options = $._options,
-                    option;
-                if (!_active || $.max < 2) {
+                    _fix = $._fix;
+                if (!_active && !_fix || $.max < 2) {
                     return $;
                 }
                 selectToOptionsNone($);
+                var _options = $._options,
+                    option;
                 if (isFloat(values) || isInteger(values) || isString(values)) {
                     values = [values];
                 }
@@ -2926,13 +2938,13 @@
         focus: function focus(mode) {
             var $ = this,
                 _active = $._active,
-                _fix = $._fix,
-                _mask = $._mask,
-                input = _mask.input,
-                value = _mask.value;
+                _fix = $._fix;
             if (!_active && !_fix) {
                 return $;
             }
+            var _mask = $._mask,
+                input = _mask.input,
+                value = _mask.value;
             if (input) {
                 focusTo(input), selectTo(input, mode);
             } else {
@@ -2943,16 +2955,13 @@
         reset: function reset(focus, mode) {
             var $ = this,
                 _active = $._active,
-                _fix = $._fix,
-                _value = $._value,
-                _values = $._values,
-                max = $.max;
-            if (_fix) {
-                return focus ? $.focus(mode) : $;
-            }
-            if (!_active) {
+                _fix = $._fix;
+            if (!_active && !_fix) {
                 return $;
             }
+            var _value = $._value,
+                _values = $._values,
+                max = $.max;
             if (max > 1) {
                 $[TOKEN_VALUES] = _values;
             } else {

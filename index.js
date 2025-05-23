@@ -2437,11 +2437,12 @@
             set: function set(value) {
                 var $ = this,
                     _active = $._active,
-                    _options = $._options,
-                    option;
-                if (!_active) {
+                    _fix = $._fix;
+                if (!_active && !_fix) {
                     return $;
                 }
+                var _options = $._options,
+                    option;
                 if (option = _options.at(value)) {
                     selectToOption(option[2], $);
                 }
@@ -2455,12 +2456,13 @@
             set: function set(values) {
                 var $ = this,
                     _active = $._active,
-                    _options = $._options,
-                    option;
-                if (!_active || $.max < 2) {
+                    _fix = $._fix;
+                if (!_active && !_fix || $.max < 2) {
                     return $;
                 }
                 selectToOptionsNone($);
+                var _options = $._options,
+                    option;
                 if (isFloat(values) || isInteger(values) || isString(values)) {
                     values = [values];
                 }
@@ -2953,16 +2955,13 @@
         reset: function reset(focus, mode) {
             var $ = this,
                 _active = $._active,
-                _fix = $._fix,
-                _value = $._value,
-                _values = $._values,
-                max = $.max;
-            if (_fix) {
-                return focus ? $.focus(mode) : $;
-            }
-            if (!_active) {
+                _fix = $._fix;
+            if (!_active && !_fix) {
                 return $;
             }
+            var _value = $._value,
+                _values = $._values,
+                max = $.max;
             if (max > 1) {
                 $[TOKEN_VALUES] = _values;
             } else {

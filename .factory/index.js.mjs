@@ -1384,10 +1384,11 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active, _options} = $, option;
-            if (!_active) {
+                {_active, _fix} = $;
+            if (!_active && !_fix) {
                 return $;
             }
+            let {_options} = $, option;
             if (option = _options.at(value)) {
                 selectToOption(option[2], $);
             }
@@ -1400,11 +1401,12 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (values) {
             let $ = this,
-                {_active, _options} = $, option;
-            if (!_active || $.max < 2) {
+                {_active, _fix} = $;
+            if (!_active && !_fix || $.max < 2) {
                 return $;
             }
             selectToOptionsNone($);
+            let {_options} = $, option;
             if (isFloat(values) || isInteger(values) || isString(values)) {
                 values = [values];
             }
@@ -1851,13 +1853,11 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     reset: function (focus, mode) {
         let $ = this,
-            {_active, _fix, _value, _values, max} = $;
-        if (_fix) {
-            return focus ? $.focus(mode) : $;
-        }
-        if (!_active) {
+            {_active, _fix} = $;
+        if (!_active && !_fix) {
             return $;
         }
+        let {_value, _values, max} = $;
         if (max > 1) {
             $[TOKEN_VALUES] = _values;
         } else {

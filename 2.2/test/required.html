@@ -20,7 +20,7 @@
       <form method="get" target="_blank">
         <p><input list="options" name="test" required type="text"></p>
         <p><label><input checked onchange="picker.vital = this.checked;" type="checkbox"> <span>Required</span></label></p>
-        <p><button type="submit">Submit</button></p>
+        <p><button type="submit">Submit</button> <button type="reset">Reset</button></p>
       </form>
     </main><datalist id="options">
       <option>Option 1</option>
@@ -30,6 +30,9 @@
     <script src="../index.min.js"></script>
     <script>
       const picker = new OptionPicker(document.querySelector('input'));
+      picker.self.form.addEventListener('reset', function () {
+          setTimeout(() => picker.vital = document.querySelector('input[type=checkbox]').checked, 1);
+      });
       picker.vital = document.querySelector('input[type=checkbox]').checked;
       picker.on('min.options', function (count, min) {
           console.error('The minimum number of options that must be selected to be able to submit the form is ' + min + '.');

@@ -1836,11 +1836,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     focus: function (mode) {
         let $ = this,
-            {_active, _fix, _mask} = $,
-            {input, value} = _mask;
+            {_active, _fix} = $;
         if (!_active && !_fix) {
             return $;
         }
+        let {_mask} = $,
+            {input, value} = _mask;
         if (input) {
             focusTo(input), selectTo(input, mode);
         } else {

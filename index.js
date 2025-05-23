@@ -2936,13 +2936,13 @@
         focus: function focus(mode) {
             var $ = this,
                 _active = $._active,
-                _fix = $._fix,
-                _mask = $._mask,
-                input = _mask.input,
-                value = _mask.value;
+                _fix = $._fix;
             if (!_active && !_fix) {
                 return $;
             }
+            var _mask = $._mask,
+                input = _mask.input,
+                value = _mask.value;
             if (input) {
                 focusTo(input), selectTo(input, mode);
             } else {

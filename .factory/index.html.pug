@@ -1836,6 +1836,16 @@ block content
       = ' '
       code picker.fix
     p Gets or sets the read-only state of the option picker. By setting the value to #[code false] or #[code true], the read-only state of the source element will also be set automatically. This only applies to the option picker that is sourced from an #[code &lt;input&gt;] element.
+    div(role='note')
+      p #[b Note:] Setting this value to #[code true] will automatically set the #[a(href='#instance-property-active') #[code picker.active]] value to #[code false], and vice versa. However, it will not disable the option picker as if you set the #[a(href='#instance-property-active') #[code picker.active]] value to #[code false] directly. This means that if the #[a(href='#instance-property-active') #[code picker.active]] value is #[code false], it does not always mean that the #[a(href='#instance-property-fix') #[code picker.fix]] value is #[code true]. However, if the #[a(href='#instance-property-fix') #[code picker.fix]] value is #[code true], it always means that the #[a(href='#instance-property-active') #[code picker.active]] value is #[code false].
+      pre: code
+        | if (!picker.active) {
+        |     // Option picker is “disabled” or “read-only”
+        | }
+        |
+        | if (picker.fix) {
+        |     // Option picker is “read-only”
+        | }
     pre: code
       | picker.fix = true; // Make the option picker “read-only”
     h4#instance-property-hooks

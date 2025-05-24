@@ -2233,7 +2233,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.4';
+    OptionPicker.version = '2.2.5';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name

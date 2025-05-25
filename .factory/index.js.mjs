@@ -837,10 +837,10 @@ function onPointerDownMask(e) {
         }
     }
     forEachMap(_options, v => v[2].hidden = false);
-    if (picker.size < 2) {
-        setStyle(options, 'max-height', 0);
-    }
     if (getReference(R) !== picker) {
+        if (picker.size < 2) {
+            setStyle(options, 'max-height', 0);
+        }
         picker.enter(!focusToArrow).fit();
         if (focusToArrow) {
             focusTo(arrow);

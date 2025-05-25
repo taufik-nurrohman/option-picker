@@ -938,14 +938,15 @@ function onSubmitForm(e) {
     let $ = this,
         picker = getReference($),
         {max, min, self} = picker,
-        count = toCount(getOptionsSelected(picker));
+        count = toCount(getOptionsSelected(picker)), exit;
     if (count < min) {
-        onInvalidSelf.call(self);
-        picker.fire('min.options', [count, min]), offEventDefault(e);
+        exit = true;
+        picker.fire('min.options', [count, min]);
     } else if (count > max) {
-        onInvalidSelf.call(self);
-        picker.fire('max.options', [count, max]), offEventDefault(e);
+        exit = true;
+        picker.fire('max.options', [count, max]);
     }
+    exit && (onInvalidSelf.call(self), offEventDefault(e));
 }
 
 function onResizeWindow() {

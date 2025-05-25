@@ -13,7 +13,7 @@
     "@taufik-nurrohman/pattern": "^1.0.1",
     "@taufik-nurrohman/rect": "^1.0.0",
     "@taufik-nurrohman/selection": "^1.1.0",
-    "@taufik-nurrohman/tick": "^2.1.0",
+    "@taufik-nurrohman/tick": "^2.1.1",
     "@taufik-nurrohman/to": "^1.2.0"
   },
   "description": "Accessible custom `<select>` (and `<input list>`) element.",

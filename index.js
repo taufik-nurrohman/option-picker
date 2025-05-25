@@ -2005,7 +2005,7 @@
                 return;
             }
         }
-        if (!(optionCurrent = getOptionSelected(picker))) {
+        if (!(optionCurrent = getOptionSelected(picker) || goToOptionFirst(picker))) {
             return;
         }
         offEventDefault(e);

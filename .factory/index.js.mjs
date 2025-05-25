@@ -1250,10 +1250,11 @@ setObjectAttributes(OptionPicker, {
                 {_mask, mask, self} = $,
                 {input} = _mask,
                 v = !!value;
+            $._fix = v;
             if (!isInput(self)) {
                 return $;
             }
-            self[TOKEN_READ_ONLY] = $._fix = v;
+            self[TOKEN_READ_ONLY] = v;
             if (v) {
                 letAttribute(input, TOKEN_CONTENTEDITABLE);
                 setAria(input, TOKEN_READONLY, true);

@@ -465,8 +465,8 @@ function onInputTextInput(e) {
     let $ = this,
         {inputType} = e,
         picker = getReference($),
-        {_active} = picker;
-    if (!_active) {
+        {_active, _fix} = picker;
+    if (!_active || _fix) {
         return offEventDefault(e);
     }
     if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
@@ -496,8 +496,8 @@ function onKeyDownTextInput(e) {
         key = e.key,
         keyIsCtrl = e.ctrlKey,
         picker = getReference($),
-        {_active} = picker;
-    if (!_active) {
+        {_active, _fix} = picker;
+    if (!_active || _fix) {
         return;
     }
     let {_options, mask, self, state} = picker,
@@ -617,8 +617,8 @@ function onKeyDownOption(e) {
 function onKeyDownValue(e) {
     let $ = this,
         picker = getReference($),
-        {_active} = picker;
-    if (!_active) {
+        {_active, _fix} = picker;
+    if (!_active || _fix) {
         return;
     }
     let key = e.key,
@@ -809,15 +809,16 @@ function onPointerDownMask(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {_active, _fix, _mask, _options, max, self} = picker,
-        {arrow, options} = _mask,
-        {target} = e, focusToArrow;
+        {_active, _fix} = picker;
     if (_fix) {
         return focusTo(picker);
     }
     if (!_active || getDatum($, 'size')) {
         return;
     }
+    let {_mask, _options, max, self} = picker,
+        {arrow, options} = _mask,
+        {target} = e, focusToArrow;
     if (arrow === target) {
         focusToArrow = 1;
     }
@@ -959,8 +960,8 @@ function onScrollWindow() {
 function onWheelMask(e) {
     let $ = this,
         picker = getReference($),
-        {_active, max} = picker;
-    if (!_active || max > 1) {
+        {_active, _fix, max} = picker;
+    if (!_active || _fix || max > 1) {
         return;
     }
     let {_mask} = picker,
@@ -1199,7 +1200,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.2.5';
+OptionPicker.version = '2.2.6';
 
 setObjectAttributes(OptionPicker, {
     name: {
@@ -1213,6 +1214,7 @@ setObjectAttributes(OptionPicker, {
             return this._active;
         },
         set: function (value) {
+            selectToNone();
             let $ = this,
                 {_mask, mask, self} = $,
                 {input, value: inputReadOnly} = _mask,
@@ -1243,6 +1245,7 @@ setObjectAttributes(OptionPicker, {
             return this._fix;
         },
         set: function (value) {
+            selectToNone();
             let $ = this,
                 {_mask, mask, self} = $,
                 {input} = _mask,
@@ -1250,7 +1253,7 @@ setObjectAttributes(OptionPicker, {
             if (!isInput(self)) {
                 return $;
             }
-            $._active = !($._fix = self[TOKEN_READ_ONLY] = v);
+            self[TOKEN_READ_ONLY] = $._fix = v;
             if (v) {
                 letAttribute(input, TOKEN_CONTENTEDITABLE);
                 setAria(input, TOKEN_READONLY, true);
@@ -1274,11 +1277,7 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active} = $;
-            if (!_active) {
-                return $;
-            }
-            let {self} = $;
+                {self} = $;
             if (isInput(self)) {
                 return $;
             }
@@ -1299,11 +1298,7 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active} = $;
-            if (!_active) {
-                return $;
-            }
-            let {state} = $;
+                {state} = $;
             state.min = isInteger(value) && value > 0 ? value : 0;
             return $;
         }
@@ -1313,11 +1308,13 @@ setObjectAttributes(OptionPicker, {
             return this._options;
         },
         set: function (options) {
+            selectToNone();
             let $ = this,
-                {_active, max} = $, selected;
-            if (!_active) {
+                {_active, _fix} = $;
+            if (!_active || _fix) {
                 return $;
             }
+            let {max} = $, selected;
             if (isFloat(options) || isInteger(options) || isString(options)) {
                 options = [options];
             }
@@ -1341,13 +1338,15 @@ setObjectAttributes(OptionPicker, {
             return !isInteger(size) || size < 1 ? 1 : size; // <https://html.spec.whatwg.org#attr-select-size>
         },
         set: function (value) {
+            selectToNone();
             let $ = this,
-                {_active, _mask, mask, self, state} = $,
-                {options} = _mask,
-                size = !isInteger(value) || value < 1 ? 1 : value;
+                {self} = $;
             if (isInput(self)) {
                 return $;
             }
+            let {_active, _mask, mask, state} = $,
+                {options} = _mask,
+                size = !isInteger(value) || value < 1 ? 1 : value;
             self.size = state.size = size;
             if (1 === size) {
                 letDatum(mask, 'size');
@@ -1376,9 +1375,10 @@ setObjectAttributes(OptionPicker, {
             return text ? getText(input) : null;
         },
         set: function (value) {
+            selectToNone();
             let $ = this,
-                {_active} = $;
-            if (!_active) {
+                {_active, _fix} = $;
+            if (!_active || _fix) {
                 return $;
             }
             let {text} = _mask;
@@ -1395,9 +1395,10 @@ setObjectAttributes(OptionPicker, {
             return "" !== value ? value : null;
         },
         set: function (value) {
+            selectToNone();
             let $ = this,
-                {_active, _fix} = $;
-            if (!_active && !_fix) {
+                {_active} = $;
+            if (!_active) {
                 return $;
             }
             let {_options} = $, option;
@@ -1412,9 +1413,10 @@ setObjectAttributes(OptionPicker, {
             return getOptionsValues(getOptionsSelected(this));
         },
         set: function (values) {
+            selectToNone();
             let $ = this,
-                {_active, _fix} = $;
-            if (!_active && !_fix || $.max < 2) {
+                {_active} = $;
+            if (!_active || $.max < 2) {
                 return $;
             }
             selectToOptionsNone($);
@@ -1437,6 +1439,7 @@ setObjectAttributes(OptionPicker, {
             return this._vital;
         },
         set: function (value) {
+            selectToNone();
             let $ = this,
                 {_mask, mask, min, self} = $,
                 {input} = _mask,
@@ -1477,7 +1480,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
             theInputID = self.id,
             theInputName = self.name,
             theInputPlaceholder = self.placeholder;
-        $._active = !isDisabledSelf && !isReadOnlySelf;
+        $._active = !isDisabledSelf;
         $._fix = isInputSelf && isReadOnlySelf;
         $._vital = isRequiredSelf;
         if (isRequiredSelf && min < 1) {
@@ -1751,16 +1754,17 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         return $;
     },
     enter: function (focus, mode) {
-        let $ = this, option,
-            {_active, _fix, _mask, _options, mask, self} = $,
-            {input, lot, options, value} = _mask,
+        let $ = this,
+            {_active, _fix, self} = $,
             isInputSelf = isInput(self);
         if (_fix && focus && isInputSelf) {
             return (focusTo(input), selectTo(input, mode)), $;
         }
-        if (!_active) {
+        if (!_active || _fix) {
             return $;
         }
+        let {_mask, _options, mask} = $,
+            {input, lot, options, value} = _mask, option;
         setAria(mask, 'expanded', toCount(getChildren(lot)) > 0);
         let theRootReference = getReference(R);
         if (theRootReference && $ !== theRootReference) {
@@ -1791,15 +1795,16 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     exit: function (focus, mode) {
         let $ = this,
-            {_active, _fix, _mask, _options, mask, self} = $,
-            {input, value} = _mask,
+            {_active, _fix, self} = $,
             isInputSelf = isInput(self);
         if (_fix && focus && isInputSelf) {
             return (focusTo(input), selectTo(input, mode)), $;
         }
-        if (!_active) {
+        if (!_active || _fix) {
             return $;
         }
+        let {_mask, _options, mask} = $,
+            {input, value} = _mask;
         forEachMap(_options, v => v[2].hidden = false);
         setAria(mask, 'expanded', false);
         letReference(R);
@@ -1823,11 +1828,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     fit: function () {
         let $ = this,
-            {_active, _mask, mask} = $,
-            {options} = _mask;
-        if (!_active || !getAria(mask, 'expanded') || getDatum(mask, 'size')) {
+            {_active, _fix, mask} = $;
+        if (!_active || _fix || !getAria(mask, 'expanded') || getDatum(mask, 'size')) {
             return $;
         }
+        let {_mask} = $,
+            {options} = _mask;
         setStyle(options, 'max-height', 0);
         let borderMaskBottom = getStyle(mask, 'border-bottom-width', false),
             borderMaskTop = getStyle(mask, 'border-top-width', false),
@@ -1850,8 +1856,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     focus: function (mode) {
         let $ = this,
-            {_active, _fix} = $;
-        if (!_active && !_fix) {
+            {_active} = $;
+        if (!_active) {
             return $;
         }
         let {_mask} = $,
@@ -1865,8 +1871,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     reset: function (focus, mode) {
         let $ = this,
-            {_active, _fix} = $;
-        if (!_active && !_fix) {
+            {_active} = $;
+        if (!_active) {
             return $;
         }
         let {_value, _values, max} = $;
@@ -1907,11 +1913,12 @@ OptionPickerOptions._ = setObjectMethods(OptionPickerOptions, {
     delete: function (key, _fireHook = 1, _fireValue = 1) {
         let $ = this,
             {of, values} = $,
-            {_active, _mask, self, state} = of,
-            {lot, options} = _mask, r;
+            {_active} = of;
         if (!_active) {
             return false;
         }
+        let {_mask, self, state} = of,
+            {lot, options} = _mask, r;
         if (!isSet(key)) {
             forEachMap(values, (v, k) => $.let(k, 0, 0));
             selectToOptionsNone(of, _fireValue);

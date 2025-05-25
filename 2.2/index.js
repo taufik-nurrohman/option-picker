@@ -1436,8 +1436,9 @@
         var $ = this,
             inputType = e.inputType,
             picker = getReference($),
-            _active = picker._active;
-        if (!_active) {
+            _active = picker._active,
+            _fix = picker._fix;
+        if (!_active || _fix) {
             return offEventDefault(e);
         }
         if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
@@ -1469,8 +1470,9 @@
             key = e.key,
             keyIsCtrl = e.ctrlKey,
             picker = getReference($),
-            _active = picker._active;
-        if (!_active) {
+            _active = picker._active,
+            _fix = picker._fix;
+        if (!_active || _fix) {
             return;
         }
         var _options = picker._options,
@@ -1600,8 +1602,9 @@
     function onKeyDownValue(e) {
         var $ = this,
             picker = getReference($),
-            _active = picker._active;
-        if (!_active) {
+            _active = picker._active,
+            _fix = picker._fix;
+        if (!_active || _fix) {
             return;
         }
         var key = e.key,
@@ -1811,8 +1814,14 @@
         var $ = this,
             picker = getReference($),
             _active = picker._active,
-            _fix = picker._fix,
-            _mask = picker._mask,
+            _fix = picker._fix;
+        if (_fix) {
+            return focusTo(picker);
+        }
+        if (!_active || getDatum($, 'size')) {
+            return;
+        }
+        var _mask = picker._mask,
             _options = picker._options,
             max = picker.max,
             self = picker.self,
@@ -1820,12 +1829,6 @@
             options = _mask.options,
             target = e.target,
             focusToArrow;
-        if (_fix) {
-            return focusTo(picker);
-        }
-        if (!_active || getDatum($, 'size')) {
-            return;
-        }
         if (arrow === target) {
             focusToArrow = 1;
         }
@@ -1973,8 +1976,9 @@
         var $ = this,
             picker = getReference($),
             _active = picker._active,
+            _fix = picker._fix,
             max = picker.max;
-        if (!_active || max > 1) {
+        if (!_active || _fix || max > 1) {
             return;
         }
         var _mask = picker._mask,
@@ -2233,7 +2237,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.5';
+    OptionPicker.version = '2.2.6';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2245,6 +2249,7 @@
                 return this._active;
             },
             set: function set(value) {
+                selectToNone();
                 var $ = this,
                     _mask = $._mask,
                     mask = $.mask,
@@ -2278,6 +2283,7 @@
                 return this._fix;
             },
             set: function set(value) {
+                selectToNone();
                 var $ = this,
                     _mask = $._mask,
                     mask = $.mask,
@@ -2287,7 +2293,7 @@
                 if (!isInput(self)) {
                     return $;
                 }
-                $._active = !($._fix = self[TOKEN_READ_ONLY] = v);
+                self[TOKEN_READ_ONLY] = $._fix = v;
                 if (v) {
                     letAttribute(input, TOKEN_CONTENTEDITABLE);
                     setAria(input, TOKEN_READONLY, true);
@@ -2311,11 +2317,7 @@
             },
             set: function set(value) {
                 var $ = this,
-                    _active = $._active;
-                if (!_active) {
-                    return $;
-                }
-                var self = $.self;
+                    self = $.self;
                 if (isInput(self)) {
                     return $;
                 }
@@ -2337,11 +2339,7 @@
             },
             set: function set(value) {
                 var $ = this,
-                    _active = $._active;
-                if (!_active) {
-                    return $;
-                }
-                var state = $.state;
+                    state = $.state;
                 state.min = isInteger(value) && value > 0 ? value : 0;
                 return $;
             }
@@ -2351,13 +2349,15 @@
                 return this._options;
             },
             set: function set(options) {
+                selectToNone();
                 var $ = this,
                     _active = $._active,
-                    max = $.max,
-                    selected;
-                if (!_active) {
+                    _fix = $._fix;
+                if (!_active || _fix) {
                     return $;
                 }
+                var max = $.max,
+                    selected;
                 if (isFloat(options) || isInteger(options) || isString(options)) {
                     options = [options];
                 }
@@ -2386,17 +2386,18 @@
                 return !isInteger(size) || size < 1 ? 1 : size; // <https://html.spec.whatwg.org#attr-select-size>
             },
             set: function set(value) {
+                selectToNone();
                 var $ = this,
-                    _active = $._active,
-                    _mask = $._mask,
-                    mask = $.mask,
-                    self = $.self,
-                    state = $.state,
-                    options = _mask.options,
-                    size = !isInteger(value) || value < 1 ? 1 : value;
+                    self = $.self;
                 if (isInput(self)) {
                     return $;
                 }
+                var _active = $._active,
+                    _mask = $._mask,
+                    mask = $.mask,
+                    state = $.state,
+                    options = _mask.options,
+                    size = !isInteger(value) || value < 1 ? 1 : value;
                 self.size = state.size = size;
                 if (1 === size) {
                     letDatum(mask, 'size');
@@ -2427,9 +2428,11 @@
                 return text ? getText(input) : null;
             },
             set: function set(value) {
+                selectToNone();
                 var $ = this,
-                    _active = $._active;
-                if (!_active) {
+                    _active = $._active,
+                    _fix = $._fix;
+                if (!_active || _fix) {
                     return $;
                 }
                 var _mask2 = _mask,
@@ -2449,10 +2452,10 @@
                 return "" !== value ? value : null;
             },
             set: function set(value) {
+                selectToNone();
                 var $ = this,
-                    _active = $._active,
-                    _fix = $._fix;
-                if (!_active && !_fix) {
+                    _active = $._active;
+                if (!_active) {
                     return $;
                 }
                 var _options = $._options,
@@ -2468,10 +2471,10 @@
                 return getOptionsValues(getOptionsSelected(this));
             },
             set: function set(values) {
+                selectToNone();
                 var $ = this,
-                    _active = $._active,
-                    _fix = $._fix;
-                if (!_active && !_fix || $.max < 2) {
+                    _active = $._active;
+                if (!_active || $.max < 2) {
                     return $;
                 }
                 selectToOptionsNone($);
@@ -2495,6 +2498,7 @@
                 return this._vital;
             },
             set: function set(value) {
+                selectToNone();
                 var $ = this,
                     _mask = $._mask,
                     mask = $.mask,
@@ -2541,7 +2545,7 @@
                 theInputID = self.id,
                 theInputName = self.name,
                 theInputPlaceholder = self.placeholder;
-            $._active = !isDisabledSelf && !isReadOnlySelf;
+            $._active = !isDisabledSelf;
             $._fix = isInputSelf && isReadOnlySelf;
             $._vital = isRequiredSelf;
             if (isRequiredSelf && min < 1) {
@@ -2824,24 +2828,24 @@
         },
         enter: function enter(focus, mode) {
             var $ = this,
-                option,
                 _active = $._active,
                 _fix = $._fix,
-                _mask = $._mask,
-                _options = $._options,
-                mask = $.mask,
                 self = $.self,
-                input = _mask.input,
-                lot = _mask.lot,
-                options = _mask.options,
-                value = _mask.value,
                 isInputSelf = isInput(self);
             if (_fix && focus && isInputSelf) {
                 return focusTo(input), selectTo(input, mode), $;
             }
-            if (!_active) {
+            if (!_active || _fix) {
                 return $;
             }
+            var _mask = $._mask,
+                _options = $._options,
+                mask = $.mask,
+                input = _mask.input,
+                lot = _mask.lot,
+                options = _mask.options,
+                value = _mask.value,
+                option;
             setAria(mask, 'expanded', toCount(getChildren(lot)) > 0);
             var theRootReference = getReference(R);
             if (theRootReference && $ !== theRootReference) {
@@ -2884,19 +2888,19 @@
             var $ = this,
                 _active = $._active,
                 _fix = $._fix,
-                _mask = $._mask,
-                _options = $._options,
-                mask = $.mask,
                 self = $.self,
-                input = _mask.input,
-                value = _mask.value,
                 isInputSelf = isInput(self);
             if (_fix && focus && isInputSelf) {
                 return focusTo(input), selectTo(input, mode), $;
             }
-            if (!_active) {
+            if (!_active || _fix) {
                 return $;
             }
+            var _mask = $._mask,
+                _options = $._options,
+                mask = $.mask,
+                input = _mask.input,
+                value = _mask.value;
             forEachMap(_options, function (v) {
                 return v[2].hidden = false;
             });
@@ -2923,12 +2927,13 @@
         fit: function fit() {
             var $ = this,
                 _active = $._active,
-                _mask = $._mask,
-                mask = $.mask,
-                options = _mask.options;
-            if (!_active || !getAria(mask, 'expanded') || getDatum(mask, 'size')) {
+                _fix = $._fix,
+                mask = $.mask;
+            if (!_active || _fix || !getAria(mask, 'expanded') || getDatum(mask, 'size')) {
                 return $;
             }
+            var _mask = $._mask,
+                options = _mask.options;
             setStyle(options, 'max-height', 0);
             var borderMaskBottom = getStyle(mask, 'border-bottom-width'),
                 borderMaskTop = getStyle(mask, 'border-top-width'),
@@ -2951,9 +2956,8 @@
         },
         focus: function focus(mode) {
             var $ = this,
-                _active = $._active,
-                _fix = $._fix;
-            if (!_active && !_fix) {
+                _active = $._active;
+            if (!_active) {
                 return $;
             }
             var _mask = $._mask,
@@ -2968,9 +2972,8 @@
         },
         reset: function reset(focus, mode) {
             var $ = this,
-                _active = $._active,
-                _fix = $._fix;
-            if (!_active && !_fix) {
+                _active = $._active;
+            if (!_active) {
                 return $;
             }
             var _value = $._value,
@@ -3017,16 +3020,16 @@
             var $ = this,
                 of = $.of,
                 values = $.values,
-                _active = of._active,
-                _mask = of._mask,
+                _active = of._active;
+            if (!_active) {
+                return false;
+            }
+            var _mask = of._mask,
                 self = of.self,
                 state = of.state,
                 lot = _mask.lot,
                 options = _mask.options,
                 r;
-            if (!_active) {
-                return false;
-            }
             if (!isSet(key)) {
                 forEachMap(values, function (v, k) {
                     return $.let(k, 0, 0);

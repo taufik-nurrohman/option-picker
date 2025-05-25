@@ -56,5 +56,5 @@
   "scripts": {
     "pack": "pack --clean=false --from=.factory --js-format=umd --js-name=OptionPicker --js-top='%(js.license)' --mjs=true --scss=true --to=."
   },
-  "version": "2.2.5"
+  "version": "2.2.6"
 }

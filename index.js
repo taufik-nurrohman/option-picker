@@ -1110,7 +1110,13 @@
         letError = _delay2[0],
         letErrorAbort = _delay2[1];
     var setError = function setError(picker) {
-        setAria(picker.mask, TOKEN_INVALID, true);
+        var mask = picker.mask,
+            state = picker.state,
+            time = state.time,
+            error = time.error;
+        if (isInteger(error) && error > 0) {
+            setAria(mask, TOKEN_INVALID, true);
+        }
     };
     var _delay3 = delay(function (picker) {
             var _mask = picker._mask,
@@ -2431,7 +2437,6 @@
                 return text ? getText(input) : null;
             },
             set: function set(value) {
-                selectToNone();
                 var $ = this,
                     _active = $._active,
                     _fix = $._fix;
@@ -2455,7 +2460,6 @@
                 return "" !== value ? value : null;
             },
             set: function set(value) {
-                selectToNone();
                 var $ = this,
                     _active = $._active;
                 if (!_active) {
@@ -2474,7 +2478,6 @@
                 return getOptionsValues(getOptionsSelected(this));
             },
             set: function set(values) {
-                selectToNone();
                 var $ = this,
                     _active = $._active;
                 if (!_active || $.max < 2) {

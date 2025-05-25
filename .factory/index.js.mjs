@@ -161,7 +161,12 @@ const [letError, letErrorAbort] = delay(function (picker) {
 });
 
 const setError = function (picker) {
-    setAria(picker.mask, TOKEN_INVALID, true);
+    let {mask, state} = picker,
+        {time} = state,
+        {error} = time;
+    if (isInteger(error) && error > 0) {
+        setAria(mask, TOKEN_INVALID, true);
+    }
 };
 
 const [toggleHint] = delay(function (picker) {
@@ -1377,7 +1382,6 @@ setObjectAttributes(OptionPicker, {
             return text ? getText(input) : null;
         },
         set: function (value) {
-            selectToNone();
             let $ = this,
                 {_active, _fix} = $;
             if (!_active || _fix) {
@@ -1397,7 +1401,6 @@ setObjectAttributes(OptionPicker, {
             return "" !== value ? value : null;
         },
         set: function (value) {
-            selectToNone();
             let $ = this,
                 {_active} = $;
             if (!_active) {
@@ -1415,7 +1418,6 @@ setObjectAttributes(OptionPicker, {
             return getOptionsValues(getOptionsSelected(this));
         },
         set: function (values) {
-            selectToNone();
             let $ = this,
                 {_active} = $;
             if (!_active || $.max < 2) {

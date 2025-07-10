@@ -718,43 +718,54 @@
         return node.value = _fromValue(value), node;
     };
     var theID = {};
+    var now = Date.now;
+    var history = new WeakMap();
+    var historyIndex = new WeakMap();
     var _getSelection = function _getSelection() {
         return D.getSelection();
     };
     var _setRange = function _setRange() {
         return D.createRange();
     };
+    // The `node` parameter is currently not in use
+    var hasSelection = function hasSelection(node, selection) {
+        return (selection || _getSelection()).rangeCount > 0;
+    };
     // <https://stackoverflow.com/a/6691294/1163000>
     // The `node` parameter is currently not in use
     var insertAtSelection = function insertAtSelection(node, content, mode, selection) {
         selection = selection || _getSelection();
         var from, range, to;
-        if (selection.rangeCount) {
-            range = selection.getRangeAt(0);
-            range.deleteContents();
-            to = D.createDocumentFragment();
-            var nodeCurrent, nodeFirst, nodeLast;
-            if (isString(content)) {
-                from = setElement('div');
-                setHTML(from, content);
-                while (nodeCurrent = getChildFirst(from, 1)) {
-                    nodeLast = setChildLast(to, nodeCurrent);
-                }
-            } else if (isArray(content)) {
-                forEachArray(content, function (v) {
-                    return nodeLast = setChildLast(to, v);
-                });
-            } else {
-                nodeLast = setChildLast(to, content);
+        if (!hasSelection(node, selection)) {
+            return false;
+        }
+        range = selection.getRangeAt(0);
+        range.deleteContents();
+        to = D.createDocumentFragment();
+        var nodeCurrent, nodeFirst, nodeLast;
+        if (isString(content)) {
+            from = setElement('div');
+            setHTML(from, content);
+            while (nodeCurrent = getChildFirst(from, 1)) {
+                nodeLast = setChildLast(to, nodeCurrent);
             }
-            nodeFirst = getChildFirst(to, 1);
-            range.insertNode(to);
-            if (nodeLast) {
-                range = range.cloneRange();
-                range.setStartAfter(nodeLast);
-                range.setStartBefore(nodeFirst);
-                setSelection(node, range, selectToNone(selection));
+        } else if (isArray(content)) {
+            forEachArray(content, function (v) {
+                return nodeLast = setChildLast(to, v);
+            });
+        } else {
+            nodeLast = setChildLast(to, content);
+        }
+        nodeFirst = getChildFirst(to, 1);
+        range.insertNode(to);
+        if (nodeLast) {
+            range = range.cloneRange();
+            range.setStartAfter(nodeLast);
+            range.setStartBefore(nodeFirst);
+            {
+                range.collapse();
             }
+            setSelection(node, range, selectToNone(node, selection));
         }
         return selection;
     };
@@ -762,6 +773,23 @@
     var letSelection = function letSelection(node, selection) {
         selection = selection || _getSelection();
         return selection.empty(), selection;
+    };
+    var redoState = function redoState(node, selection) {
+        var _getValueInMap, _getValueInMap2;
+        var h = (_getValueInMap = getValueInMap(node, history)) != null ? _getValueInMap : [],
+            i = (_getValueInMap2 = getValueInMap(node, historyIndex)) != null ? _getValueInMap2 : toCount(h) - 1,
+            j;
+        if (!(j = h[i + 1])) {
+            return restoreSelection(node, h[i][1], selection);
+        }
+        i++;
+        setValueInMap(node, i, historyIndex);
+        return setHTML(node, j[0]), restoreSelection(node, j[1], selection);
+    };
+    var resetState = function resetState(node, selection) {
+        letValueInMap(node, history);
+        letValueInMap(node, historyIndex);
+        return saveState(node, selection);
     };
     // <https://stackoverflow.com/a/13950376/1163000>
     var restoreSelection = function restoreSelection(node, store, selection) {
@@ -793,6 +821,34 @@
         }
         return setSelection(node, range, letSelection(node, selection));
     };
+    // <https://stackoverflow.com/a/13950376/1163000>
+    var saveSelection = function saveSelection(node, selection) {
+        var range = (_getSelection()).getRangeAt(0),
+            rangeClone = range.cloneRange();
+        rangeClone.selectNodeContents(node);
+        rangeClone.setEnd(range.startContainer, range.startOffset);
+        var start = toCount(rangeClone + "");
+        return [start, start + toCount(range + "")];
+    };
+    var saveState = function saveState(node, selection) {
+        var _getValueInMap3, _getValueInMap4, _getHTML;
+        var h = (_getValueInMap3 = getValueInMap(node, history)) != null ? _getValueInMap3 : [],
+            i = (_getValueInMap4 = getValueInMap(node, historyIndex)) != null ? _getValueInMap4 : toCount(h) - 1,
+            j,
+            v = (_getHTML = getHTML(node)) != null ? _getHTML : "";
+        j = hasSelection(node, selection) ? saveSelection(node) : [];
+        if (h[i] && v === h[i][0] && j[0] === h[i][1][0] && j[1] === h[i][1][1]) {
+            return node; // No change
+        }
+        // Trim future history if `undoState()` was used
+        if (i < toCount(h) - 1) {
+            h.splice(i + 1);
+        }
+        h.push([v, j, now()]);
+        setValueInMap(node, h, history);
+        setValueInMap(node, ++i, historyIndex);
+        return node;
+    };
     var selectTo = function selectTo(node, mode, selection) {
         selection = selection || _getSelection();
         letSelection(node, selection);
@@ -805,7 +861,8 @@
             selection.collapseToStart();
         } else;
     };
-    var selectToNone = function selectToNone(selection) {
+    // The `node` parameter is currently not in use
+    var selectToNone = function selectToNone(node, selection) {
         selection = selection || _getSelection();
         // selection.removeAllRanges();
         if (selection.rangeCount) {
@@ -820,6 +877,18 @@
             return restoreSelection(node, range, selection);
         }
         return selection.addRange(range), selection;
+    };
+    var undoState = function undoState(node, selection) {
+        var _getValueInMap5, _getValueInMap6;
+        var h = (_getValueInMap5 = getValueInMap(node, history)) != null ? _getValueInMap5 : [],
+            i = (_getValueInMap6 = getValueInMap(node, historyIndex)) != null ? _getValueInMap6 : toCount(h) - 1,
+            j;
+        if (!(j = h[i - 1])) {
+            return restoreSelection(node, h[i][1], selection);
+        }
+        i--;
+        setValueInMap(node, i, historyIndex);
+        return setHTML(node, j[0]), restoreSelection(node, j[1], selection);
     };
 
     function _toArray(iterable) {
@@ -1005,6 +1074,8 @@
     var KEY_PAGE_DOWN = KEY_PAGE + KEY_DOWN;
     var KEY_PAGE_UP = KEY_PAGE + KEY_UP;
     var KEY_TAB = 'Tab';
+    var KEY_Y = 'y';
+    var KEY_Z = 'z';
     var OPTION_SELF = 0;
     var OPTION_TEXT = 1;
     var TOKEN_CONTENTEDITABLE = 'contenteditable';
@@ -1118,13 +1189,18 @@
             setAria(mask, TOKEN_INVALID, true);
         }
     };
-    var _delay3 = delay(function (picker) {
+    var _delay3 = delay(function ($) {
+            saveState($);
+        }, 1),
+        _delay4 = _maybeArrayLike(_slicedToArray, _delay3, 1),
+        saveStateLazy = _delay4[0];
+    var _delay5 = delay(function (picker) {
             var _mask = picker._mask,
                 input = _mask.input;
             toggleHintByValue(picker, getText(input, 0));
         }),
-        _delay4 = _maybeArrayLike(_slicedToArray, _delay3, 1),
-        toggleHint = _delay4[0];
+        _delay6 = _maybeArrayLike(_slicedToArray, _delay5, 1),
+        toggleHint = _delay6[0];
     var toggleHintByValue = function toggleHintByValue(picker, value) {
         var _mask = picker._mask,
             hint = _mask.hint;
@@ -1402,7 +1478,7 @@
                 setValue(self, getText($));
             }
         })[0](1);
-        toggleHint(1, picker);
+        saveState($), toggleHint(1, picker), saveStateLazy($);
     }
 
     function onFocusOption() {
@@ -1448,9 +1524,9 @@
             return offEventDefault(e);
         }
         if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
-            toggleHintByValue(picker, 0);
+            toggleHintByValue(picker, 0), saveStateLazy($);
         } else if ('insertText' === inputType) {
-            toggleHintByValue(picker, 1);
+            toggleHintByValue(picker, 1), saveStateLazy($);
         }
     }
 
@@ -1475,6 +1551,7 @@
             exit,
             key = e.key,
             keyIsCtrl = e.ctrlKey,
+            keyIsShift = e.shiftKey,
             picker = getReference($),
             _active = picker._active,
             _fix = picker._fix;
@@ -1487,6 +1564,7 @@
             state = picker.state,
             strict = state.strict,
             time = state.time,
+            error = time.error,
             search = time.search;
         if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key) && !keyIsCtrl) {
             picker.enter().fit();
@@ -1513,7 +1591,16 @@
                 currentOption && focusTo(currentOption);
             }
         } else if (KEY_TAB === key) {
+            letError(isInteger(error) && error > 0 ? error : 0, picker);
             selectToNone(), picker.exit();
+        } else if (keyIsCtrl) {
+            if (!keyIsShift && KEY_Z === toCaseLower(key)) {
+                exit = true;
+                undoState($);
+            } else if (keyIsShift && KEY_Z === toCaseLower(key) || KEY_Y === toCaseLower(key)) {
+                exit = true;
+                redoState($);
+            }
         } else {
             delay(function () {
                 // Only execute the filter if the previous search query is different from the current search query
@@ -1803,7 +1890,7 @@
                 setValue(self, getText($));
             }
         })[0](1);
-        toggleHint(1, picker), insertAtSelection($, e.clipboardData.getData('text/plain'));
+        saveState($), toggleHint(1, picker), insertAtSelection($, e.clipboardData.getData('text/plain')), saveStateLazy($);
     }
     // The default state is `0`. When the pointer is pressed on the option mask, its value will become `1`. This check is
     // done to distinguish between a “touch only” and a “touch move” on touch device(s). It is also checked on pointer
@@ -1950,25 +2037,27 @@
     }
 
     function onResetForm() {
-        getReference(this).reset();
+        forEachSet(getReference(this), function ($) {
+            return $.reset();
+        });
     }
 
     function onSubmitForm(e) {
-        var $ = this,
-            picker = getReference($),
-            max = picker.max,
-            min = picker.min,
-            self = picker.self,
-            count = toCount(getOptionsSelected(picker)),
-            exit;
-        if (count < min) {
-            exit = true;
-            picker.fire('min.options', [count, min]);
-        } else if (count > max) {
-            exit = true;
-            picker.fire('max.options', [count, max]);
-        }
-        exit && (onInvalidSelf.call(self), offEventDefault(e));
+        forEachSet(getReference(this), function (picker) {
+            var max = picker.max,
+                min = picker.min,
+                self = picker.self,
+                count = toCount(getOptionsSelected(picker)),
+                exit;
+            if (count < min) {
+                exit = true;
+                picker.fire('min.options', [count, min]);
+            } else if (count > max) {
+                exit = true;
+                picker.fire('max.options', [count, max]);
+            }
+            exit && (onInvalidSelf.call(self), offEventDefault(e));
+        });
     }
 
     function onResizeWindow() {
@@ -2245,7 +2334,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.6';
+    OptionPicker.version = '2.2.7';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
@@ -2443,13 +2532,12 @@
                 if (!_active || _fix) {
                     return $;
                 }
-                var _mask2 = _mask,
-                    text = _mask2.text;
+                var _mask = $._mask,
+                    text = _mask.text;
                 if (!text) {
                     return $;
                 }
-                var _mask3 = _mask,
-                    input = _mask3.input,
+                var input = _mask.input,
                     v;
                 return setText(input, v = _fromValue(value)), toggleHintByValue($, v), $;
             }
@@ -2461,7 +2549,8 @@
             },
             set: function set(value) {
                 var $ = this,
-                    _active = $._active;
+                    _active = $._active,
+                    self = $.self;
                 if (!_active) {
                     return $;
                 }
@@ -2469,6 +2558,8 @@
                     option;
                 if (option = _options.at(value)) {
                     selectToOption(option[2], $);
+                } else if (isInput(self) && null === value) {
+                    selectToOptionsNone($, 1);
                 }
                 return $;
             }
@@ -2646,10 +2737,12 @@
             setNext(self, mask);
             setChildLast(mask, self);
             if (form) {
+                var set = getReference(form) || new Set();
+                set.add($);
                 onEvent(EVENT_RESET, form, onResetForm);
                 onEvent(EVENT_SUBMIT, form, onSubmitForm);
                 setID(form);
-                setReference(form, $);
+                setReference(form, set);
             }
             onEvent(EVENT_FOCUS, self, onFocusSelf);
             onEvent(EVENT_INVALID, self, onInvalidSelf);
@@ -2755,7 +2848,7 @@
                     }
                 });
             }
-            return $;
+            return resetState(textInput), $;
         },
         blur: function blur() {
             var $ = this,
@@ -2836,7 +2929,9 @@
             var $ = this,
                 _active = $._active,
                 _fix = $._fix,
+                _mask = $._mask,
                 self = $.self,
+                input = _mask.input,
                 isInputSelf = isInput(self);
             if (_fix && focus && isInputSelf) {
                 return focusTo(input), selectTo(input, mode), $;
@@ -2844,10 +2939,8 @@
             if (!_active || _fix) {
                 return $;
             }
-            var _mask = $._mask,
-                _options = $._options,
+            var _options = $._options,
                 mask = $.mask,
-                input = _mask.input,
                 lot = _mask.lot,
                 options = _mask.options,
                 value = _mask.value,
@@ -2894,7 +2987,9 @@
             var $ = this,
                 _active = $._active,
                 _fix = $._fix,
+                _mask = $._mask,
                 self = $.self,
+                input = _mask.input,
                 isInputSelf = isInput(self);
             if (_fix && focus && isInputSelf) {
                 return focusTo(input), selectTo(input, mode), $;
@@ -2902,10 +2997,8 @@
             if (!_active || _fix) {
                 return $;
             }
-            var _mask = $._mask,
-                _options = $._options,
+            var _options = $._options,
                 mask = $.mask,
-                input = _mask.input,
                 value = _mask.value;
             forEachMap(_options, function (v) {
                 return v[2].hidden = false;

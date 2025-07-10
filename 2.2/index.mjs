@@ -1,4 +1,4 @@
-import {/* focusTo, */insertAtSelection, selectTo, selectToNone} from '@taufik-nurrohman/selection';
+import {/* focusTo, */insertAtSelection, redoState, resetState, saveState, selectTo, selectToNone, undoState} from '@taufik-nurrohman/selection';
 import {R, W, getAria, getAttributes, getChildFirst, getChildLast, getChildren, getDatum, getElement, getElementIndex, getHTML, getID, getName, getNext, getParent, getParentForm, getPrev, getRole, getState, getStyle, getText, getValue, hasState, isDisabled, isReadOnly, isRequired, letAria, letAttribute, letClass, letDatum, letElement, letID, letStyle, setAria, setAttribute, setChildLast, setClass, setDatum, setElement, setHTML, setID, setNext, setStyle, setStyles, setText, setValue} from '@taufik-nurrohman/document';
 import {debounce, delay} from '@taufik-nurrohman/tick';
 import {forEachArray, forEachMap, forEachObject, forEachSet, getPrototype, getReference, getValueInMap, hasKeyInMap, letReference, letValueInMap, onAnimationsEnd, setObjectAttributes, setObjectMethods, setReference, setValueInMap, toValuesFromMap, toValueFirstFromMap} from '@taufik-nurrohman/f';
@@ -57,6 +57,8 @@ const KEY_PAGE = 'Page';
 const KEY_PAGE_DOWN = KEY_PAGE + KEY_DOWN;
 const KEY_PAGE_UP = KEY_PAGE + KEY_UP;
 const KEY_TAB = 'Tab';
+const KEY_Y = 'y';
+const KEY_Z = 'z';
 
 const OPTION_SELF = 0;
 const OPTION_TEXT = 1;
@@ -168,6 +170,10 @@ const setError = function (picker) {
         setAria(mask, TOKEN_INVALID, true);
     }
 };
+
+const [saveStateLazy] = delay(function ($) {
+    saveState($);
+}, 1);
 
 const [toggleHint] = delay(function (picker) {
     let {_mask} = picker,
@@ -429,7 +435,7 @@ function onCutTextInput() {
             setValue(self, getText($));
         }
     })[0](1);
-    toggleHint(1, picker);
+    saveState($), toggleHint(1, picker), saveStateLazy($);
 }
 
 function onFocusOption() {
@@ -475,9 +481,9 @@ function onInputTextInput(e) {
         return offEventDefault(e);
     }
     if ('deleteContent' === inputType.slice(0, 13) && !getText($, 0)) {
-        toggleHintByValue(picker, 0);
+        toggleHintByValue(picker, 0), saveStateLazy($);
     } else if ('insertText' === inputType) {
-        toggleHintByValue(picker, 1);
+        toggleHintByValue(picker, 1), saveStateLazy($);
     }
 }
 
@@ -500,6 +506,7 @@ function onKeyDownTextInput(e) {
     let $ = this, exit,
         key = e.key,
         keyIsCtrl = e.ctrlKey,
+        keyIsShift = e.shiftKey,
         picker = getReference($),
         {_active, _fix} = picker;
     if (!_active || _fix) {
@@ -507,7 +514,7 @@ function onKeyDownTextInput(e) {
     }
     let {_options, mask, self, state} = picker,
         {strict, time} = state,
-        {search} = time;
+        {error, search} = time;
     if (KEY_DELETE_LEFT === key || KEY_DELETE_RIGHT === key || 1 === toCount(key) && !keyIsCtrl) {
         picker.enter().fit();
         searchQuery = 0; // This will make a difference and force the filter to execute
@@ -533,7 +540,16 @@ function onKeyDownTextInput(e) {
             currentOption && focusTo(currentOption);
         }
     } else if (KEY_TAB === key) {
+        letError(isInteger(error) && error > 0 ? error : 0, picker);
         selectToNone(), picker.exit();
+    } else if (keyIsCtrl) {
+        if (!keyIsShift && KEY_Z === toCaseLower(key)) {
+            exit = true;
+            undoState($);
+        } else if (keyIsShift && KEY_Z === toCaseLower(key) || KEY_Y === toCaseLower(key)) {
+            exit = true;
+            redoState($);
+        }
     } else {
         delay(() => {
             // Only execute the filter if the previous search query is different from the current search query
@@ -636,7 +652,7 @@ function onKeyDownValue(e) {
         exit, valueCurrent, valueNext, valuePrev;
     searchTermClear(search[1]);
     if (KEY_ARROW_DOWN === key || KEY_ARROW_UP === key || KEY_ENTER === key || KEY_PAGE_DOWN === key || KEY_PAGE_UP === key || ("" === searchTerm && ' ' === key)) {
-        let focus = exit = true;
+        let focus = (exit = true);
         if (KEY_ENTER === key || ' ' === key) {
             if (valueCurrent = _options.at(getOptionValue($))) {
                 focus = false;
@@ -796,7 +812,7 @@ function onPasteTextInput(e) {
             setValue(self, getText($));
         }
     })[0](1);
-    toggleHint(1, picker), insertAtSelection($, e.clipboardData.getData('text/plain'));
+    saveState($), toggleHint(1, picker), insertAtSelection($, e.clipboardData.getData('text/plain'), -1), saveStateLazy($);
 }
 
 // The default state is `0`. When the pointer is pressed on the option mask, its value will become `1`. This check is
@@ -936,22 +952,22 @@ function onPointerUpRoot() {
 }
 
 function onResetForm() {
-    getReference(this).reset();
+    forEachSet(getReference(this), $ => $.reset());
 }
 
 function onSubmitForm(e) {
-    let $ = this,
-        picker = getReference($),
-        {max, min, self} = picker,
-        count = toCount(getOptionsSelected(picker)), exit;
-    if (count < min) {
-        exit = true;
-        picker.fire('min.options', [count, min]);
-    } else if (count > max) {
-        exit = true;
-        picker.fire('max.options', [count, max]);
-    }
-    exit && (onInvalidSelf.call(self), offEventDefault(e));
+    forEachSet(getReference(this), picker => {
+        let {max, min, self} = picker,
+            count = toCount(getOptionsSelected(picker)), exit;
+        if (count < min) {
+            exit = true;
+            picker.fire('min.options', [count, min]);
+        } else if (count > max) {
+            exit = true;
+            picker.fire('max.options', [count, max]);
+        }
+        exit && (onInvalidSelf.call(self), offEventDefault(e));
+    });
 }
 
 function onResizeWindow() {
@@ -1206,7 +1222,7 @@ OptionPicker.state = {
     'with': []
 };
 
-OptionPicker.version = '2.2.6';
+OptionPicker.version = '2.2.7';
 
 setObjectAttributes(OptionPicker, {
     name: {
@@ -1387,7 +1403,8 @@ setObjectAttributes(OptionPicker, {
             if (!_active || _fix) {
                 return $;
             }
-            let {text} = _mask;
+            let {_mask} = $,
+                {text} = _mask;
             if (!text) {
                 return $;
             }
@@ -1402,13 +1419,15 @@ setObjectAttributes(OptionPicker, {
         },
         set: function (value) {
             let $ = this,
-                {_active} = $;
+                {_active, self} = $;
             if (!_active) {
                 return $;
             }
             let {_options} = $, option;
             if (option = _options.at(value)) {
                 selectToOption(option[2], $);
+            } else if (isInput(self) && null === value) {
+                selectToOptionsNone($, 1);
             }
             return $;
         }
@@ -1579,10 +1598,12 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         setNext(self, mask);
         setChildLast(mask, self);
         if (form) {
+            let set = getReference(form) || new Set;
+            set.add($);
             onEvent(EVENT_RESET, form, onResetForm);
             onEvent(EVENT_SUBMIT, form, onSubmitForm);
             setID(form);
-            setReference(form, $);
+            setReference(form, set);
         }
         onEvent(EVENT_FOCUS, self, onFocusSelf);
         onEvent(EVENT_INVALID, self, onInvalidSelf);
@@ -1686,7 +1707,7 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
                 }
             });
         }
-        return $;
+        return resetState(textInput), $;
     },
     blur: function () {
         let $ = this,
@@ -1759,7 +1780,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     enter: function (focus, mode) {
         let $ = this,
-            {_active, _fix, self} = $,
+            {_active, _fix, _mask, self} = $,
+            {input} = _mask,
             isInputSelf = isInput(self);
         if (_fix && focus && isInputSelf) {
             return (focusTo(input), selectTo(input, mode)), $;
@@ -1767,8 +1789,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         if (!_active || _fix) {
             return $;
         }
-        let {_mask, _options, mask} = $,
-            {input, lot, options, value} = _mask, option;
+        let {_options, mask} = $,
+            {lot, options, value} = _mask, option;
         setAria(mask, 'expanded', toCount(getChildren(lot)) > 0);
         let theRootReference = getReference(R);
         if (theRootReference && $ !== theRootReference) {
@@ -1799,7 +1821,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
     },
     exit: function (focus, mode) {
         let $ = this,
-            {_active, _fix, self} = $,
+            {_active, _fix, _mask, self} = $,
+            {input} = _mask,
             isInputSelf = isInput(self);
         if (_fix && focus && isInputSelf) {
             return (focusTo(input), selectTo(input, mode)), $;
@@ -1807,8 +1830,8 @@ OptionPicker._ = setObjectMethods(OptionPicker, {
         if (!_active || _fix) {
             return $;
         }
-        let {_mask, _options, mask} = $,
-            {input, value} = _mask;
+        let {_options, mask} = $,
+            {value} = _mask;
         forEachMap(_options, v => v[2].hidden = false);
         setAria(mask, 'expanded', false);
         letReference(R);

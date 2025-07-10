@@ -7,9 +7,9 @@ Accessible custom `<select>` (and `<input list>`) element.
 ![index.min.js](https://img.shields.io/github/size/taufik-nurrohman/option-picker/index.min.js?branch=main&color=%23f1e05a&label=index.min.js&labelColor=%231f2328&style=flat-square)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/892942af-77fd-4678-93c9-402862bb2571">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/503ff380-fe53-4188-aeee-0006af534d60">
-  <img alt="Option Picker" src="https://github.com/user-attachments/assets/503ff380-fe53-4188-aeee-0006af534d60">
+  <source media="(prefers-color-scheme: dark)" srcset="2.png">
+  <source media="(prefers-color-scheme: light)" srcset="1.png">
+  <img alt="Option Picker" src="1.png">
 </picture>
 
 Press <kbd>Enter</kbd> or <kbd>Space</kbd> key to open/close the options list. Use <kbd>ArrowDown</kbd> and

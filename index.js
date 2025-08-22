@@ -2061,8 +2061,15 @@
     }
 
     function onResizeWindow() {
-        var picker = getReference(R);
-        picker && picker.fit();
+        var picker = getReference(R),
+            tick;
+        if (picker) {
+            if (!tick) {
+                W.requestAnimationFrame(function () {
+                    picker.fit(), tick = 0;
+                }), tick = 1;
+            }
+        }
     }
 
     function onScrollWindow() {
@@ -2334,7 +2341,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.7';
+    OptionPicker.version = '2.2.8';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name

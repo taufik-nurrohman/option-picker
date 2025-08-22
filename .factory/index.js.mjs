@@ -971,8 +971,14 @@ function onSubmitForm(e) {
 }
 
 function onResizeWindow() {
-    let picker = getReference(R);
-    picker && picker.fit();
+    let picker = getReference(R), tick;
+    if (picker) {
+        if (!tick) {
+            W.requestAnimationFrame(() => {
+                picker.fit(), (tick = 0);
+            }), (tick = 1);
+        }
+    }
 }
 
 function onScrollWindow() {

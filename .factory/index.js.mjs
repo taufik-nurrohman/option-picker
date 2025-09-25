@@ -95,7 +95,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
     let count = _options.count();
     if (selectOnly) {
         forEachMap(_options, v => {
-            if ("" !== q && (q === toCaseLower(getText(v[2]).replace(/\uFFFD/g, "")).slice(0, toCount(q)) || q === toCaseLower(getOptionValue(v[2])).slice(0, toCount(q))) && !getAria(v[2], TOKEN_DISABLED)) {
+            if ("" !== q && (q === toCaseLower(getText(v[2]).replace(/\u200C/g, "")).slice(0, toCount(q)) || q === toCaseLower(getOptionValue(v[2])).slice(0, toCount(q))) && !getAria(v[2], TOKEN_DISABLED)) {
                 selectToOption(v[2], $);
                 return 0;
             }
@@ -103,7 +103,7 @@ const filter = debounce(($, input, _options, selectOnly) => {
         });
     } else {
         forEachMap(_options, v => {
-            if ("" === q || hasValue(q, toCaseLower(getText(v[2]).replace(/\uFFFD/g, "") + '\t' + getOptionValue(v[2])))) {
+            if ("" === q || hasValue(q, toCaseLower(getText(v[2]).replace(/\u200C/g, "") + '\t' + getOptionValue(v[2])))) {
                 v[2].hidden = false;
             } else {
                 v[2].hidden = true;

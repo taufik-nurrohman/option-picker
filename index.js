@@ -1112,8 +1112,7 @@
         var count = _options.count();
         if (selectOnly) {
             forEachMap(_options, function (v) {
-                var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-                if ("" !== q && q === text.slice(0, toCount(q)) && !getAria(v[2], TOKEN_DISABLED)) {
+                if ("" !== q && (q === toCaseLower(getText(v[2]).replace(/\uFFFD/g, "")).slice(0, toCount(q)) || q === toCaseLower(getOptionValue(v[2])).slice(0, toCount(q))) && !getAria(v[2], TOKEN_DISABLED)) {
                     selectToOption(v[2], $);
                     return 0;
                 }
@@ -1121,8 +1120,7 @@
             });
         } else {
             forEachMap(_options, function (v) {
-                var text = toCaseLower(getText(v[2]) + '\t' + getOptionValue(v[2]));
-                if ("" === q || hasValue(q, text)) {
+                if ("" === q || hasValue(q, toCaseLower(getText(v[2]).replace(/\uFFFD/g, "") + '\t' + getOptionValue(v[2])))) {
                     v[2].hidden = false;
                 } else {
                     v[2].hidden = true;
@@ -2341,7 +2339,7 @@
         },
         'with': []
     };
-    OptionPicker.version = '2.2.8';
+    OptionPicker.version = '2.2.9';
     setObjectAttributes(OptionPicker, {
         name: {
             value: name
